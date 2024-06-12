@@ -24,4 +24,21 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        
+
+      - name: Rush Update
+        run: node common/scripts/install-run-rush.js update
+      
+      - name: Rush Install
+        run: node common/scripts/install-run-rush.js install
+
+      - name: Check Eslint format
+        run: node common/scripts/install-run-rush.js check-format --verbose
+
+      - name: Run Build
+        run: node common/scripts/install-run-rush.js build
+
+      - name: Run Tests
+        run: node common/scripts/install-run-rush.js test --verbose
+
+      - name: Remove dependencies
+        run: node common/scripts/install-run-rush.js purge  
