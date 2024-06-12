@@ -1,0 +1,11 @@
+{
+    "testKey1": {
+        "testSubKey1": "testValue1"
+    },
+    "testKey2": {
+        "testSubKey2": "https://test.domain.com/user?name=Alice&age=18"
+    },
+    "testKey3": {
+        "testSubKey3": "30"
+    }
+}

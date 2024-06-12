@@ -1,0 +1,11 @@
+{
+    "items": 
+      {
+        "key": "",
+        "value": "{\"id\":\"Test\",\"description\":\"Test feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}",
+        "label": "dev",
+        "content_type": "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+        "tags": {}
+      }
+    
+}

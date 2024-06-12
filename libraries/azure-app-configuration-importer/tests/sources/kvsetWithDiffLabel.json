@@ -1,0 +1,55 @@
+{
+    "items": [
+      {
+        "key": "app:Settings:FontSize",
+        "value": "45",
+        "label": "Label1",
+        "content_type": "",
+        "tags": {}
+      },
+      {
+        "key": "app:Settings:BackgroundColor",
+        "value": "yellow",
+        "label": "Label1",
+        "content_type": "",
+        "tags": {}
+      },
+      {
+        "key": "app:Settings:FontColor",
+        "value": "yellow",
+        "label": "Label1",
+        "content_type": null,
+        "tags": {
+            "tag1": "value1",
+            "tag2": "value2"
+          }
+      },
+      {
+        "key": "Database:ConnectionString",
+        "value": "{\"uri\":\"https://keyvault.vault.azure.net/secrets/db-secret\"}",
+        "label": "Label1",
+        "content_type": "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8",
+        "tags": {}
+      },
+      {
+        "key": "TestEnv",
+        "value": "Debug",
+        "label": "Label1",
+        "content_type": null,
+        "tags": {
+            "tag1": "value1",
+            "tag2": "value2"
+        }
+      },
+      {
+        "key": "TestEnv",
+        "value": "Debug",
+        "label": "dev",
+        "content_type": null,
+        "tags": {
+            "tag1": "value1",
+            "tag2": "value2"
+        }
+      }
+    ]
+  }

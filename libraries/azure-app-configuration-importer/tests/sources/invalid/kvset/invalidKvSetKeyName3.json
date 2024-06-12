@@ -1,0 +1,11 @@
+{
+    "items": [
+        {
+            "key": ".appconfig.featureflag/Test",
+            "value": "false",
+            "label": "test",
+            "content_type": null,
+            "tags": {}
+        }
+    ]
+}
