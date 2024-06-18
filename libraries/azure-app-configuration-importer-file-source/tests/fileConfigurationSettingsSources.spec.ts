@@ -1,30 +1,30 @@
 import { assert } from "chai";
 import * as path from "path";
 import { ArgumentError, ParseError, ConfigurationFormat, ConfigurationProfile, ArgumentNullError } from "@azure/app-configuration-importer";
-import { FileConfigurationSettingsSource } from "../src/FileConfigurationSettingsSource";
+import { FileConfigurationSettingsSource } from "../src/fileConfigurationSettingsSource";
 
 describe("File configuration source test", () => {
   it("Throw argument error when set unexpected option when the profile is kvset", async () => {
     const options1 = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Json,
       profile: ConfigurationProfile.KvSet,
       separator: ":"
     };
     const options2 = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Json,
       profile: ConfigurationProfile.KvSet,
       label: "some"
     };
     const options3 = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Json,
       profile: ConfigurationProfile.KvSet,
       tags: { some: "value" }
     };
     const options4 = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Json,
       profile: ConfigurationProfile.KvSet,
       depth: 3
@@ -52,7 +52,7 @@ describe("File configuration source test", () => {
 
   it("Throw argument error if format is not json when the profile is kvset", async () => {
     const options = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Yaml,
       profile: ConfigurationProfile.KvSet
     };
@@ -62,7 +62,7 @@ describe("File configuration source test", () => {
 
   it("Throw argument error if depth is set but separator is not", async () => {
     const options = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Json,
       depth: 3
     };
@@ -72,7 +72,7 @@ describe("File configuration source test", () => {
 
   it("Throw argument error if separator is not valid", async () => {
     const options = {
-      filePath: path.join("__dirname", "../tests/sources/SimpleKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/simpleKeyValue.json"),
       format: ConfigurationFormat.Json,
       separator: "("
     };
@@ -122,12 +122,12 @@ describe("File configuration source test", () => {
 
   it("Throw error if format is not json when the contentType is json", async () => {
     const options1 = {
-      filePath: path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json"),
       format: ConfigurationFormat.Properties,
       contentType: "application/json"
     };
     const options2 = {
-      filePath: path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json"),
+      filePath: path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json"),
       format: ConfigurationFormat.Yaml,
       contentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8"
     };

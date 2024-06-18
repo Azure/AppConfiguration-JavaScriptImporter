@@ -7,10 +7,10 @@ import {
   SetConfigurationSettingParam, 
   FeatureFlagValue, 
   SecretReferenceValue } from "@azure/app-configuration";
-import { ConfigurationSettingsSource } from "./settingsImport/ConfigurationSettingsSource";
+import { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
 import { ImportMode } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
-import { AdaptiveTaskManager } from "./internal/AdaptiveTaskManager";
+import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
 import { ImportProgress, KeyLabelLookup } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 

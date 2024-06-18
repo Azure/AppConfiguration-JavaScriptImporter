@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
-import { ConfigurationSettingsSource } from "./ConfigurationSettingsSource";
+import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { 
   ConfigurationSetting, 
   SetConfigurationSettingParam, 

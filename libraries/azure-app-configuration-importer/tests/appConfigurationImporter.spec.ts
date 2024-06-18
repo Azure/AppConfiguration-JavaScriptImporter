@@ -2,13 +2,13 @@ import { assert, expect } from "chai";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/StringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { 
   AppConfigurationClient, 
   ConfigurationSetting, 
   DeleteConfigurationSettingResponse,
   SetConfigurationSettingResponse } from "@azure/app-configuration";
-import { AppConfigurationImporter  } from "../src/AppConfigurationImporter";
+import { AppConfigurationImporter  } from "../src/appConfigurationImporter";
 import * as sinon from "sinon";
 import { AbortSignalLike, HttpHeader, HttpHeadersLike, HttpMethods, HttpOperationResponse, OperationResponse, OperationSpec, ProxySettings, RawHttpHeaders, RequestPrepareOptions, TransferProgressEvent, WebResourceLike, RestError } from "@azure/core-http";
 import { ImportProgress } from "../src/models";
@@ -37,7 +37,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SimpleKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/simpleKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -59,7 +59,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SimpleKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/simpleKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -93,7 +93,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SimpleKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/simpleKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -131,7 +131,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SimpleKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/simpleKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     let finished = 0;
@@ -213,7 +213,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     };
 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SimpleKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/simpleKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);

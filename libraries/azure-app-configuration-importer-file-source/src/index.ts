@@ -2,4 +2,4 @@
 // Licensed under the MIT license.
 
 export { FileSourceOptions as FileConfigurationSyncOptions } from "./fileSourceOptions";
-export { FileConfigurationSettingsSource } from "./FileConfigurationSettingsSource";
+export { FileConfigurationSettingsSource } from "./fileConfigurationSettingsSource";

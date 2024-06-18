@@ -10,7 +10,7 @@ import {
 } from "@azure/app-configuration";
 import { ArgumentError } from "../../errors";
 import { KvSetConfigurationItem } from "../../models";
-import { ConfigurationSettingsConverter } from "./ConfigurationSettingsConverter";
+import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
 
 /**
  * Format Parser for kvset profile.

@@ -2,7 +2,7 @@ import { ConfigurationSetting, ListConfigurationSettingPage } from "@azure/app-c
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
 import * as sinon from "sinon";
 import { assert } from "chai";
-import { MockupResourceLike, MockUpHttpHeaderLike } from "./AppConfigurationImporter.spec";
+import { MockupResourceLike, MockUpHttpHeaderLike } from "./appConfigurationImporter.spec";
 
 const items: ConfigurationSetting[] = [
   {

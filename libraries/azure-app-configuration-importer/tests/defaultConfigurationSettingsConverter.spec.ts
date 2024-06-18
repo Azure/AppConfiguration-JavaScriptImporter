@@ -3,13 +3,13 @@ import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat } from "../src/enums";
 import { ArgumentError } from "../src/errors";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/StringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { assertThrowAsync } from "./utlis";
 
 describe("Parse Json format file", () => {
   it("Parse simple key value json file", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SimpleKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/simpleKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -26,7 +26,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key value json file, does not set depth", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":"
     };
@@ -44,7 +44,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key value json file, set depth to 1", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 1
@@ -66,7 +66,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key value json file, set depth to number larger than 1", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 3
@@ -89,7 +89,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key value json file with array", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 3
@@ -112,7 +112,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key value json file correctly when does not set separator and depth", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -138,7 +138,7 @@ describe("Parse Json format file", () => {
       testTag: "TagValue"
     };
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       prefix: "testprefix/",
       label: "testLabel",
@@ -170,7 +170,7 @@ describe("Parse Json format file", () => {
 
   it("Invalid key name, throw Argument Error", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       prefix: "%"
     };
@@ -243,7 +243,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key value json file with json contentType", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       contentType: "application/json"
@@ -262,7 +262,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key array json file with json contentType", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 2,
@@ -282,7 +282,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key array json file", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 2
@@ -301,7 +301,7 @@ describe("Parse Json format file", () => {
 
   it("Parse nested key array json file with arbitrary content type", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 2,
@@ -324,7 +324,7 @@ describe("Parse Json format file", () => {
 
   it("Preserve arrays if content type is Json",async  () => { 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/ArrayPreserve.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/arrayPreserve.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       contentType: "application/json"
@@ -339,7 +339,7 @@ describe("Parse Json format file", () => {
   
   it("Ignore empty objects when content type is not JSON",async  () => { 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/EmptyObjects.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyObjects.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 1

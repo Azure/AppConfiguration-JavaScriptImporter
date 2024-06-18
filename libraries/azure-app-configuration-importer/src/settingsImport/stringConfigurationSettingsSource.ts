@@ -11,13 +11,13 @@ import * as jsyaml from "js-yaml";
 import stripJSONComments from "strip-json-comments";
 import { getProperties  } from "properties-file";
 import { SourceOptions, StringSourceOptions } from "../importOptions";
-import { ConfigurationSettingsSource } from "./ConfigurationSettingsSource";
+import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ParseError } from "../errors";
 import { validateOptions } from "../internal/utils";
-import { ConfigurationSettingsConverter } from "../internal/parsers/ConfigurationSettingsConverter";
-import { DefaultConfigurationSettingsConverter } from "../internal/parsers/DefaultConfigurationSettingsConverter";
-import { KvSetConfigurationSettingsConverter } from "../internal/parsers/KvSetConfigurationSettingsConverter";
+import { ConfigurationSettingsConverter } from "../internal/parsers/configurationSettingsConverter";
+import { DefaultConfigurationSettingsConverter } from "../internal/parsers/defaultConfigurationSettingsConverter";
+import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetConfigurationSettingsConverter";
 
 /**
  * ConfigurationSettingsSource implementation of  string data configuration source

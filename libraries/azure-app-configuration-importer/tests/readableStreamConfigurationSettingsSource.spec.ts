@@ -4,17 +4,17 @@ import * as fs from "fs";
 import * as sinon from "sinon";
 import { AppConfigurationClient, SetConfigurationSettingResponse } from "@azure/app-configuration";
 import { ImportProgress } from "../src/models";
-import { AppConfigurationImporter } from "../src/AppConfigurationImporter";
-import { MockUpHttpHeaderLike, MockupResourceLike } from "./AppConfigurationImporter.spec";
+import { AppConfigurationImporter } from "../src/appConfigurationImporter";
+import { MockUpHttpHeaderLike, MockupResourceLike } from "./appConfigurationImporter.spec";
 import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
-import { ReadableStreamConfigurationSettingsSource } from "../src/settingsImport/ReadableStreamConfigurationSettingsSource";
+import { ReadableStreamConfigurationSettingsSource } from "../src/settingsImport/readableStreamConfigurationSettingsSource";
 import  { ReadableStreamSourceOptions } from "../src/importOptions";
 import { assertThrowAsync, listConfigurationSettings } from "./utlis";
 import { ParseError } from "../src/errors";
 
 describe("Readable stream configuration settings source tests", () => {
   it("Successfully get configuration settings from readable stream source, json file", async () => {
-    const filePath = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const filePath = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -128,7 +128,7 @@ describe("Readable stream configuration settings source tests", () => {
     AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
-    const filePath = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const filePath = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -164,7 +164,7 @@ describe("Readable stream configuration settings source tests", () => {
   });
 
   it("Successfully get configuration settings from readable stream source(Node JS), json file", async () => {
-    const filePath = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const filePath = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
 
     const readableStream = fs.createReadStream(filePath);
     

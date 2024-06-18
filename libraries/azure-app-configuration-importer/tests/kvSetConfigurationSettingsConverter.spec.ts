@@ -5,9 +5,9 @@ import * as path from "path";
 import * as sinon from "sinon";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "../src/enums";
 import { ArgumentError } from "../src/errors";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/StringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { JsonSecretReferenceValue } from "../src/models";
-import { AppConfigurationImporter } from "../src/AppConfigurationImporter";
+import { AppConfigurationImporter } from "../src/appConfigurationImporter";
 import { listConfigurationSettings, assertThrowAsync } from "./utlis";
 
 describe("Parse kvset format file", () => {

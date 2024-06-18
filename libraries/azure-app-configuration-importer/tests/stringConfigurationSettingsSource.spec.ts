@@ -3,12 +3,12 @@ import * as path from "path";
 import * as fs from "fs";
 import { ArgumentError, ParseError } from "../src/errors";
 import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/StringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { assertThrowAsync } from "./utlis";
 
 describe("String configuration source test", () => {
   it("Throw argument error when set unexpected option when the profile is kvset", async () => {
-    const simpleKeyValueFilePath: string = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const simpleKeyValueFilePath: string = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
     const options1 = {
       data: fs.readFileSync(simpleKeyValueFilePath).toString(),
       format: ConfigurationFormat.Json,
@@ -56,7 +56,7 @@ describe("String configuration source test", () => {
   });
 
   it("Throw argument error if format is not json when the profile is kvset", async () => {
-    const stringFilePath: string = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const stringFilePath: string = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
     const options = {
       data: fs.readFileSync(stringFilePath).toString(),
       format: ConfigurationFormat.Yaml,
@@ -67,7 +67,7 @@ describe("String configuration source test", () => {
   });
 
   it("Throw argument error if depth is set but separator is not", async () => {
-    const stringFilePath: string = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const stringFilePath: string = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
     const options = {
       data: fs.readFileSync(stringFilePath).toString(),
       format: ConfigurationFormat.Json,
@@ -78,7 +78,7 @@ describe("String configuration source test", () => {
   });
 
   it("Throw argument error if separator is not valid", async () => {
-    const stringFilePath: string = path.join("__dirname", "../tests/sources/SimpleKeyValue.json");
+    const stringFilePath: string = path.join("__dirname", "../tests/sources/simpleKeyValue.json");
     const options = {
       data: fs.readFileSync(stringFilePath).toString(),
       format: ConfigurationFormat.Json,
@@ -133,7 +133,7 @@ describe("String configuration source test", () => {
   });
 
   it("Throw error if format is not json when the contentType is json", async () => {
-    const jsonStringFilePath: string = path.join("__dirname", "../tests/sources/NestedDeepKeyValue.json");
+    const jsonStringFilePath: string = path.join("__dirname", "../tests/sources/nestedDeepKeyValue.json");
     const jsonString: string = fs.readFileSync(jsonStringFilePath).toString();
     const options1 = {
       data: jsonString,

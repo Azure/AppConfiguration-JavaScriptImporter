@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { ConfigurationFormat, ConfigurationProfile } from "@azure/app-configuration-importer";
-import { Tags } from "./Tags";
+import { Tags } from "./tags";
 /**
  * Base options for configuration import
  *

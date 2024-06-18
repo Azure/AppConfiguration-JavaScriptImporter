@@ -3,12 +3,12 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationFormat } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/StringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 
 describe("Parse sercret reference file", () => {
   it("Parse secret reference file, get correct configurationSettings", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/SecretReference.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/secretReference.json")).toString(),
       format: ConfigurationFormat.Json,
       contentType: secretReferenceContentType
     };

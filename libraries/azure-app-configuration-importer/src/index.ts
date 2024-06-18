@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export { AppConfigurationImporter } from "./AppConfigurationImporter";
+export { AppConfigurationImporter } from "./appConfigurationImporter";
 export {
   StringSourceOptions,
   IterableSourceOptions,
@@ -10,7 +10,7 @@ export {
 export * from "./enums";
 export * from "./errors";
 export { ImportProgress as ImportResult } from "./models";
-export { StringConfigurationSettingsSource } from "./settingsImport/StringConfigurationSettingsSource";
-export { ConfigurationSettingsSource } from "./settingsImport/ConfigurationSettingsSource";
-export { IterableConfigurationSettingsSource } from "./settingsImport/IterableConfigurationSettingsSource";
-export { ReadableStreamConfigurationSettingsSource } from "./settingsImport/ReadableStreamConfigurationSettingsSource";
+export { StringConfigurationSettingsSource } from "./settingsImport/stringConfigurationSettingsSource";
+export { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
+export { IterableConfigurationSettingsSource } from "./settingsImport/iterableConfigurationSettingsSource";
+export { ReadableStreamConfigurationSettingsSource } from "./settingsImport/readableStreamConfigurationSettingsSource";

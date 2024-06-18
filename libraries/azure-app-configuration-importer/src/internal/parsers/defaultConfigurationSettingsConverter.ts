@@ -9,7 +9,7 @@ import {
   featureFlagContentType
 } from "@azure/app-configuration";
 import { SourceOptions } from "../../importOptions";
-import { ConfigurationSettingsConverter } from "./ConfigurationSettingsConverter";
+import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
 import { Constants } from "../constants";
 import { ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";

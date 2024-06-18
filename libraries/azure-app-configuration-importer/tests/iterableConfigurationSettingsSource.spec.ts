@@ -1,11 +1,11 @@
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { AppConfigurationClient, SetConfigurationSettingResponse, featureFlagContentType } from "@azure/app-configuration";
-import { AppConfigurationImporter } from "../src/AppConfigurationImporter";
+import { AppConfigurationImporter } from "../src/appConfigurationImporter";
 import { ImportProgress } from "../src/models";
-import { MockUpHttpHeaderLike, MockupResourceLike } from "./AppConfigurationImporter.spec";
+import { MockUpHttpHeaderLike, MockupResourceLike } from "./appConfigurationImporter.spec";
 import { listConfigurationSettings, assertThrowAsync } from "./utlis";
-import { IterableConfigurationSettingsSource } from "../src/settingsImport/IterableConfigurationSettingsSource";
+import { IterableConfigurationSettingsSource } from "../src/settingsImport/iterableConfigurationSettingsSource";
 import { ArgumentError, ImportMode } from "../src";
 
 describe("Iterator configuration source test", () => {
