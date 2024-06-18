@@ -178,7 +178,7 @@ describe("Parse kvset format file", () => {
 
   it("Does not support parse kvset yaml file, throw error", async () => {
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/KvSetYaml.yaml")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvsetYaml.yaml")).toString(),
       format: ConfigurationFormat.Yaml,
       profile: ConfigurationProfile.KvSet
     };
