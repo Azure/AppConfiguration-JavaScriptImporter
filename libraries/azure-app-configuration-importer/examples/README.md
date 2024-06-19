@@ -16,7 +16,7 @@ The example are compatible with [LTS version of Node.js](https://github.com/node
 You'll need the following Azure resources to run the examples
 
 - An [Azure subscription](https://azure.microsoft.com/free/)
-- An [Azure App Configuration store](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal)
+- An [Azure App Configuration store](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal)
 
 Before running the samples in Node, they must be complied to JavaScript using the TypeScript complier. For more information on TypeScript,
 see the [TypeScript documentation]("https://www.typescriptlang.org/docs/home"). Install the TypeScript compiler using:

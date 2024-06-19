@@ -23,36 +23,36 @@ export async function main() {
 
   const client = new AppConfigurationClient(connectionString);
   const appConfigurationImporterClient = new AppConfigurationImporter(client);
-  
+
   const options: FileConfigurationSyncOptions = {
-    filePath:  path.join(__dirname, "..", "testFiles/kvset.json"),
+    filePath: path.join(__dirname, "..", "testFiles/kvset.json"),
     format: ConfigurationFormat.Json,
     profile: ConfigurationProfile.KvSet
   };
 
-  const maxTimeout = 1000;
+  const timeout = 30;
   let successCount = 0;
 
   const progressCallBack = (progressResults: ImportResult) => {
     successCount = progressResults.successCount;
   };
-    
+
   try {
     await appConfigurationImporterClient.Import(
       new FileConfigurationSettingsSource(options),
-      maxTimeout,
+      timeout,
       false,
       progressCallBack,
       ImportMode.IgnoreMatch
     );
   }
-  catch(error) {
+  catch (error) {
     console.log("Failed to import settings", error);
   }
 
   console.log(`'${successCount}' key-values were uploaded to Azure App Configuration`);
 }
 
-main().catch((error)=> {
+main().catch((error) => {
   console.log("error", error);
 });

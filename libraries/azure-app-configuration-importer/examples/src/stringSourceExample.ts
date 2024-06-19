@@ -24,9 +24,9 @@ export async function main() {
   const client = new AppConfigurationClient(connectionString);
   const appConfigurationImporterClient = new AppConfigurationImporter(client);
   const filePath = path.join(__dirname, "..", "testFiles/default.json");
-  const fileData = fs.readFileSync(filePath, {encoding: "utf-8"}).toString();
+  const fileData = fs.readFileSync(filePath, { encoding: "utf-8" }).toString();
 
-  const options: StringSourceOptions =  {
+  const options: StringSourceOptions = {
     data: fileData,
     format: ConfigurationFormat.Json,
     profile: ConfigurationProfile.Default,
@@ -35,29 +35,29 @@ export async function main() {
     label: "MyLabel"
   };
 
-  const maxTimeout = 1000;
+  const timeout = 30;
   let successCount = 0;
 
   const progressCallBack = (progressResults: ImportResult) => {
     successCount = progressResults.successCount;
   };
-    
-  try{
+
+  try {
     await appConfigurationImporterClient.Import(
       new StringConfigurationSettingsSource(options),
-      maxTimeout,
+      timeout,
       false,
       progressCallBack,
       ImportMode.IgnoreMatch
     );
   }
-  catch(error) {
+  catch (error) {
     console.log("Failed to import settings", error);
   }
 
   console.log(`'${successCount}' key-values were uploaded to Azure App Configuration`);
 }
 
-main().catch((error)=>{
+main().catch((error) => {
   console.log("error", error);
 });

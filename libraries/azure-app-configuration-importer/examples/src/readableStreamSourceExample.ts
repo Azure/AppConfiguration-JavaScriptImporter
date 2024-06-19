@@ -7,12 +7,14 @@
 import path from "path";
 import fs from "fs";
 import { AppConfigurationClient } from "@azure/app-configuration";
-import { AppConfigurationImporter, 
-  ReadableStreamConfigurationSettingsSource, 
-  ReadableStreamSourceOptions, 
-  ConfigurationFormat, ConfigurationProfile, 
-  ImportMode, 
-  ImportResult } from "@azure/app-configuration-importer";
+import {
+  AppConfigurationImporter,
+  ReadableStreamConfigurationSettingsSource,
+  ReadableStreamSourceOptions,
+  ConfigurationFormat, ConfigurationProfile,
+  ImportMode,
+  ImportResult
+} from "@azure/app-configuration-importer";
 
 // Load the .env file if it exists
 import * as dotenv from "dotenv";
@@ -26,7 +28,7 @@ export async function main() {
   if (!connectionString) {
     throw "Connection string cannot be null";
   }
-  
+
   const client = new AppConfigurationClient(connectionString);
   const appConfigurationImporterClient = new AppConfigurationImporter(client);
   const filePath = path.join(__dirname, "..", "testFiles/default.json");
@@ -34,7 +36,7 @@ export async function main() {
   const encoder = new TextEncoder();
   const readableStream = new ReadableStream<Uint8Array>({
     start(controller) {
-      fs.readFile(filePath, { encoding: "utf-8"}, (error, data) => {
+      fs.readFile(filePath, { encoding: "utf-8" }, (error, data) => {
         if (error) {
           controller.error(error);
         }
@@ -46,38 +48,38 @@ export async function main() {
     }
   });
 
-  const options: ReadableStreamSourceOptions =  {
+  const options: ReadableStreamSourceOptions = {
     data: readableStream,
     format: ConfigurationFormat.Json,
     profile: ConfigurationProfile.Default,
     label: "MyLabel",
     depth: 3,
-    separator: ":" 
+    separator: ":"
   };
 
-  const maxTimeout = 1000;
+  const timeout = 30;
   let successCount = 0;
 
   const progressCallBack = (progressResults: ImportResult) => {
     successCount = progressResults.successCount;
   };
-    
-  try{
+
+  try {
     await appConfigurationImporterClient.Import(
       new ReadableStreamConfigurationSettingsSource(options),
-      maxTimeout,
+      timeout,
       false,
       progressCallBack,
       ImportMode.IgnoreMatch
     );
   }
-  catch(error) {
+  catch (error) {
     console.log("Failed to import settings", error);
   }
 
   console.log(`'${successCount}' key-values were uploaded to Azure App Configuration`);
 }
 
-main().catch((error)=>{
+main().catch((error) => {
   console.log("error", error);
 });

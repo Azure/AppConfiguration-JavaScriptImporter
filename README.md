@@ -1,13 +1,13 @@
 # Azure App Configuration - JavaScript Importer
 
-The [Azure App Configuration](https://docs.microsoft.com/en-us/azure/azure-app-configuration/overview) Importer for JavaScript enables developers to import their configuration settings from a configuration sources to Azure App Configuration service.
+The [Azure App Configuration](https://docs.microsoft.com/azure/azure-app-configuration/overview) Importer for JavaScript enables developers to import their configuration settings from a configuration sources to Azure App Configuration service.
 
 ## Getting started
 
 ### Prerequisites
 
 - An [Azure Subscription](https://azure.microsoft.com)
-- An [App Configuration](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal) resource
+- An [App Configuration](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal) resource
 
 ### Install the package
 
@@ -24,7 +24,7 @@ npm install @azure/app-configuration-importer
    const appConfigurationImporterClient = new AppConfigurationImporter(client);
 
    // Import settings
-   const result = await asyncClient.appConfigurationImporterClient(new FileConfigurationSettingsSource({filePath:  path.join(__dirname, "..", "source/mylocalPath.json"), format: ConfigurationFormat.Json}));
+   const result = await appConfigurationImporterClient.Import(new FileConfigurationSettingsSource({filePath:  path.join(__dirname, "..", "source/mylocalPath.json"), format: ConfigurationFormat.Json}));
 ```
 
 
@@ -50,6 +50,6 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
 trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.

@@ -13,10 +13,10 @@ dotenv.config();
 
 export async function main() {
   // Set the following environment variable, set to a store you would like to import from
-  const srcConnectionString =  process.env["APPCONFIG_CONNECTION_STRING_SRC_STORE"];
+  const srcConnectionString = process.env["APPCONFIG_CONNECTION_STRING_SRC_STORE"];
 
   // Set the following environment variable, set to the store you would like to import to.
-  const targetConnectionString =  process.env["APPCONFIG_CONNECTION_STRING"];
+  const targetConnectionString = process.env["APPCONFIG_CONNECTION_STRING"];
 
   if (!srcConnectionString || !targetConnectionString) {
     throw "Connection string cannot be null";
@@ -26,25 +26,25 @@ export async function main() {
   const targetClient = new AppConfigurationClient(targetConnectionString);
 
   const appConfigurationImporterClient = new AppConfigurationImporter(targetClient);
-  
-  const options: IterableSourceOptions ={
-    data: sourceClient.listConfigurationSettings({labelFilter: "Label 1"}), // Ensure the source store has a number of key-values whose label is "Label 1"
+
+  const options: IterableSourceOptions = {
+    data: sourceClient.listConfigurationSettings({ labelFilter: "Label 1" }), // Ensure the source store has a number of key-values whose label is "Label 1"
     prefix: "test",
     label: "MyLabel",
     contentType: "text"
   };
 
-  const maxTimeout = 1000;
+  const timeout = 30;
   let successCount = 0;
 
   const progressCallBack = (progressResults: ImportResult) => {
     successCount = progressResults.successCount;
   };
-    
+
   try {
     await appConfigurationImporterClient.Import(
       new IterableConfigurationSettingsSource(options),
-      maxTimeout,
+      timeout,
       false,
       progressCallBack,
       ImportMode.IgnoreMatch
@@ -57,6 +57,6 @@ export async function main() {
   console.log(`'${successCount}' key-values were uploaded to Azure App Configuration`);
 }
 
-main().catch((error)=>{
+main().catch((error) => {
   console.log("error", error);
 });
