@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { assert, expect } from "chai";
 import * as path from "path";
 import * as fs from "fs";

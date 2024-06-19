@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { FeatureFlagValue, featureFlagContentType, secretReferenceContentType, AppConfigurationClient } from "@azure/app-configuration";
 import { assert } from "chai";
 import * as fs from "fs";

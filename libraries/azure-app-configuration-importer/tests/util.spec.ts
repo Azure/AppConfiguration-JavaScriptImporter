@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { assert } from "chai";
 import { areTagsEqual, isJsonContentType, isConfigSettingEqual } from "../src/internal/utils";
 import { ConfigurationSetting, FeatureFlagValue, SetConfigurationSettingParam } from "@azure/app-configuration";

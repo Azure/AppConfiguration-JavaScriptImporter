@@ -9,15 +9,15 @@ export default {
   output: [
     {
       file: "./dist/index.js",
-      name: "app-configuration-sync-client",
+      name: "azure-app-configuration-importer",
       format: "umd",
-      sourcemap: true,
-    },
+      sourcemap: true
+    }
   ],
   // Indicate here external modules you don't wanna include in your bundle
   external: [],
   watch: {
-    include: "src/**",
+    include: "src/**"
   },
   plugins: [
     // Allow json resolution
@@ -32,6 +32,6 @@ export default {
     resolve(),
 
     // Resolve source maps to the original source
-    sourceMaps(),
-  ],
+    sourceMaps()
+  ]
 };

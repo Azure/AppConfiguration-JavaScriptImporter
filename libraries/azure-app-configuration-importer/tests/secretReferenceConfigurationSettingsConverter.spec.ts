@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { secretReferenceContentType } from "@azure/app-configuration";
 import { assert } from "chai";
 import * as fs from "fs";

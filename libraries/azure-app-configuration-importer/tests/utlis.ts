@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { ConfigurationSetting, ListConfigurationSettingPage } from "@azure/app-configuration";
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
 import * as sinon from "sinon";

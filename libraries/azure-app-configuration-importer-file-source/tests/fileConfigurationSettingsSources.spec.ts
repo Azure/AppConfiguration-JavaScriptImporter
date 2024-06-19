@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { assert } from "chai";
 import * as path from "path";
 import { ArgumentError, ParseError, ConfigurationFormat, ConfigurationProfile, ArgumentNullError } from "@azure/app-configuration-importer";
