@@ -1,0 +1,15 @@
+{
+    "items": [
+        {
+            "key": "someKey",
+            "value": "false",
+            "label": "test",
+            "content_type": null,
+            "tags": {
+                "test": {
+                    "test1": "test1"
+                }
+            }
+        }
+    ]
+}

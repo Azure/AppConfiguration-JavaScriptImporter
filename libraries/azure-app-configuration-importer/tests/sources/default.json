@@ -1,0 +1,9 @@
+{
+    "app":{
+        "Settings":{
+            "FontSize": "45",
+            "BackgroundColor": "yellow",
+            "FontColor":"black"
+        }
+    }
+}
