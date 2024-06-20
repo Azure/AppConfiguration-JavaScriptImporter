@@ -9,21 +9,17 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x]
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
     - name: Install pnpm
       run: npm install -g pnpm
 
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version:  '18.x'
 
     - name: Rush Update
       run: node common/scripts/install-run-rush.js update
