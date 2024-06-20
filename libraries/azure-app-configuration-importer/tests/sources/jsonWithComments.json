@@ -1,0 +1,5 @@
+// This file has a comment
+{
+    /*This file has comments*/
+    "testKey1": "testValue1"
+}

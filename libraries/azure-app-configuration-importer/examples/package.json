@@ -1,0 +1,32 @@
+{
+    "name": "@azure-samples/app-configuration-importer-ts",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Azure App Configuration Importer client library samples for TypeScript",
+    "engines": {
+      "node": ">=18.0.0"
+    },
+    "scripts": {
+      "build": "npm run clean && tsc -b",
+      "clean": "rimraf dist/"
+    },
+    "keywords": [
+      "node",
+      "azure",
+      "typescript",
+      "browser",
+      "cloud"
+    ],
+    "author": "Microsoft Corporation",
+    "license": "MIT",
+    "dependencies": {
+      "dotenv": "latest",
+      "@azure/app-configuration-importer": "latest",
+      "@azure/app-configuration-importer-file-source": "latest"
+    },
+    "devDependencies": {
+      "@types/node": "^18.0.0",
+      "typescript": "~5.4.5",
+      "rimraf": "latest"
+    }
+  }

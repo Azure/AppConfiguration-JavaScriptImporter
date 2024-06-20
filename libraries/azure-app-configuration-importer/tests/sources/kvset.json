@@ -1,0 +1,28 @@
+{
+    "items": [
+      {
+        "key": ".appconfig.featureflag/Test",
+        "value": "{\"id\":\"Test\",\"description\":\"Test feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}",
+        "label": "dev",
+        "content_type": "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+        "tags": {}
+      },
+      {
+        "key": "Database:ConnectionString",
+        "value": "{\"uri\":\"https://keyvault.vault.azure.net/secrets/db-secret\"}",
+        "label": "test",
+        "content_type": "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8",
+        "tags": {}
+      },
+      {
+        "key": "TestEnv",
+        "value": "Debug",
+        "label": "dev",
+        "content_type": null,
+        "tags": {
+            "tag1": "value1",
+            "tag2": "value2"
+        }
+      }
+    ]
+  }

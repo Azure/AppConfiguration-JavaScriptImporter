@@ -1,0 +1,5 @@
+{
+    "testKey1":"testValue1",
+    "testKey2":"https://test.domain.com/user?name=Alice&age=18",
+    "testKey3":30
+}

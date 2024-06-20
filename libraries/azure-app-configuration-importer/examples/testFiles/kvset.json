@@ -1,0 +1,35 @@
+{
+    "items": [
+      {
+        "key": ".appconfig.featureflag/Beta",
+        "value": "{\"id\":\"Beta\",\"description\":\"Beta feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}",
+        "label": "MyLabel",
+        "content_type": "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+        "tags": {}
+      },
+      {
+        "key": "test:app:Database:ConnectionString",
+        "value": "{\"uri\":\"https://keyvault.vault.azure.net/secrets/db-secret\"}",
+        "label": "MyLabel",
+        "content_type": "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8",
+        "tags": {}
+      },
+      {
+        "key": "test:app:Env",
+        "value": "Debug",
+        "label": "MyLabel",
+        "content_type": null,
+        "tags": {
+            "tag1": "value1",
+            "tag2": "value2"
+        }
+      },
+      {
+        "key": "test:app:BackgroundColor",
+        "value": "yellow",
+        "label": "MyLabel",
+        "content_type": null,
+        "tags": {}
+      }
+    ]
+  }

@@ -1,14 +1,36 @@
-# Project
+# Azure App Configuration - JavaScript Importer
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+The [Azure App Configuration](https://docs.microsoft.com/azure/azure-app-configuration/overview) Importer for JavaScript enables developers to import their configuration settings from a configuration sources to Azure App Configuration service.
 
-As the maintainer of this project, please make a few updates:
+## Getting started
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+### Prerequisites
+
+- An [Azure Subscription](https://azure.microsoft.com)
+- An [App Configuration](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal) resource
+
+### Install the package
+
+```bash
+npm install @azure/app-configuration-importer
+```
+
+### Use the API
+
+```ts
+   import { AppConfigurationImporter } from "@azure/app-configuration-importer";
+
+   const client = new AppConfigurationClient("<app-configuration-connection-string>");
+   const appConfigurationImporterClient = new AppConfigurationImporter(client);
+
+   // Import settings
+   const result = await appConfigurationImporterClient.Import(new FileConfigurationSettingsSource({filePath:  path.join(__dirname, "..", "source/mylocalPath.json"), format: ConfigurationFormat.Json}));
+```
+
+
+## Examples
+
+See code snippets under [examples/](./libraries/azure-app-configuration-importer/examples/) folder.
 
 ## Contributing
 
@@ -28,6 +50,6 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
 trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
