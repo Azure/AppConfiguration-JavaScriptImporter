@@ -21,8 +21,7 @@
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha -r ts-node/register 'tests/**/*.ts'",
     "check-format": "eslint src tests",
     "format": "eslint src tests --fix",
-    "clean": "rimraf dist dist-* types *.tgz *.log",
-    "prepare": "npm run build"
+    "clean": "rimraf dist dist-* types *.tgz *.log"
   },
   "dependencies": {
     "@azure/app-configuration": "1.5.0",
