@@ -13,6 +13,9 @@ import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
 import { ImportProgress, KeyLabelLookup } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
+import { v4 as uuidv4 } from "uuid";
+import { Constants } from "./internal/constants";
+import { OperationOptions } from "@azure/core-client";
 
 /**
  * Entrypoint class for sync configuration
@@ -48,7 +51,8 @@ export class AppConfigurationImporter {
     strict = false,
     progressCallback?: (progress: ImportProgress) => unknown,
     importMode?: ImportMode,
-    dryRun?: boolean
+    dryRun?: boolean,
+    correlationRequestId?: string
   ) {
     if (importMode == undefined) {
       importMode = ImportMode.IgnoreMatch;
@@ -69,9 +73,19 @@ export class AppConfigurationImporter {
       }
       srcKeyLabelLookUp[config.key][config.label || ""] = true;
     });
-    
+
+    // generate correlationRequestId for operations in the same activity
+    const customCorrelationRequestId: string = correlationRequestId || uuidv4();
+    const correlationRequestIdHeader: OperationOptions = {
+      requestOptions: {
+        customHeaders: {
+          [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
+        }
+      }
+    };
+
     if (strict || importMode == ImportMode.IgnoreMatch) {
-      for await (const existing of this.configurationClient.listConfigurationSettings(configSettingsSource.FilterOptions)) {
+      for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...correlationRequestIdHeader})) {
 
         const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
         
@@ -94,7 +108,7 @@ export class AppConfigurationImporter {
       this.printUpdatesToConsole(configSettings, configurationSettingToDelete);
     }
     else {
-      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, progressCallback);
+      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, progressCallback, correlationRequestIdHeader);
     }
   }
 
@@ -119,16 +133,17 @@ export class AppConfigurationImporter {
     settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
     settingsToDelete: ConfigurationSetting<string>[],
     timeout: number,
-    progressCallback?: (progress: ImportProgress) => unknown | undefined
+    progressCallback?: (progress: ImportProgress) => unknown | undefined,
+    correlationRequestIdHeader?: OperationOptions
   ): Promise<void> {
-    const deleteTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting), settingsToDelete);
+    const deleteTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting, correlationRequestIdHeader), settingsToDelete);
     const startTime = Date.now();
     await this.executeTasksWithTimeout(deleteTaskManager, timeout);
     const endTime = Date.now();
     const deleteTimeConsumed = (endTime - startTime) / 1000;
     timeout -= deleteTimeConsumed;
 
-    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting), settingsToAdd);
+    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, correlationRequestIdHeader), settingsToAdd);
     await this.executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
   }
 
