@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@azure/app-configuration": "1.5.0",
+    "@azure/core-client": "^1.9.2",
     "@azure/core-paging": "^1.4.0",
     "@azure/core-rest-pipeline": "^1.6.0",
     "flat": "^5.0.2",
