@@ -111,7 +111,8 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       }
 
       // Ignore key-value with empty array/object value when content-type is not json, instead of pushing a kv with an empty array/obj
-      if (!isJsonType && typeof flatted[element] === "object" && Object.keys(flatted[element]).length == 0 ) {
+      // For null value it will be treated as "null" string.
+      if (!isJsonType && flatted[element] && typeof flatted[element] === "object" && Object.keys(flatted[element]).length == 0 ) {
         continue;
       }
 

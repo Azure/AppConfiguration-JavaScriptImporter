@@ -166,6 +166,21 @@ describe("File configuration source test", () => {
     assert.equal(configurationSettings[0].value, "testValue1");
   });
 
+  it("Handle null value present in json file", async () => {
+    const options = {
+      filePath: path.join("__dirname", "../tests/sources/emptyValue.json"),
+      format: ConfigurationFormat.Json,
+      separator: ":",
+      depth: 3
+    };
+
+    const fileConfigurationSource = new FileConfigurationSettingsSource(options);
+    const configurationSettings = await fileConfigurationSource.GetConfigurationSettings();
+    assert.equal(configurationSettings.length, 2);
+    assert.equal(configurationSettings[0].key, "app:testKey1");
+    assert.equal(configurationSettings[0].value, "null");
+  });
+
 });
 
 async function assertThrowAsync(asyncFunction:() => any, error: any): Promise<void> {

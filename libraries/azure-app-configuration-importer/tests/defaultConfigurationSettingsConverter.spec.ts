@@ -355,4 +355,53 @@ describe("Parse Json format file", () => {
     assert.equal(configurationSettings[0].key, "testKey3");
     assert.equal(configurationSettings[0].value, "{\"testSubKey3\":\"testValue3\"}");
   });
+
+  it("Handle null value present in json configuration file",async  () => { 
+    const options = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyValue.json")).toString(),
+      format: ConfigurationFormat.Json,
+      separator: ":",
+      depth: 3
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 2);
+    assert.equal(configurationSettings[0].key, "app:testKey1");
+    assert.equal(configurationSettings[0].value, "null");
+  });
+
+  it("Handle null value present in json configuration file, with json content type",async  () => { 
+    const options = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyValue.json")).toString(),
+      format: ConfigurationFormat.Json,
+      separator: ":",
+      depth: 3,
+      contentType: "application/json"
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 2);
+    assert.equal(configurationSettings[0].key, "app:testKey1");
+    assert.equal(configurationSettings[0].value, "null");
+  });
+
+  it("Handle null value present in yaml configuration file",async  () => { 
+    const options = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyValue.yaml")).toString(),
+      format: ConfigurationFormat.Yaml,
+      separator: ":",
+      depth: 3
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 2);
+    assert.equal(configurationSettings[0].key, "app:testKey1");
+    assert.equal(configurationSettings[0].value, "null");
+  });
 });
