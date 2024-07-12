@@ -358,7 +358,7 @@ describe("Parse Json format file", () => {
 
   it("Handle null value present in json configuration file",async  () => { 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/EmptyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 3
@@ -374,7 +374,7 @@ describe("Parse Json format file", () => {
 
   it("Handle null value present in json configuration file, with json content type",async  () => { 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/EmptyValue.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyValue.json")).toString(),
       format: ConfigurationFormat.Json,
       separator: ":",
       depth: 3,
@@ -391,7 +391,7 @@ describe("Parse Json format file", () => {
 
   it("Handle null value present in yaml configuration file",async  () => { 
     const options = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/EmptyValue.yaml")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/emptyValue.yaml")).toString(),
       format: ConfigurationFormat.Yaml,
       separator: ":",
       depth: 3
