@@ -108,7 +108,7 @@ export class AppConfigurationImporter {
       this.printUpdatesToConsole(configSettings, configurationSettingToDelete);
     }
     else {
-      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, progressCallback, correlationRequestIdHeader);
+      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, correlationRequestIdHeader, progressCallback);
     }
   }
 
@@ -133,8 +133,8 @@ export class AppConfigurationImporter {
     settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
     settingsToDelete: ConfigurationSetting<string>[],
     timeout: number,
-    progressCallback?: (progress: ImportProgress) => unknown | undefined,
-    correlationRequestIdHeader?: OperationOptions
+    correlationRequestIdHeader: OperationOptions,
+    progressCallback?: (progress: ImportProgress) => unknown | undefined
   ): Promise<void> {
     const deleteTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting, correlationRequestIdHeader), settingsToDelete);
     const startTime = Date.now();
