@@ -1,36 +1,10 @@
 # Azure App Configuration - JavaScript Importer
 
-The [Azure App Configuration](https://docs.microsoft.com/azure/azure-app-configuration/overview) Importer for JavaScript enables developers to import their configuration settings from a configuration sources to Azure App Configuration service.
+This repository is for the [Azure App Configuration](https://docs.microsoft.com/azure/azure-app-configuration/overview) Importer for JavaScript (Node.js & Browser). It contains libraries that enable developers to import their configuration settings from a configuration source to Azure App Configuration service.
 
 ## Getting started
 
-### Prerequisites
-
-- An [Azure Subscription](https://azure.microsoft.com)
-- An [App Configuration](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal) resource
-
-### Install the package
-
-```bash
-npm install @azure/app-configuration-importer
-```
-
-### Use the API
-
-```ts
-   import { AppConfigurationImporter } from "@azure/app-configuration-importer";
-
-   const client = new AppConfigurationClient("<app-configuration-connection-string>");
-   const appConfigurationImporterClient = new AppConfigurationImporter(client);
-
-   // Import settings
-   const result = await appConfigurationImporterClient.Import(new FileConfigurationSettingsSource({filePath:  path.join(__dirname, "..", "source/mylocalPath.json"), format: ConfigurationFormat.Json}));
-```
-
-
-## Examples
-
-See code snippets under [examples/](./libraries/azure-app-configuration-importer/examples/) folder.
+The readme for each package contains code samples and package information. This readme is located in its respective folder within `/libraries` directory. The same readme file can be found on the landing page for the package in [npm](https://www.npmjs.com/).
 
 ## Contributing
 

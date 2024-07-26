@@ -1,16 +1,15 @@
-# Examples for Azure App Configuration Importer
+# Examples for Azure App Configuration Importer File Source
 
-These examples show how to use the App Configuration Importer in some common scenarios
+These examples show how to use the App Configuration Importer File Source in some common scenarios
 
-| File Name                                                                          | Description                                                                  |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [iterableSourceExample.ts](./src/iterableSourceExample.ts)                         |  Demonstrates importing configuration settings from an Iterable source       |
-| [stringSourceExample.ts](./src/stringSourceExample.ts)                             |  Demonstrates importing configuration settings from a String source          |
-| [readableStreamSourceExample](./src/readableStreamSourceExample.ts)                |  Demonstrates importing configuration settings from a ReadableStream source  |
+| File Name                                                                    | Description                                                                                          |
+| -----------------------------------------------------------------------------| ---------------------------------------------------------------------------------------------------- |
+| [fileSourceExampleWithDefault.ts](./src/fileSourceExampleWithDefault.ts)     |  Demonstrates importing configuration settings from a file source with default file content profile  |
+| [fileSourceExampleWithKVSet.ts](./src/fileSourceExampleWithKVSet.ts)         |  Demonstrates importing configuration settings from a file source with KVSet file content profile    |
 
 ## Prerequisites
 
-The example are compatible with [LTS version of Node.js](https://github.com/nodejs/release#release-schedule)
+The examples are compatible with [LTS version of Node.js](https://github.com/nodejs/release#release-schedule).
 
 You'll need the following Azure resources to run the examples
 
@@ -52,7 +51,7 @@ To run the examples using the published version of the package:
 4. Run whichever example you like 
 
     ```bash
-        node dist\stringSourceExample.js
+        node dist\fileSourceExampleWithDefault.js
     ```
 
 5. Clean up any configuration settings that may have been imported to your store if you don't plan on using them.

@@ -1,8 +1,8 @@
 {
-    "name": "@azure-samples/app-configuration-importer-ts",
+    "name": "@azure-samples/app-configuration-importer-file-source-ts",
     "private": true,
     "version": "1.0.0",
-    "description": "Azure App Configuration Importer client library samples for TypeScript",
+    "description": "Azure App Configuration Importer File Source client library samples for TypeScript",
     "engines": {
       "node": ">=18.0.0"
     },
@@ -21,7 +21,7 @@
     "license": "MIT",
     "dependencies": {
       "dotenv": "latest",
-      "@azure/app-configuration-importer": "latest"
+      "@azure/app-configuration-importer-file-source": "latest"
     },
     "devDependencies": {
       "@types/node": "^18.0.0",
