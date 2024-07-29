@@ -17,7 +17,7 @@ Key links:
 ### Prerequisites
 
 - An [Azure Subscription](https://azure.microsoft.com)
-- An [App Configuration](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal) resource
+- An [App Configuration store](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-azure-app-configuration-create?tabs=azure-portal) resource
 
 ### Install the package
 

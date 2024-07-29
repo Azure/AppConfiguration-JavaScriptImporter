@@ -4,7 +4,7 @@ This repository is for the [Azure App Configuration](https://docs.microsoft.com/
 
 ## Getting started
 
-The readme for each package contains code samples and package information. This readme is located in its respective folder within `/libraries` directory. The same readme file can be found on the landing page for the package in [npm](https://www.npmjs.com/).
+The readme for each package contains code samples and package information. Each readme is located in its respective folder within `/libraries` directory. The same readme file can be found on the landing page for the package in [npm](https://www.npmjs.com/).
 
 ## Contributing
 

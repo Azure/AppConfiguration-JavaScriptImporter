@@ -22,10 +22,16 @@ export async function main() {
   const client = new AppConfigurationClient(connectionString);
   const appConfigurationImporterClient = new AppConfigurationImporter(client);
 
-  const data = "{\"app\":{\"Settings\":{\"FontSize\":\"45\",\"BackgroundColor\":\"yellow\",\"FontColor\":\"black\"}}}";
+  const configData = {
+    app: {
+      Settings: {
+        FontSize: "45"
+      }
+    }
+  };
 
   const options: StringSourceOptions = {
-    data: data,
+    data: JSON.stringify(configData),
     format: ConfigurationFormat.Json,
     profile: ConfigurationProfile.Default,
     separator: ":",
