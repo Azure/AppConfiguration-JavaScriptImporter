@@ -23,15 +23,15 @@ export async function main() {
   const appConfigurationImporterClient = new AppConfigurationImporter(client);
 
   const configData = {
-    App: {
-      Settings: {
-        FontSize: "45"
+    app: {
+      settings: {
+        fontSize: "45"
       }
     }
   };
   
   //
-  // Imported as TestApp:Settings:FontSize with separator as ":" and with the label "MyLabel"
+  // Imported as Testapp:settings:fontSize with separator as ":" and with the label "MyLabel"
   const options: StringSourceOptions = {
     data: JSON.stringify(configData),
     format: ConfigurationFormat.Json,

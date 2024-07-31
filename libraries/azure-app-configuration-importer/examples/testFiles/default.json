@@ -1,9 +1,9 @@
 {
-    "App":{
-        "Settings":{
-            "FontSize": "45",
-            "BackgroundColor": "yellow",
-            "FontColor":"black"
+    "app":{
+        "settings":{
+            "fontSize": "45",
+            "backgroundColor": "yellow",
+            "fontColor":"black"
         }
     },
     "FeatureManagement": {
