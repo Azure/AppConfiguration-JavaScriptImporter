@@ -75,7 +75,7 @@ export class AppConfigurationImporter {
 
     // generate correlationRequestId for operations in the same activity
     const customCorrelationRequestId: string = uuidv4();
-    const correlationRequestIdHeader: OperationOptions = {
+    const customHeadersOption: OperationOptions = {
       requestOptions: {
         customHeaders: {
           [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
@@ -84,7 +84,7 @@ export class AppConfigurationImporter {
     };
 
     if (strict || importMode == ImportMode.IgnoreMatch) {
-      for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...correlationRequestIdHeader})) {
+      for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
 
         const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
         
@@ -107,7 +107,7 @@ export class AppConfigurationImporter {
       this.printUpdatesToConsole(configSettings, configurationSettingToDelete);
     }
     else {
-      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, correlationRequestIdHeader, progressCallback);
+      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, customHeadersOption, progressCallback);
     }
   }
 
@@ -132,17 +132,17 @@ export class AppConfigurationImporter {
     settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
     settingsToDelete: ConfigurationSetting<string>[],
     timeout: number,
-    correlationRequestIdHeader: OperationOptions,
+    options: OperationOptions,
     progressCallback?: (progress: ImportProgress) => unknown | undefined
   ): Promise<void> {
-    const deleteTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting, correlationRequestIdHeader), settingsToDelete);
+    const deleteTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting, options), settingsToDelete);
     const startTime = Date.now();
     await this.executeTasksWithTimeout(deleteTaskManager, timeout);
     const endTime = Date.now();
     const deleteTimeConsumed = (endTime - startTime) / 1000;
     timeout -= deleteTimeConsumed;
 
-    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, correlationRequestIdHeader), settingsToAdd);
+    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToAdd);
     await this.executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
   }
 
