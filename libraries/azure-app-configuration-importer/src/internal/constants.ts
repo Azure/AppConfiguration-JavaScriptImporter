@@ -24,5 +24,6 @@ export const Constants = {
     "__",
     "/",
     ":"
-  ]
+  ],
+  CorrelationRequestIdHeader: "x-ms-correlation-request-id"
 };
