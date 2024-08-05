@@ -51,8 +51,7 @@ export class AppConfigurationImporter {
     strict = false,
     progressCallback?: (progress: ImportProgress) => unknown,
     importMode?: ImportMode,
-    dryRun?: boolean,
-    correlationRequestId?: string
+    dryRun?: boolean
   ) {
     if (importMode == undefined) {
       importMode = ImportMode.IgnoreMatch;
@@ -75,7 +74,7 @@ export class AppConfigurationImporter {
     });
 
     // generate correlationRequestId for operations in the same activity
-    const customCorrelationRequestId: string = correlationRequestId || uuidv4();
+    const customCorrelationRequestId: string = uuidv4();
     const correlationRequestIdHeader: OperationOptions = {
       requestOptions: {
         customHeaders: {
