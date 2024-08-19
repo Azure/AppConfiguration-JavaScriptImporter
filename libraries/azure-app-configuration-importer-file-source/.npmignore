@@ -11,4 +11,4 @@ tsconfig.json
 tsdoc.json
 tsconfig.test.json
 rollup.config.js
-owners.txt
+app-configuration-importer-file-source.test.log

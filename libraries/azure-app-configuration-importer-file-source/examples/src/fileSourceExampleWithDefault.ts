@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 /**
- * @summary Demonstrates importing configurations from a String source
+ * @summary Demonstrates importing configurations from a File source
 */
+import path from "path";
 import { AppConfigurationClient } from "@azure/app-configuration";
-import { AppConfigurationImporter, StringConfigurationSettingsSource, StringSourceOptions, ConfigurationFormat, ConfigurationProfile, ImportMode, ImportResult } from "@azure/app-configuration-importer";
+import { AppConfigurationImporter, ConfigurationFormat, ConfigurationProfile, ImportMode, ImportResult } from "@azure/app-configuration-importer";
+import { FileConfigurationSettingsSource, FileConfigurationSyncOptions } from "@azure/app-configuration-importer-file-source";
 
 // Load the .env file if it exists
 import * as dotenv from "dotenv";
@@ -22,23 +24,10 @@ export async function main() {
   const client = new AppConfigurationClient(connectionString);
   const appConfigurationImporterClient = new AppConfigurationImporter(client);
 
-  const configData = {
-    app: {
-      settings: {
-        fontSize: "45"
-      }
-    }
-  };
-  
-  //
-  // Imported as Testapp:settings:fontSize with separator as ":" and with the label "MyLabel"
-  const options: StringSourceOptions = {
-    data: JSON.stringify(configData),
+  const options: FileConfigurationSyncOptions = {
+    filePath: path.join(__dirname, "..", "testFiles/default.json"),
     format: ConfigurationFormat.Json,
-    profile: ConfigurationProfile.Default,
-    separator: ":",
-    prefix: "Test",
-    label: "MyLabel"
+    profile: ConfigurationProfile.Default
   };
 
   const timeout = 30;
@@ -50,7 +39,7 @@ export async function main() {
 
   try {
     await appConfigurationImporterClient.Import(
-      new StringConfigurationSettingsSource(options),
+      new FileConfigurationSettingsSource(options),
       timeout,
       false,
       progressCallBack,
