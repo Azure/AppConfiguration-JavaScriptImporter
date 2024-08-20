@@ -12,10 +12,19 @@
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist-esm/src/index.js",
-  "browser": {
-    "./dist-esm/src/internal/stream.js": "./dist-esm/src/internal/stream.browser.js"
-  },
+  "browser": "./dist-esm/src/internal/stream.browser.js",
   "types": "./types/azure-app-configuration-importer.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist-esm/src/**/*.js",
+    "dist-esm/src/**/*.js.map",
+    "types/src/**/*d.ts",
+    "types/src/**/*d.ts.map",
+    "types/azure-app-configuration-importer.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "npm run clean && tsc -p . && rollup -c && api-extractor run --local",
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha -r ts-node/register 'tests/**/*.ts'",
