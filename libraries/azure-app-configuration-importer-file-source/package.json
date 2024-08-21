@@ -20,7 +20,7 @@
     "dist-esm/src/**/*.js.map",
     "types/src/**/*d.ts",
     "types/src/**/*d.ts.map",
-    "types/azure-app-configuration-importer.d.ts",
+    "types/azure-app-configuration-importer-file-source.d.ts",
     "README.md",
     "LICENSE"
   ],
