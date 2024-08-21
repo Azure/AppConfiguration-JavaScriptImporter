@@ -12,7 +12,9 @@
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist-esm/src/index.js",
-  "browser": "./dist-esm/src/internal/stream.browser.js",
+  "browser": {
+    "./dist-esm/src/internal/stream.js": "./dist-esm/src/internal/stream.browser.js"
+  },
   "types": "./types/azure-app-configuration-importer.d.ts",
   "files": [
     "dist/**/*.js",
