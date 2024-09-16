@@ -13,9 +13,19 @@ echo $PROJECT_BASE_DIR
 # Change to the project directory.
 cd $PROJECT_BASE_DIR
 
+cd libraries/azure-app-configuration-importer
+
 #Install dependencies, build, and test.
 echo "install pnpm"
-npm install -g pnpm --verbose
+npm install pnpm --verbose
+
+cd libraries/azure-app-configuration-importer-file-source
+
+#Install dependencies, build, and test.
+echo "install pnpm"
+npm install pnpm --verbose
+
+cd $PROJECT_BASE_DIR
 
 echo "rush update"
 node common/scripts/install-run-rush.js update
