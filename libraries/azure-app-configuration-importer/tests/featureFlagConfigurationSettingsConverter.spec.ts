@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import {
-  FeatureFlagValue,
   featureFlagContentType,
   featureFlagPrefix
 } from "@azure/app-configuration";
@@ -14,6 +13,7 @@ import { ArgumentError } from "../src/errors";
 import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { StringSourceOptions } from "../src/importOptions";
 import { assertThrowAsync } from "./utlis";
+import { FeatureFlagValue } from "../src/featureFlag";
 
 describe("Parse FeatureFlag Json format file", () => {
   it("Invalid FeatureFlag json format, no filter name", async () => {
@@ -328,5 +328,122 @@ describe("Parse FeatureFlag Json format file", () => {
       "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"end\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.isTrue(featureFlag3.enabled);
+  });
+
+  it("Parse feature flag ffv2 schema json file", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsFfv2.json")).toString(),
+      format: ConfigurationFormat.Json
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 3);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}Variant_Override_True`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = configurationSettings[0].value as FeatureFlagValue;
+    assert.equal(featureFlag1.id, "Variant_Override_True");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.allocation), "{\"default_when_enabled\":\"True_Override\"}");
+    assert.equal(JSON.stringify(featureFlag1.variants),
+      "[{\"name\":\"True_Override\",\"status_override\":\"Disabled\",\"configuration_value\":\"default\"}]");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}Variant_Override_False`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = configurationSettings[1].value as FeatureFlagValue;
+    assert.equal(featureFlag2.id, "Variant_Override_False");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.allocation), "{\"default_when_disabled\":\"False_Override\"}");
+    assert.equal(JSON.stringify(featureFlag2.variants),
+      "[{\"name\":\"False_Override\",\"status_override\":\"Enabled\",\"configuration_value\":\"default\"}]");
+    assert.isTrue(featureFlag1.enabled);
+    assert.isFalse(featureFlag2.enabled);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}TestVariants`);
+    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
+    const featureFlag3 = configurationSettings[2].value as FeatureFlagValue;
+    assert.equal(featureFlag3.id, "TestVariants");
+    assert.equal(
+      JSON.stringify(featureFlag3.conditions),
+      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+    );
+    assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
+    assert.equal(JSON.stringify(featureFlag3.variants),
+      "[{\"name\":\"Alpha\",\"configuration_value\":\"The Variant Alpha.\"},{\"name\":\"Beta\",\"configuration_value\":\"The Variant Beta.\"}]");
+    assert.isTrue(featureFlag3.enabled);
+  });
+
+  it("Parse feature flag ffv2 schema yaml file", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsFfv2.yaml")).toString(),
+      format: ConfigurationFormat.Yaml
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 3);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}Variant_Override_True`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = configurationSettings[0].value as FeatureFlagValue;
+    assert.equal(featureFlag1.id, "Variant_Override_True");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.allocation), "{\"default_when_enabled\":\"True_Override\"}");
+    assert.equal(JSON.stringify(featureFlag1.variants),
+      "[{\"name\":\"True_Override\",\"status_override\":\"Disabled\",\"configuration_value\":\"default\"}]");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}Variant_Override_False`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = configurationSettings[1].value as FeatureFlagValue;
+    assert.equal(featureFlag2.id, "Variant_Override_False");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.allocation), "{\"default_when_disabled\":\"False_Override\"}");
+    assert.equal(JSON.stringify(featureFlag2.variants),
+      "[{\"name\":\"False_Override\",\"status_override\":\"Enabled\",\"configuration_value\":\"default\"}]");
+    assert.isTrue(featureFlag1.enabled);
+    assert.isFalse(featureFlag2.enabled);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}TestVariants`);
+    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
+    const featureFlag3 = configurationSettings[2].value as FeatureFlagValue;
+    assert.equal(featureFlag3.id, "TestVariants");
+    assert.equal(
+      JSON.stringify(featureFlag3.conditions),
+      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+    );
+    assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
+    assert.equal(JSON.stringify(featureFlag3.variants),
+      "[{\"name\":\"Alpha\",\"configuration_value\":\"The Variant Alpha.\"},{\"name\":\"Beta\",\"configuration_value\":\"The Variant Beta.\"}]");
+    assert.isTrue(featureFlag3.enabled);
+  });
+
+  it("Invalid FeatureFlag json format, no variant name", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidVariant.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+
+    assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Invalid FeatureFlag ffv2 schema json format", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidFFv2Format.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+
+    assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Invalid FeatureFlag json format, no allocation user variant", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidAllocation.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+
+    assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 });

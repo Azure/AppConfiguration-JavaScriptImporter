@@ -15,6 +15,12 @@ export const Constants = {
     "enabled_for",
     "enabled-for"
   ],
+  FeatureFlagsKeyWords: [
+    "FeatureFlags",
+    "featureFlags",
+    "feature_flags",
+    "feature-flags"
+  ],
   Separators: [
     ".",
     ",",
