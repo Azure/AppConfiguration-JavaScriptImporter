@@ -93,7 +93,7 @@ const CAMEL: FeatureFlagKeywords = {
   default_when_disabled: "defaultwhenDisabled",
   default_when_enabled: "defaultWhenEnabled",
   status_override: "statusOverride",
-  client_filters: "slientFilters",
+  client_filters: "clientFilters",
   display_name: "displayName",
   configuration_value: "configurationValue"
 };
