@@ -9,7 +9,6 @@ import {
 } from "@azure/app-configuration";
 import { SourceOptions } from "../../importOptions";
 import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
-import { Constants } from "../constants";
 import { ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";
 import * as flat from "flat";
@@ -202,6 +201,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
             `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
           );
         }
+
         const prefix: string = options.prefix ?? "";
         settings.push({
           key: featureFlagPrefix + prefix + featureFlag,
@@ -260,7 +260,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       }
 
       const requirement_type = featureData[this.featureFlagsKeyWordsCase.requirement_type];
-      if(featureData[this.featureFlagsKeyWordsCase.requirement_type]) {
+      if(requirement_type) {
         if (this.validateRequirementType(requirement_type, featureFlagName)) {
           featureFlagValue.conditions.requirement_type = requirement_type;
         }
@@ -350,7 +350,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
         for (const percentile of percentileAllocation) {
           if (!this.isValidPercentileAllocation(percentile)) {
             throw new ArgumentError(
-              `This feature flag '${featureFlag.id}' has a percentile allocation object without the required 'from', 'to'and 'variant' properties.`
+              `This feature flag '${featureFlag.id}' has a percentile allocation object without the required 'from', 'to' and 'variant' properties.`
             );
           }
           featureFlagValue.allocation.percentile.push(percentile);
@@ -376,11 +376,10 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       }
     }
 
-    console.log(featureFlagValue);
     return featureFlagValue;
   }
 
-  private isValidUserAllocation(user: any): user is User {
+  private isValidUserAllocation(user: object): user is User {
     const lowerCaseUser = this.getLowerCaseProperties(user);
     return (
       typeof lowerCaseUser === "object" &&
@@ -390,7 +389,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     );
   }
 
-  private isValidGroupAllocation(group: any): group is Group {
+  private isValidGroupAllocation(group: object): group is Group {
     const lowerCaseGroup = this.getLowerCaseProperties(group);
     return (
       typeof lowerCaseGroup === "object" &&
@@ -400,7 +399,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     );
   }
 
-  private isValidPercentileAllocation(percentile: any): percentile is Percentile {
+  private isValidPercentileAllocation(percentile: object): percentile is Percentile {
     const lowerCasePercentile = this.getLowerCaseProperties(percentile);
     return (
       typeof lowerCasePercentile === "object" &&
@@ -412,18 +411,11 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   }
 
   private isValidVariant(variant: any): variant is Variant {
-    const configuration_value: string = variant[this.featureFlagsKeyWordsCase.configuration_value];
     const status_override = variant[this.featureFlagsKeyWordsCase.status_override];
     return (
       typeof variant === "object" &&
       variant !== null &&
       typeof variant.name === "string" &&
-      (configuration_value === undefined ||
-        typeof configuration_value=== "string" ||
-        typeof configuration_value === "number" ||
-        typeof configuration_value === "boolean" ||
-        Array.isArray(configuration_value) ||
-        typeof configuration_value === "object") &&
       (status_override === undefined ||
         Object.values(StatusOverride).includes(status_override))
     );
@@ -499,7 +491,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   private validateRequirementType(requirement_type: any, featureFlagName: string) {
     if(!Object.values(RequirementType).includes(requirement_type)){
       throw new ArgumentError(
-        `This feature flag '${featureFlagName}' has a user allocation object without the required 'variant' and 'users' properties.`
+        `This feature flag '${featureFlagName}' must have any/all requirement type.`
       );
     }
 
