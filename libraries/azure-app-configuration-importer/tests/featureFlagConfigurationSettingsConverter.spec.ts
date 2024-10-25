@@ -65,32 +65,33 @@ describe("Parse FeatureFlag Json format file", () => {
       "{\"Settings\":{\"BackgroundColor\":\"Yellow\",\"FontSize\":\"45\",\"Fruit\":\"Banana\",\"Color\":\"Orange\",\"FontColor\":\"Black\"}}"
     );
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}${options.prefix}FeatureT`);
-    const featureFlag1 = configurationSettings[1].value as FeatureFlagValue;
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
+    console.log(configurationSettings);
     assert.equal(featureFlag1.id, "FeatureT");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}${options.prefix}FeatureU`);
-    const featureFlag2 = configurationSettings[2].value as FeatureFlagValue;
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureU");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[3].key, `${featureFlagPrefix}${options.prefix}FeatureV`);
-    const featureFlag3 = configurationSettings[3].value as FeatureFlagValue;
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[3].value))) as FeatureFlagValue;
     assert.equal(featureFlag3.id, "FeatureV");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.isTrue(featureFlag3.enabled);
     assert.equal(configurationSettings[4].key, `${featureFlagPrefix}${options.prefix}FeatureX`);
-    const featureFlag4 = configurationSettings[4].value as FeatureFlagValue;
+    const featureFlag4 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[4].value))) as FeatureFlagValue;
     assert.equal(featureFlag4.id, "FeatureX");
-    assert.equal(JSON.stringify(featureFlag4.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag4.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag4.enabled);
     assert.equal(configurationSettings[5].key, `${featureFlagPrefix}${options.prefix}FeatureY`);
-    const featureFlag5 = configurationSettings[5].value as FeatureFlagValue;
+    const featureFlag5 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[5].value))) as FeatureFlagValue;
     assert.equal(featureFlag5.id, "FeatureY");
-    assert.equal(JSON.stringify(featureFlag5.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag5.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag5.enabled);
   });
 
@@ -127,32 +128,32 @@ describe("Parse FeatureFlag Json format file", () => {
       "{\"Settings\":{\"BackgroundColor\":\"Yellow\",\"FontSize\":\"45\",\"Fruit\":\"Banana\",\"Color\":\"Orange\",\"FontColor\":\"Black\"}}"
     );
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureT`);
-    const featureFlag1 = configurationSettings[1].value as FeatureFlagValue;
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
     assert.equal(featureFlag1.id, "FeatureT");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureU`);
-    const featureFlag2 = configurationSettings[2].value as FeatureFlagValue;
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureU");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[3].key, `${featureFlagPrefix}FeatureV`);
-    const featureFlag3 = configurationSettings[3].value as FeatureFlagValue;
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[3].value))) as FeatureFlagValue;
     assert.equal(featureFlag3.id, "FeatureV");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.isTrue(featureFlag3.enabled);
     assert.equal(configurationSettings[4].key, `${featureFlagPrefix}FeatureX`);
-    const featureFlag4 = configurationSettings[4].value as FeatureFlagValue;
+    const featureFlag4 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[4].value))) as FeatureFlagValue;
     assert.equal(featureFlag4.id, "FeatureX");
-    assert.equal(JSON.stringify(featureFlag4.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag4.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag4.enabled);
     assert.equal(configurationSettings[5].key, `${featureFlagPrefix}FeatureY`);
-    const featureFlag5 = configurationSettings[5].value as FeatureFlagValue;
+    const featureFlag5 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[5].value))) as FeatureFlagValue;
     assert.equal(featureFlag5.id, "FeatureY");
-    assert.equal(JSON.stringify(featureFlag5.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag5.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag5.enabled);
   });
 
@@ -184,44 +185,44 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.equal(configurationSettings[1].label, "testLabel");
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
     assert.equal(configurationSettings[1].tags, testTag);
-    const featureFlag1 = configurationSettings[1].value as FeatureFlagValue;
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
     assert.equal(featureFlag1.id, "FeatureT");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureU`);
     assert.equal(configurationSettings[2].label, "testLabel");
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
     assert.equal(configurationSettings[2].tags, testTag);
-    const featureFlag2 = configurationSettings[2].value as FeatureFlagValue;
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureU");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[3].key, `${featureFlagPrefix}FeatureV`);
     assert.equal(configurationSettings[3].label, "testLabel");
     assert.equal(configurationSettings[3].contentType, featureFlagContentType);
     assert.equal(configurationSettings[3].tags, testTag);
-    const featureFlag3 = configurationSettings[3].value as FeatureFlagValue;
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[3].value))) as FeatureFlagValue;
     assert.equal(featureFlag3.id, "FeatureV");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.isTrue(featureFlag3.enabled);
     assert.equal(configurationSettings[4].key, `${featureFlagPrefix}FeatureX`);
     assert.equal(configurationSettings[4].label, "testLabel");
     assert.equal(configurationSettings[4].contentType, featureFlagContentType);
     assert.equal(configurationSettings[4].tags, testTag);
-    const featureFlag4 = configurationSettings[4].value as FeatureFlagValue;
+    const featureFlag4 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[4].value))) as FeatureFlagValue;
     assert.equal(featureFlag4.id, "FeatureX");
-    assert.equal(JSON.stringify(featureFlag4.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag4.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag4.enabled);
     assert.equal(configurationSettings[5].key, `${featureFlagPrefix}FeatureY`);
     assert.equal(configurationSettings[5].label, "testLabel");
     assert.equal(configurationSettings[5].contentType, featureFlagContentType);
     assert.equal(configurationSettings[5].tags, testTag);
-    const featureFlag5 = configurationSettings[5].value as FeatureFlagValue;
+    const featureFlag5 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[5].value))) as FeatureFlagValue;
     assert.equal(featureFlag5.id, "FeatureY");
-    assert.equal(JSON.stringify(featureFlag5.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag5.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag5.enabled);
   });
 
@@ -309,23 +310,23 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.equal(configurationSettings.length, 3);
     assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureT`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
-    const featureFlag1 = configurationSettings[0].value as FeatureFlagValue;
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
     assert.equal(featureFlag1.id, "FeatureT");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"client_filters\":[]}");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureU`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
-    const featureFlag2 = configurationSettings[1].value as FeatureFlagValue;
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureU");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"client_filters\":[]}");
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureV`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
-    const featureFlag3 = configurationSettings[2].value as FeatureFlagValue;
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
     assert.equal(featureFlag3.id, "FeatureV");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"end\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"end\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.isTrue(featureFlag3.enabled);
   });
@@ -341,18 +342,18 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.equal(configurationSettings.length, 3);
     assert.equal(configurationSettings[0].key, `${featureFlagPrefix}Variant_Override_True`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
-    const featureFlag1 = configurationSettings[0].value as FeatureFlagValue;
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
     assert.equal(featureFlag1.id, "Variant_Override_True");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"client_filters\":[]}");
     assert.equal(JSON.stringify(featureFlag1.allocation), "{\"default_when_enabled\":\"True_Override\"}");
     assert.equal(JSON.stringify(featureFlag1.variants),
       "[{\"name\":\"True_Override\",\"status_override\":\"Disabled\",\"configuration_value\":\"default\"}]");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}Variant_Override_False`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
-    const featureFlag2 = configurationSettings[1].value as FeatureFlagValue;
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
     assert.equal(featureFlag2.id, "Variant_Override_False");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"client_filters\":[]}");
     assert.equal(JSON.stringify(featureFlag2.allocation), "{\"default_when_disabled\":\"False_Override\"}");
     assert.equal(JSON.stringify(featureFlag2.variants),
       "[{\"name\":\"False_Override\",\"status_override\":\"Enabled\",\"configuration_value\":\"default\"}]");
@@ -360,11 +361,11 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}TestVariants`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
-    const featureFlag3 = configurationSettings[2].value as FeatureFlagValue;
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
     assert.equal(featureFlag3.id, "TestVariants");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
     assert.equal(JSON.stringify(featureFlag3.variants),
@@ -383,18 +384,18 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.equal(configurationSettings.length, 3);
     assert.equal(configurationSettings[0].key, `${featureFlagPrefix}Variant_Override_True`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
-    const featureFlag1 = configurationSettings[0].value as FeatureFlagValue;
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
     assert.equal(featureFlag1.id, "Variant_Override_True");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"client_filters\":[]}");
     assert.equal(JSON.stringify(featureFlag1.allocation), "{\"default_when_enabled\":\"True_Override\"}");
     assert.equal(JSON.stringify(featureFlag1.variants),
       "[{\"name\":\"True_Override\",\"status_override\":\"Disabled\",\"configuration_value\":\"default\"}]");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}Variant_Override_False`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
-    const featureFlag2 = configurationSettings[1].value as FeatureFlagValue;
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
     assert.equal(featureFlag2.id, "Variant_Override_False");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
+    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"client_filters\":[]}");
     assert.equal(JSON.stringify(featureFlag2.allocation), "{\"default_when_disabled\":\"False_Override\"}");
     assert.equal(JSON.stringify(featureFlag2.variants),
       "[{\"name\":\"False_Override\",\"status_override\":\"Enabled\",\"configuration_value\":\"default\"}]");
@@ -402,11 +403,11 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}TestVariants`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
-    const featureFlag3 = configurationSettings[2].value as FeatureFlagValue;
+    const featureFlag3 = configurationSettings[2].value  as FeatureFlagValue;
     assert.equal(featureFlag3.id, "TestVariants");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
     assert.equal(JSON.stringify(featureFlag3.variants),
@@ -456,47 +457,5 @@ describe("Parse FeatureFlag Json format file", () => {
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
 
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
-  });
-
-  it("Parse feature flag ffv2 schema with hyphen case json file", async () => {
-    const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsHyphenCaseFFV2.json")).toString(),
-      format: ConfigurationFormat.Json
-    };
-    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
-
-    assert.equal(configurationSettings.length, 3);
-    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}Variant_Override_True`);
-    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
-    const featureFlag1 = configurationSettings[0].value as FeatureFlagValue;
-    assert.equal(featureFlag1.id, "Variant_Override_True");
-    assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
-    assert.equal(JSON.stringify(featureFlag1.allocation), "{\"default_when_enabled\":\"True_Override\"}");
-    assert.equal(JSON.stringify(featureFlag1.variants),
-      "[{\"name\":\"True_Override\",\"status_override\":\"Disabled\",\"configuration_value\":\"default\"}]");
-    assert.isTrue(featureFlag1.enabled);
-    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}Variant_Override_False`);
-    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
-    const featureFlag2 = configurationSettings[1].value as FeatureFlagValue;
-    assert.equal(featureFlag2.id, "Variant_Override_False");
-    assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
-    assert.equal(JSON.stringify(featureFlag2.allocation), "{\"default_when_disabled\":\"False_Override\"}");
-    assert.equal(JSON.stringify(featureFlag2.variants),
-      "[{\"name\":\"False_Override\",\"status_override\":\"Enabled\",\"configuration_value\":\"default\"}]");
-    assert.isTrue(featureFlag1.enabled);
-    assert.isFalse(featureFlag2.enabled);
-    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}TestVariants`);
-    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
-    const featureFlag3 = configurationSettings[2].value as FeatureFlagValue;
-    assert.equal(featureFlag3.id, "TestVariants");
-    assert.equal(
-      JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
-    );
-    assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
-    assert.equal(JSON.stringify(featureFlag3.variants),
-      "[{\"name\":\"Alpha\",\"configuration_value\":\"The Variant Alpha.\"},{\"name\":\"Beta\",\"configuration_value\":\"The Variant Beta.\"}]");
-    assert.isTrue(featureFlag3.enabled);
   });
 });

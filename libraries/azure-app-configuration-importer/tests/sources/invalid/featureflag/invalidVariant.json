@@ -4,7 +4,7 @@
             {
                 "id": "TestVariants",
                 "description": "",
-                "enabled": "true",
+                "enabled": true,
                 "allocation": {
                     "user": [
                         {

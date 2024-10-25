@@ -4,7 +4,7 @@
             {
                 "id": "Variant_Override_True",
                 "description": "",
-                "enabled": "true",
+                "enabled": true,
                 "conditions": {
                     "client_filters": [],
                     "requirement_type": "invalid value"
