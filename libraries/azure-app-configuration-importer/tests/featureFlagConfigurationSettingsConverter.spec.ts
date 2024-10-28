@@ -365,7 +365,7 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.equal(featureFlag3.id, "TestVariants");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"Name\":\"TimeWindow\",\"Parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
     assert.equal(JSON.stringify(featureFlag3.variants),
@@ -403,11 +403,11 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.isFalse(featureFlag2.enabled);
     assert.equal(configurationSettings[2].key, `${featureFlagPrefix}TestVariants`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
-    const featureFlag3 = configurationSettings[2].value  as FeatureFlagValue;
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
     assert.equal(featureFlag3.id, "TestVariants");
     assert.equal(
       JSON.stringify(featureFlag3.conditions),
-      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+      "{\"client_filters\":[{\"Name\":\"TimeWindow\",\"Parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
     );
     assert.equal(JSON.stringify(featureFlag3.allocation),"{\"user\":[{\"variant\":\"Alpha\",\"users\":[\"Adam\"]},{\"variant\":\"Beta\",\"users\":[\"Britney\"]}]}");
     assert.equal(JSON.stringify(featureFlag3.variants),

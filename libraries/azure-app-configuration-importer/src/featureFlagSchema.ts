@@ -13,6 +13,7 @@ export const featureFlagValueSchema: JSONSchemaType<FeatureFlagValue> = {
       properties: {
         client_filters: {
           type: "array",
+          minItems: 0,
           nullable: true,
           items: {
             type: "object",
@@ -111,7 +112,8 @@ export const featureFlagValueSchema: JSONSchemaType<FeatureFlagValue> = {
       type: "object",
       nullable: true,
       properties: {
-        enabled: { type: "boolean", nullable: true }
+        enabled: { type: "boolean", nullable: true },
+        metadata: { type: "object", nullable: true }
       }
     }
   },

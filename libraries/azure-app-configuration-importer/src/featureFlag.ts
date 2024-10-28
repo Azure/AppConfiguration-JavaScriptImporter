@@ -13,6 +13,7 @@ export interface FeatureFlagValue {
     variants?: Variant[];
     telemetry?: {
         enabled?: boolean;
+        metadata?: object;
     };
 }
 

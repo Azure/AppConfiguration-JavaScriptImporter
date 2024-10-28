@@ -169,8 +169,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
     if (this.checkIfUsingFFV2Schema(config)) {
       const featureFlagsKeyWord: string = Constants.FeatureFlagsKeyWord;
-      const featureManagementKey = featureFlagsKeyWord as keyof object;
-      const featureFlags: any = config[featureManagementKey];
+      const featureFlagsKey = featureFlagsKeyWord as keyof object;
+      const featureFlags: any = config[featureFlagsKey];
       
       if (!Array.isArray(featureFlags)) { 
         throw new ArgumentError(
@@ -320,7 +320,17 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   private getFeatureFlagsFromV2Schema(featureFlag: any): FeatureFlagValue {
     const ajv = new Ajv({allowUnionTypes: true});
     const validate = ajv.compile<FeatureFlagValue>(featureFlagValueSchema);
-    const valid = validate(featureFlag);
+
+    const featureFlagCopy = JSON.parse(JSON.stringify(featureFlag)); //deep copy
+
+    //normalize client filters
+    if (featureFlagCopy.conditions && featureFlagCopy.conditions.client_filters) {
+      for (let i = 0; i < featureFlagCopy.conditions.client_filters.length; i++) {
+        featureFlagCopy.conditions.client_filters[i] = this.getLowerCaseFilters(featureFlagCopy.conditions.client_filters[i]);
+      }
+    }
+
+    const valid = validate(featureFlagCopy);
     if (!valid) {
       const validationError = new AjvValidationError(validate.errors as ErrorObject[]);
       throw new ArgumentError(`Feature flag '${featureFlag.id}' is not in the correct format. ${validationError.getFriendlyMessage()}`);

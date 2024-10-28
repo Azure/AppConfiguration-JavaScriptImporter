@@ -3,6 +3,8 @@ feature_management:
     - id: Variant_Override_True
       description: ''
       enabled: true
+      conditions:
+        client_filters: []
       allocation:
         default_when_enabled: True_Override
       variants:
@@ -12,6 +14,8 @@ feature_management:
     - id: Variant_Override_False
       description: ''
       enabled: false
+      conditions:
+        client_filters: []
       allocation:
         default_when_disabled: False_Override
       variants:
