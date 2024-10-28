@@ -181,7 +181,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       for (const featureFlag of featureFlags) {
         if (!featureFlag.id) {
           throw new ArgumentError(
-            `Data contains feature flags in invalid format. The ${featureFlag} should have an id property.`
+            `Feature flag ${featureFlag} is in an invalid format: id is a required property`
           );
         }
 
@@ -318,7 +318,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   }
 
   private getFeatureFlagsFromV2Schema(featureFlag: any): FeatureFlagValue {
-    const ajv = new Ajv({allowUnionTypes: true});
+    const ajv = new Ajv();
     const validate = ajv.compile<FeatureFlagValue>(featureFlagValueSchema);
 
     const featureFlagCopy = JSON.parse(JSON.stringify(featureFlag)); //deep copy

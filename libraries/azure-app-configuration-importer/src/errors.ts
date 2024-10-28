@@ -51,7 +51,7 @@ export class AjvValidationError extends Error {
   public errors: AjvError[];
 
   constructor(validationErrors: ErrorObject[]) {
-    super("AJV validation errors occurred.");
+    super();
     this.errors = this.parseAjvErrors(validationErrors);
   }
 
