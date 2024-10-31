@@ -30,7 +30,7 @@ export const featureFlagValueSchema: JSONSchemaType<FeatureFlagValue> = {
           enum: [RequirementType.All, RequirementType.Any] }
       }
     },
-    displayName: { type: "string", nullable: true },
+    display_name: { type: "string", nullable: true },
     allocation: {
       type: "object",
       nullable: true,

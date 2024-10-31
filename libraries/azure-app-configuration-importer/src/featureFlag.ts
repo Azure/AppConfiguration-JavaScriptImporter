@@ -8,7 +8,7 @@ export interface FeatureFlagValue {
         client_filters?: ClientFilter[];
         requirement_type?: RequirementType
     };
-    displayName?: string;
+    display_name?: string;
     allocation?: Allocation;
     variants?: Variant[];
     telemetry?: {
