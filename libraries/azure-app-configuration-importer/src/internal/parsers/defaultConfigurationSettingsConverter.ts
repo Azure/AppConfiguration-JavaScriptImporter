@@ -38,12 +38,16 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
     let configurationSettings = new Array<
       SetConfigurationSettingParam
     >();
+
     let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam>();
-    let foundFeatureManagement = false;
-    let featureFlags: any = {};
-    let featureManagementKeyWord = "";
-    let enabledForKeyWord = "";
-    let requirementTypeKeyWord = "";
+    let foundMsFmSchema = false;
+    let foundLegacySchema = false;
+    let msFmFeatureManagementKeyWord = "";
+    let legacySchemaFeatureManagementKeyWord = "";
+    let legacySchemaEnabledForKeyWord = "";
+    let legachSchemaRequirementTypeKeyWord = "";
+
+    const featureFlagsDict: any = {};
 
     if (options.format == ConfigurationFormat.Properties && !options.skipFeatureFlags) {
       this.checkFeatureManagementExist(config);
@@ -51,29 +55,43 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
 
     for (let i = 0; i < Constants.FeatureManagementKeyWords.length; i++) {
       if (Constants.FeatureManagementKeyWords[i] in config) {
-        if (foundFeatureManagement) {
-          throw new ArgumentError(
-            "Unable to proceed because data contains multiple sections corresponding to Feature Management."
-          );
+        if (Constants.FeatureManagementKeyWords[i] == Constants.FeatureManagementKeyWords[2]) { //feature_management
+          if (foundMsFmSchema) {
+            throw new ArgumentError(
+              `Unable to proceed because data contains multiple sections corresponding to Feature Management with the key, ${Constants.FeatureManagementKeyWords[i]}`
+            );
+          }
+          foundMsFmSchema = true;
+          msFmFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
+          const featureManagementKey = msFmFeatureManagementKeyWord as keyof object;
+          featureFlagsDict[featureManagementKey] = config[featureManagementKey];
+          delete config[featureManagementKey];
         }
-
-        featureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
-        enabledForKeyWord = Constants.EnabledForKeyWords[i];
-        requirementTypeKeyWord = Constants.RequirementTypeKeyWords[i];
-        const featureManagementKey = featureManagementKeyWord as keyof object;
-        featureFlags = config[featureManagementKey];
-        delete config[featureManagementKey];
-        foundFeatureManagement = true;
+        else {   
+          if (foundLegacySchema) {
+            throw new ArgumentError(
+              `Unable to proceed because data contains multiple sections corresponding to Feature Flags. with the key, ${Constants.FeatureManagementKeyWords[i]}`
+            );
+          }
+          foundLegacySchema = true;
+          legacySchemaFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
+          legacySchemaEnabledForKeyWord = Constants.EnabledForKeyWords[i];
+          legachSchemaRequirementTypeKeyWord = Constants.RequirementTypeKeyWords[i];
+          const legacyFeatureManagementKey = legacySchemaFeatureManagementKeyWord as keyof object;
+          featureFlagsDict[legacyFeatureManagementKey] = config[legacyFeatureManagementKey];
+          delete config[legacyFeatureManagementKey];
+        }
       }
     }
 
-    if (foundFeatureManagement && !options.skipFeatureFlags) {
+    if ((foundLegacySchema || foundMsFmSchema) && !options.skipFeatureFlags) {
       const featureFlagConverter = new FeatureFlagConfigurationSettingsConverter(
-        featureManagementKeyWord,
-        enabledForKeyWord,
-        requirementTypeKeyWord
+        legacySchemaFeatureManagementKeyWord,
+        msFmFeatureManagementKeyWord,
+        legacySchemaEnabledForKeyWord,
+        legachSchemaRequirementTypeKeyWord
       );
-      featureFlagsConfigSettings = featureFlagConverter.Convert(featureFlags, options);
+      featureFlagsConfigSettings = featureFlagConverter.Convert(featureFlagsDict, options);
     }
 
     const flattenedConfigurationSettings: object = flat.flatten(config, {
@@ -145,15 +163,19 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
  * @internal
  * */
 class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettingsConverter {
-  featureManagementKeyWord: string;
-  enabledForKeyWord: string;
-  requirementTypeKeyWord: string;
-  constructor(featureManagementKeyWord: string, enabledForKeyWord: string, requirementTypeKeyWord: string) {
-    this.featureManagementKeyWord = featureManagementKeyWord;
-    this.enabledForKeyWord = enabledForKeyWord;
-    this.requirementTypeKeyWord = requirementTypeKeyWord;
+  legacySchemaFeatureManagementKeyWord: string;
+  msFmFeatureManagementKeyWord: string;
+  legacySchemaEnabledForKeyWord: string;
+  legacySchemaRequirmentTypeKeyWord: string;
+  ajv: Ajv; 
+  constructor(legacySchemaFeatureManagementKeyWord: string, msFmFeatureManagementKeyWord: string, legacySchemaEnabledForKeyWord: string, legacySchemaRequirmentTypeKeyWord: string ) {
+    this.legacySchemaFeatureManagementKeyWord = legacySchemaFeatureManagementKeyWord;
+    this.msFmFeatureManagementKeyWord = msFmFeatureManagementKeyWord;
+    this.legacySchemaEnabledForKeyWord = legacySchemaEnabledForKeyWord;
+    this.legacySchemaRequirmentTypeKeyWord = legacySchemaRequirmentTypeKeyWord;
+    this.ajv = new Ajv();
 
-    if (!this.featureManagementKeyWord || !this.enabledForKeyWord) {
+    if (!this.legacySchemaFeatureManagementKeyWord && !this.msFmFeatureManagementKeyWord) {
       throw new ArgumentError("No feature management was found");
     }
   }
@@ -166,63 +188,65 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     options: SourceOptions
   ): SetConfigurationSettingParam[] {
     const settings = new Array<SetConfigurationSettingParam>();
+    const featureFlags = new Array<FeatureFlagValue>();
 
-    if (this.checkIfUsingFFV2Schema(config)) {
-      const featureFlagsKeyWord: string = Constants.FeatureFlagsKeyWord;
-      const featureFlagsKey = featureFlagsKeyWord as keyof object;
-      const featureFlags: any = config[featureFlagsKey];
-      
-      if (!Array.isArray(featureFlags)) { 
-        throw new ArgumentError(
-          `Data contains feature flags in invalid format. The ${featureFlagsKeyWord} should have be an array.`
-        );
-      }
+    if (this.msFmFeatureManagementKeyWord) {
+      const msFmSectionFeatureFlags = this.getMsFmSchemaSection(config);
+      if (msFmSectionFeatureFlags) {
+        for (const featureFlag of msFmSectionFeatureFlags) {
+          if (!featureFlag.id) {
+            throw new ArgumentError(
+              `Feature flag ${featureFlag} is in an invalid format: id is a required property`
+            );
+          }
 
-      for (const featureFlag of featureFlags) {
-        if (!featureFlag.id) {
-          throw new ArgumentError(
-            `Feature flag ${featureFlag} is in an invalid format: id is a required property`
-          );
+          if (!this.validateFeatureName(featureFlag.id)) {
+            throw new ArgumentError(
+              `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature id.`
+            );
+          }
+          featureFlags.push(this.getFeatureFlagFromMicrosoftFeatureFlagSchema(featureFlag));
         }
-
-        if (!this.validateFeatureName(featureFlag.id)) {
-          throw new ArgumentError(
-            `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature id.`
-          );
-        }
-
-        const prefix: string = options.prefix ?? "";
-        settings.push({
-          key: featureFlagPrefix + prefix + featureFlag.id,
-          label: options.label,
-          value: JSON.stringify(this.getFeatureFlagsFromV2Schema(featureFlag)),
-          contentType: featureFlagContentType,
-          tags: options.tags
-        });
       }
     }
-    else {
-      for (const featureFlag in config) {
+
+    const legacySchemaFeatureFlags = this.getLegacySchema(config);
+    if (legacySchemaFeatureFlags) {
+      for (const featureFlag in legacySchemaFeatureFlags) {
         if (!this.validateFeatureName(featureFlag)) {
           throw new ArgumentError(
             `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
           );
         }
 
-        const prefix: string = options.prefix ?? "";
-        settings.push({
-          key: featureFlagPrefix + prefix + featureFlag,
-          label: options.label,
-          value: JSON.stringify(this.getFeatureFlagValueFromV1Schema(
-            featureFlag,
-            config,
-            this.enabledForKeyWord,
-            this.requirementTypeKeyWord
-          )),
-          contentType: featureFlagContentType,
-          tags: options.tags
-        });
+        const featureFlagDefinition = this.getFeatureFlagDefinitionFromLegacySchema(
+          featureFlag,
+          legacySchemaFeatureFlags,
+          this.legacySchemaEnabledForKeyWord,
+          this.legacySchemaRequirmentTypeKeyWord
+        );
+        
+        // Check if the featureFlag with the same id already exists
+        // feature flag written in Microsoft schema has higher priority
+        const featureFlagExists = featureFlags.some(existingFeatureFlag => existingFeatureFlag.id === featureFlagDefinition.id);
+        
+        if (!featureFlagExists) {
+          featureFlags.push(featureFlagDefinition);
+        }
       }
+    }
+
+    const prefix: string = options.prefix ?? "";
+    for (const featureFlag of featureFlags) {
+      const setting: SetConfigurationSettingParam = {
+        key: featureFlagPrefix + prefix + featureFlag.id,
+        label: options.label,
+        value: JSON.stringify(featureFlag),
+        contentType: featureFlagContentType,
+        tags: options.tags
+      };
+
+      settings.push(setting);
     }
 
     return settings;
@@ -238,7 +262,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     }
   }
 
-  private getFeatureFlagValueFromV1Schema(
+  private getFeatureFlagDefinitionFromLegacySchema(
     featureFlagName: any,
     featureData: any,
     enabledForKeyWord: string,
@@ -317,10 +341,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureFlagValue;
   }
 
-  private getFeatureFlagsFromV2Schema(featureFlag: any): FeatureFlagValue {
-    const ajv = new Ajv();
-    const validate = ajv.compile<FeatureFlagValue>(featureFlagValueSchema);
-
+  private getFeatureFlagFromMicrosoftFeatureFlagSchema(featureFlag: any): FeatureFlagValue {
+    const validate = this.ajv.compile<FeatureFlagValue>(featureFlagValueSchema);
     const featureFlagCopy = JSON.parse(JSON.stringify(featureFlag)); //deep copy
 
     //normalize client filters
@@ -337,23 +359,6 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     }
 
     return featureFlag;
-  }
-
-  private checkIfUsingFFV2Schema(config: object): boolean {
-    let foundFeatureFlagsKey = false;
-
-    for (const key in config) {
-      if (key == Constants.FeatureFlagsKeyWord) {
-        if (foundFeatureFlagsKey) {
-          throw new ArgumentError(
-            "Unable to proceed because data contains multiple sections corresponding to Feature Flags."
-          );
-        }
-        foundFeatureFlagsKey = true;
-      }
-    }
-
-    return foundFeatureFlagsKey;
   }
 
   private getLowerCaseFilters(clientFilter: ClientFilter): { [key: string]: any } {
@@ -375,5 +380,36 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     }
 
     return true;
+  }
+
+  private getMsFmSchemaSection(config: object): any {
+    const featureManagementKey = this.msFmFeatureManagementKeyWord as keyof object;
+    const featureManagementSection = config[featureManagementKey];
+    if (featureManagementSection && typeof featureManagementSection === "object") {
+      if (!Array.isArray(featureManagementSection[Constants.FeatureFlagsKeyWord])) {
+        throw new ArgumentError(`The ${Constants.FeatureFlagsKeyWord} key within ${this.msFmFeatureManagementKeyWord} must be an array.`);
+      }
+      return featureManagementSection[Constants.FeatureFlagsKeyWord];
+    }
+  }
+
+  private getLegacySchema(config: object): any {
+    if (this.legacySchemaFeatureManagementKeyWord) {
+      const featureManagementSection = config[this.legacySchemaFeatureManagementKeyWord as keyof object];
+      if (featureManagementSection && typeof featureManagementSection === "object") {
+        return featureManagementSection;
+      }
+    }
+
+    if (this.msFmFeatureManagementKeyWord) {
+      //feature_management - legacy schema might be nested within it.
+      const featureManagementSection = config[this.msFmFeatureManagementKeyWord as keyof object];
+      if (featureManagementSection && typeof featureManagementSection === "object") {
+        const { feature_flags, ...rest } = featureManagementSection as { [key: string]: any };
+        if (Object.keys(rest).length > 0) {
+          return rest;
+        }
+      }
+    }
   }
 }

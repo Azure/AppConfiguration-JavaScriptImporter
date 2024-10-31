@@ -458,4 +458,132 @@ describe("Parse FeatureFlag Json format file", () => {
 
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
+
+  it("Respect both feature management schemas, legacy schema within feature_management in the same file", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaUnderscoreCase.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 3);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
+    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
+    assert.equal(featureFlag2.id, "FeatureY");
+    assert.isFalse(featureFlag2.enabled);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
+    assert.equal(featureFlag3.id, "FeatureX");
+    assert.isTrue(featureFlag3.enabled);
+  });
+
+  it("Respect both feature management schemas, FeatureManagement + feature_management in the same file", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaPascalCase.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 3);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
+    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
+    assert.equal(featureFlag2.id, "FeatureY");
+    assert.isFalse(featureFlag2.enabled);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
+    assert.equal(featureFlag3.id, "FeatureX");
+    assert.isTrue(featureFlag3.enabled);
+  });
+
+  
+  it("Invalid FeatureManagement format, invalid sections allowed", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidFmSections.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+
+    assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Respect both feature management schemas, feature-management + feature_management in the same file", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaHyphenCase.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 3);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
+    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
+    assert.equal(featureFlag2.id, "FeatureY");
+    assert.isFalse(featureFlag2.enabled);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
+    assert.equal(featureFlag3.id, "FeatureX");
+    assert.isTrue(featureFlag3.enabled);
+  });
+
+  it("Respect both feature management schemas, featureManagement + feature_management  in the same file", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaCamelCase.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 3);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[0].value))) as FeatureFlagValue;
+    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[1].value))) as FeatureFlagValue;
+    assert.equal(featureFlag2.id, "FeatureY");
+    assert.isFalse(featureFlag2.enabled);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].contentType, featureFlagContentType);
+    const featureFlag3 = JSON.parse(JSON.parse(JSON.stringify(configurationSettings[2].value))) as FeatureFlagValue;
+    assert.equal(featureFlag3.id, "FeatureX");
+    assert.isTrue(featureFlag3.enabled);
+    assert.equal(
+      JSON.stringify(featureFlag3.conditions),
+      "{\"client_filters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+    );
+  });
 });
