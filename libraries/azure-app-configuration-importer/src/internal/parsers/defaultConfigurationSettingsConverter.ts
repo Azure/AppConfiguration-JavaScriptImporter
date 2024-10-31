@@ -205,7 +205,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
               `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature id.`
             );
           }
-          featureFlags.push(this.getFeatureFlagFromMicrosoftFeatureFlagSchema(featureFlag));
+          featureFlags.push(this.getFeatureFlagDefinitionFromMsFmSchema(featureFlag));
         }
       }
     }
@@ -341,7 +341,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureFlagValue;
   }
 
-  private getFeatureFlagFromMicrosoftFeatureFlagSchema(featureFlag: any): FeatureFlagValue {
+  private getFeatureFlagDefinitionFromMsFmSchema(featureFlag: any): FeatureFlagValue {
     const validate = this.ajv.compile<FeatureFlagValue>(featureFlagValueSchema);
     const featureFlagCopy = JSON.parse(JSON.stringify(featureFlag)); //deep copy
 
