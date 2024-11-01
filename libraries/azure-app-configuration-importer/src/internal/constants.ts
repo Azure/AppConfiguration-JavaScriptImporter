@@ -6,20 +6,20 @@ export const Constants = {
   FeatureManagementKeyWords: [
     "FeatureManagement",
     "featureManagement",
-    "feature_management",
-    "feature-management"
+    "feature-management",
+    "feature_management"
   ],
   EnabledForKeyWords: [
     "EnabledFor",
     "enabledFor",
-    "enabled_for",
-    "enabled-for"
+    "enabled-for",
+    "enabled_for"
   ],
   RequirementTypeKeyWords: [
     "RequirementType",
     "requirementType",
-    "requirement_type",
-    "requirement-type"
+    "requirement-type",
+    "requirement_type"
   ],
   Separators: [
     ".",

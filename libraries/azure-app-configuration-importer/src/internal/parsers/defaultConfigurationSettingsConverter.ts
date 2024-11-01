@@ -53,35 +53,39 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       this.checkFeatureManagementExist(config);
     }
 
-    for (let i = 0; i < Constants.FeatureManagementKeyWords.length; i++) {
+    for (let i = 0; i < Constants.FeatureManagementKeyWords.length - 1; i++) {
       if (Constants.FeatureManagementKeyWords[i] in config) {
-        if (Constants.FeatureManagementKeyWords[i] == Constants.FeatureManagementKeyWords[2]) { //feature_management
-          if (foundMsFmSchema) {
-            throw new ArgumentError(
-              `Unable to proceed because data contains multiple sections corresponding to Feature Management with the key, ${Constants.FeatureManagementKeyWords[i]}`
-            );
-          }
-          foundMsFmSchema = true;
-          msFmFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
-          const featureManagementKey = msFmFeatureManagementKeyWord as keyof object;
-          featureFlagsDict[featureManagementKey] = config[featureManagementKey];
-          delete config[featureManagementKey];
+        if (foundLegacySchema) {
+          throw new ArgumentError(
+            `Unable to proceed because data contains multiple sections corresponding to Feature Management. with the key, ${Constants.FeatureManagementKeyWords[i]}`
+          );
         }
-        else {   
-          if (foundLegacySchema) {
-            throw new ArgumentError(
-              `Unable to proceed because data contains multiple sections corresponding to Feature Flags. with the key, ${Constants.FeatureManagementKeyWords[i]}`
-            );
-          }
-          foundLegacySchema = true;
-          legacySchemaFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
-          legacySchemaEnabledForKeyWord = Constants.EnabledForKeyWords[i];
-          legachSchemaRequirementTypeKeyWord = Constants.RequirementTypeKeyWords[i];
-          const legacyFeatureManagementKey = legacySchemaFeatureManagementKeyWord as keyof object;
-          featureFlagsDict[legacyFeatureManagementKey] = config[legacyFeatureManagementKey];
-          delete config[legacyFeatureManagementKey];
+        foundLegacySchema = true;
+
+        legacySchemaFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
+        legacySchemaEnabledForKeyWord = Constants.EnabledForKeyWords[i];
+        legachSchemaRequirementTypeKeyWord = Constants.RequirementTypeKeyWords[i];
+
+        const legacyFeatureManagementKey = legacySchemaFeatureManagementKeyWord as keyof object;
+        featureFlagsDict[legacyFeatureManagementKey] = config[legacyFeatureManagementKey];
+        delete config[legacyFeatureManagementKey];
+      }
+    }
+
+    const msFmKeyWord = Constants.FeatureManagementKeyWords[3];
+    if (msFmKeyWord in config) {
+      if (foundLegacySchema) {
+        if (Object.keys(config[msFmKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
+          throw new ArgumentError(
+            `Unable to proceed because data contains an already defined section with same schema corresponding to Feature Management with the key, ${legacySchemaFeatureManagementKeyWord}.`
+          );
         }
       }
+      foundMsFmSchema = true;
+      msFmFeatureManagementKeyWord = msFmKeyWord;
+      const featureManagementKey = msFmFeatureManagementKeyWord as keyof object;
+      featureFlagsDict[featureManagementKey] = config[featureManagementKey];
+      delete config[featureManagementKey];
     }
 
     if ((foundLegacySchema || foundMsFmSchema) && !options.skipFeatureFlags) {
