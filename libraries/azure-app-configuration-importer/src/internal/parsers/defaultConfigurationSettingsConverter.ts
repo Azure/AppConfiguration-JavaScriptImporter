@@ -42,10 +42,7 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
     let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam>();
     let foundMsFmSchema = false;
     let foundLegacySchema = false;
-    let msFmFeatureManagementKeyWord = "";
     let legacySchemaFeatureManagementKeyWord = "";
-    let legacySchemaEnabledForKeyWord = "";
-    let legachSchemaRequirementTypeKeyWord = "";
 
     const featureFlagsDict: any = {};
 
@@ -60,11 +57,9 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
             `Unable to proceed because data contains multiple sections corresponding to Feature Management. with the key, ${Constants.FeatureManagementKeyWords[i]}`
           );
         }
+        
         foundLegacySchema = true;
-
         legacySchemaFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
-        legacySchemaEnabledForKeyWord = Constants.EnabledForKeyWords[i];
-        legachSchemaRequirementTypeKeyWord = Constants.RequirementTypeKeyWords[i];
 
         const legacyFeatureManagementKey = legacySchemaFeatureManagementKeyWord as keyof object;
         featureFlagsDict[legacyFeatureManagementKey] = config[legacyFeatureManagementKey];
@@ -72,18 +67,24 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       }
     }
 
-    const msFmKeyWord = Constants.FeatureManagementKeyWords[3];
-    if (msFmKeyWord in config) {
-      if (foundLegacySchema) {
-        if (Object.keys(config[msFmKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
-          throw new ArgumentError(
-            `Unable to proceed because data contains an already defined section with same schema corresponding to Feature Management with the key, ${legacySchemaFeatureManagementKeyWord}.`
-          );
-        }
+    const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
+    if (msFeatureManagementKeyWord in config) {
+      if (foundLegacySchema && Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
+        throw new ArgumentError(
+          `Unable to proceed because data contains an already defined section with same schema corresponding to Feature Management with the key, ${legacySchemaFeatureManagementKeyWord}.`
+        );
       }
-      foundMsFmSchema = true;
-      msFmFeatureManagementKeyWord = msFmKeyWord;
-      const featureManagementKey = msFmFeatureManagementKeyWord as keyof object;
+
+      if (Object.keys(config[msFeatureManagementKeyWord as keyof object]).includes(Constants.FeatureFlagsKeyWord)) {
+        foundMsFmSchema = true;
+      }
+
+      if (Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)){
+        foundLegacySchema = true;
+        legacySchemaFeatureManagementKeyWord = msFeatureManagementKeyWord;
+      }
+
+      const featureManagementKey = msFeatureManagementKeyWord as keyof object;
       featureFlagsDict[featureManagementKey] = config[featureManagementKey];
       delete config[featureManagementKey];
     }
@@ -91,9 +92,7 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
     if ((foundLegacySchema || foundMsFmSchema) && !options.skipFeatureFlags) {
       const featureFlagConverter = new FeatureFlagConfigurationSettingsConverter(
         legacySchemaFeatureManagementKeyWord,
-        msFmFeatureManagementKeyWord,
-        legacySchemaEnabledForKeyWord,
-        legachSchemaRequirementTypeKeyWord
+        foundMsFmSchema
       );
       featureFlagsConfigSettings = featureFlagConverter.Convert(featureFlagsDict, options);
     }
@@ -168,18 +167,15 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
  * */
 class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettingsConverter {
   legacySchemaFeatureManagementKeyWord: string;
-  msFmFeatureManagementKeyWord: string;
-  legacySchemaEnabledForKeyWord: string;
-  legacySchemaRequirmentTypeKeyWord: string;
-  ajv: Ajv; 
-  constructor(legacySchemaFeatureManagementKeyWord: string, msFmFeatureManagementKeyWord: string, legacySchemaEnabledForKeyWord: string, legacySchemaRequirmentTypeKeyWord: string ) {
+  foundMsFeatureManagement: boolean;
+  ajv: Ajv;
+
+  constructor(legacySchemaFeatureManagementKeyWord: string, foundMsFeatureManagement: boolean) {
     this.legacySchemaFeatureManagementKeyWord = legacySchemaFeatureManagementKeyWord;
-    this.msFmFeatureManagementKeyWord = msFmFeatureManagementKeyWord;
-    this.legacySchemaEnabledForKeyWord = legacySchemaEnabledForKeyWord;
-    this.legacySchemaRequirmentTypeKeyWord = legacySchemaRequirmentTypeKeyWord;
+    this.foundMsFeatureManagement = foundMsFeatureManagement;
     this.ajv = new Ajv();
 
-    if (!this.legacySchemaFeatureManagementKeyWord && !this.msFmFeatureManagementKeyWord) {
+    if (!this.legacySchemaFeatureManagementKeyWord && !this.foundMsFeatureManagement) {
       throw new ArgumentError("No feature management was found");
     }
   }
@@ -194,14 +190,19 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     const settings = new Array<SetConfigurationSettingParam>();
     const featureFlags = new Array<FeatureFlagValue>();
 
-    if (this.msFmFeatureManagementKeyWord) {
+    if (this.foundMsFeatureManagement) {
       const msFmSectionFeatureFlags = this.getMsFmSchemaSection(config);
+
       if (msFmSectionFeatureFlags) {
         for (const featureFlag of msFmSectionFeatureFlags) {
           if (!featureFlag.id) {
             throw new ArgumentError(
               `Feature flag ${featureFlag} is in an invalid format: id is a required property`
             );
+          }
+
+          if (featureFlags.some(existingFeatureFlag => existingFeatureFlag.id === featureFlag.id)) {
+            throw new ArgumentError(`Feature flag with id '${featureFlag.id}' already exists.`);
           }
 
           if (!this.validateFeatureName(featureFlag.id)) {
@@ -214,28 +215,32 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       }
     }
 
-    const legacySchemaFeatureFlags = this.getLegacySchema(config);
-    if (legacySchemaFeatureFlags) {
-      for (const featureFlag in legacySchemaFeatureFlags) {
-        if (!this.validateFeatureName(featureFlag)) {
-          throw new ArgumentError(
-            `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
-          );
-        }
+    if (this.legacySchemaFeatureManagementKeyWord) {
+      const legacySchemaFeatureFlags = this.getLegacySchema(config);
+      if (legacySchemaFeatureFlags) {
+        for (const featureFlag in legacySchemaFeatureFlags) {
+          if (!this.validateFeatureName(featureFlag)) {
+            throw new ArgumentError(
+              `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
+            );
+          }
 
-        const featureFlagDefinition = this.getFeatureFlagDefinitionFromLegacySchema(
-          featureFlag,
-          legacySchemaFeatureFlags,
-          this.legacySchemaEnabledForKeyWord,
-          this.legacySchemaRequirmentTypeKeyWord
-        );
+          const featureManagementIndex = Constants.FeatureManagementKeyWords.indexOf(this.legacySchemaFeatureManagementKeyWord);
+
+          const featureFlagDefinition = this.getFeatureFlagDefinitionFromLegacySchema(
+            featureFlag,
+            legacySchemaFeatureFlags,
+            Constants.EnabledForKeyWords[featureManagementIndex],
+            Constants.RequirementTypeKeyWords[featureManagementIndex]
+          );
         
-        // Check if the featureFlag with the same id already exists
-        // feature flag written in Microsoft schema has higher priority
-        const featureFlagExists = featureFlags.some(existingFeatureFlag => existingFeatureFlag.id === featureFlagDefinition.id);
+          // Check if the featureFlag with the same id already exists
+          // feature flag written in Microsoft schema has higher priority
+          const featureFlagExists = featureFlags.some(existingFeatureFlag => existingFeatureFlag.id === featureFlagDefinition.id);
         
-        if (!featureFlagExists) {
-          featureFlags.push(featureFlagDefinition);
+          if (!featureFlagExists) {
+            featureFlags.push(featureFlagDefinition);
+          }
         }
       }
     }
@@ -387,32 +392,31 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   }
 
   private getMsFmSchemaSection(config: object): any {
-    const featureManagementKey = this.msFmFeatureManagementKeyWord as keyof object;
+    const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
+    const featureManagementKey =  msFeatureManagementKeyWord as keyof object;
     const featureManagementSection = config[featureManagementKey];
+
     if (featureManagementSection && typeof featureManagementSection === "object") {
       if (!Array.isArray(featureManagementSection[Constants.FeatureFlagsKeyWord])) {
-        throw new ArgumentError(`The ${Constants.FeatureFlagsKeyWord} key within ${this.msFmFeatureManagementKeyWord} must be an array.`);
+        throw new ArgumentError(`The ${Constants.FeatureFlagsKeyWord} key within ${msFeatureManagementKeyWord} must be an array.`);
       }
+
       return featureManagementSection[Constants.FeatureFlagsKeyWord];
     }
   }
 
   private getLegacySchema(config: object): any {
-    if (this.legacySchemaFeatureManagementKeyWord) {
-      const featureManagementSection = config[this.legacySchemaFeatureManagementKeyWord as keyof object];
-      if (featureManagementSection && typeof featureManagementSection === "object") {
-        return featureManagementSection;
-      }
-    }
-
-    if (this.msFmFeatureManagementKeyWord) {
-      //feature_management - legacy schema might be nested within it.
-      const featureManagementSection = config[this.msFmFeatureManagementKeyWord as keyof object];
-      if (featureManagementSection && typeof featureManagementSection === "object") {
+    const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
+    const featureManagementSection = config[this.legacySchemaFeatureManagementKeyWord as keyof object];
+    if (featureManagementSection && typeof featureManagementSection === "object") {
+      if (this.legacySchemaFeatureManagementKeyWord === msFeatureManagementKeyWord) { //legacy schema might be nested within msFmSchema
         const { feature_flags, ...rest } = featureManagementSection as { [key: string]: any };
         if (Object.keys(rest).length > 0) {
           return rest;
         }
+      }
+      else {
+        return featureManagementSection;
       }
     }
   }
