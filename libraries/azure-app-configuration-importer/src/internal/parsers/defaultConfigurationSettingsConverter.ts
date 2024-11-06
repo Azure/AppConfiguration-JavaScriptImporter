@@ -69,7 +69,8 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
 
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
     if (msFeatureManagementKeyWord in config) {
-      if (foundLegacySchema && Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
+      if (foundLegacySchema &&
+        Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
         throw new ArgumentError(
           `Unable to proceed because data contains an already defined section with same schema corresponding to Feature Management with the key, ${legacySchemaFeatureManagementKeyWord}.`
         );
