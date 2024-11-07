@@ -1,7 +1,6 @@
-import { FeatureFlagValue, RequirementType, StatusOverride } from "./featureFlag";
-import { JSONSchemaType } from "ajv";
+import { RequirementType, StatusOverride } from "./featureFlag";
 
-export const featureFlagValueSchema: JSONSchemaType<FeatureFlagValue> = {
+export const featureFlagValueSchema = {
   type: "object",
   properties: {
     id: { type: "string" },
