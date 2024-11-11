@@ -14,7 +14,7 @@ import { ClientFilter } from "../../models";
 import * as flat from "flat";
 import { ConfigurationFormat } from "../../enums";
 import { isJsonContentType } from "../utils";
-import { FeatureFlagValue, RequirementType } from "../../featureFlag";
+import { MsFeatureFlagValue, RequirementType } from "../../featureFlag";
 import { Constants } from "../constants";
 import { featureFlagValueSchema } from "../../featureFlagSchema";
 import Ajv, { ErrorObject } from "ajv";
@@ -34,12 +34,12 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
   public Convert(
     config: object,
     options: SourceOptions
-  ): SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] {
+  ): SetConfigurationSettingParam<string | MsFeatureFlagValue | SecretReferenceValue>[] {
     let configurationSettings = new Array<
-      SetConfigurationSettingParam<string | FeatureFlagValue>
+      SetConfigurationSettingParam<string | MsFeatureFlagValue>
     >();
 
-    let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<FeatureFlagValue>>();
+    let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
     let foundMsFmSchema = false;
     let foundLegacySchema = false;
     let legacySchemaFeatureManagementKeyWord = "";
@@ -187,18 +187,18 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   Convert(
     config: object,
     options: SourceOptions
-  ): SetConfigurationSettingParam<FeatureFlagValue>[] {
-    const settings = new Array<SetConfigurationSettingParam<FeatureFlagValue>>();
-    const featureFlags = new Array<FeatureFlagValue>();
+  ): SetConfigurationSettingParam<MsFeatureFlagValue>[] {
+    const settings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
+    const featureFlags = new Array<MsFeatureFlagValue>();
 
     if (this.foundMsFeatureManagement) {
-      const msFmSectionFeatureFlags = this.getMsFmSchemaSection(config);
+      const msFmSectionFeatureFlags = this.getMsFmSchemaFeatureFlags(config);
 
       if (msFmSectionFeatureFlags) {
         for (const featureFlag of msFmSectionFeatureFlags) {
           if (!featureFlag.id) {
             throw new ArgumentError(
-              `Feature flag ${featureFlag} is in an invalid format: id is a required property`
+              "Feature flag without id is found, id is a required property."
             );
           }
 
@@ -208,7 +208,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
           if (!this.validateFeatureName(featureFlag.id)) {
             throw new ArgumentError(
-              `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature id.`
+              `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed in feature name.`
             );
           }
           featureFlags.push(this.getFeatureFlagDefinitionFromMsFmSchema(featureFlag));
@@ -217,7 +217,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     }
 
     if (this.legacySchemaFeatureManagementKeyWord) {
-      const legacySchemaFeatureFlags = this.getLegacySchema(config);
+      const legacySchemaFeatureFlags = this.getLegacySchemaFeatureFlags(config);
 
       if (legacySchemaFeatureFlags) {
         for (const featureFlag in legacySchemaFeatureFlags) {
@@ -249,7 +249,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
     const prefix: string = options.prefix ?? "";
     for (const featureFlag of featureFlags) {
-      const setting: SetConfigurationSettingParam<FeatureFlagValue> = {
+      const setting: SetConfigurationSettingParam<MsFeatureFlagValue> = {
         key: featureFlagPrefix + prefix + featureFlag.id,
         label: options.label,
         value: featureFlag,
@@ -278,10 +278,10 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     featureData: any,
     enabledForKeyWord: string,
     requirementTypeKeyWord: string
-  ): FeatureFlagValue {
+  ): MsFeatureFlagValue {
     const defaultFeatureConditions = { clientFilters: [] };
 
-    const featureFlagValue: FeatureFlagValue = {
+    const featureFlagValue: MsFeatureFlagValue = {
       id: featureFlagName,
       description: "",
       enabled: false,
@@ -356,8 +356,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureFlagValue;
   }
 
-  private getFeatureFlagDefinitionFromMsFmSchema(featureFlag: any): FeatureFlagValue {
-    const validate = this.ajv.compile<FeatureFlagValue>(featureFlagValueSchema);
+  private getFeatureFlagDefinitionFromMsFmSchema(featureFlag: any): MsFeatureFlagValue {
+    const validate = this.ajv.compile<MsFeatureFlagValue>(featureFlagValueSchema);
     const featureFlagCopy = JSON.parse(JSON.stringify(featureFlag)); //deep copy
 
     // normalize client filters
@@ -373,7 +373,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       throw new ArgumentError(`Feature flag '${featureFlag.id}' is not in the correct format. ${validationError.getFriendlyMessage()}`);
     }
 
-    const parsedFeatureFlag: FeatureFlagValue = {
+    const parsedFeatureFlag: MsFeatureFlagValue = {
       ...featureFlag,
       displayName: featureFlag.display_name,
       conditions: {
@@ -405,7 +405,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return true;
   }
 
-  private getMsFmSchemaSection(config: object): any {
+  private getMsFmSchemaFeatureFlags(config: object): any {
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
     const featureManagementKey =  msFeatureManagementKeyWord as keyof object;
     const featureManagementSection = config[featureManagementKey];
@@ -421,7 +421,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureManagementSection[Constants.FeatureFlagsKeyWord];
   }
 
-  private getLegacySchema(config: object): any {
+  private getLegacySchemaFeatureFlags(config: object): any {
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
     const featureManagementSection = config[this.legacySchemaFeatureManagementKeyWord as keyof object];
 

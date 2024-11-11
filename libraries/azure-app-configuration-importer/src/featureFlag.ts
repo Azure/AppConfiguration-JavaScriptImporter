@@ -1,10 +1,7 @@
 import { ClientFilter } from "./models";
-import { FeatureFlagValue as FeatureFlagValue1 } from "@azure/app-configuration";
+import { FeatureFlagValue } from "@azure/app-configuration";
 
-export interface FeatureFlagValue extends FeatureFlagValue1 {
-    id?: string;
-    description?: string;
-    enabled: boolean;
+export interface MsFeatureFlagValue extends FeatureFlagValue {
     conditions: {
         clientFilters: ClientFilter[];
         requirementType?: RequirementType
