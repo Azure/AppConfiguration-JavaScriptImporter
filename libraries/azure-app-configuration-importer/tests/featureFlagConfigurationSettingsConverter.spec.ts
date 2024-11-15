@@ -330,9 +330,9 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.isTrue(featureFlag3.enabled);
   });
 
-  it("Parse feature flag ffv2 schema json file", async () => {
+  it("Parse new ms fm schema json file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsFfv2.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsMsFmSchema.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -372,9 +372,9 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.isTrue(featureFlag3.enabled);
   });
 
-  it("Parse feature flag ffv2 schema yaml file", async () => {
+  it("Parse new ms fm schema yaml file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsFfv2.yaml")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsMsFmSchema.yaml")).toString(),
       format: ConfigurationFormat.Yaml
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -425,9 +425,9 @@ describe("Parse FeatureFlag Json format file", () => {
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 
-  it("Invalid FeatureFlag ffv2 schema json format", async () => {
+  it("Invalid new ms fm schema json format", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidFFv2Format.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidMsFmSchemaFormat.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
@@ -436,7 +436,7 @@ describe("Parse FeatureFlag Json format file", () => {
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 
-  it("Invalid FeatureFlag json format, no allocation user variant", async () => {
+  it("Invalid new ms fm json format, no allocation user variant", async () => {
     const options: StringSourceOptions = {
       data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidAllocation.json")).toString(),
       format: ConfigurationFormat.Json,
@@ -447,9 +447,9 @@ describe("Parse FeatureFlag Json format file", () => {
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 
-  it("Invalid FeatureFlag json format, invalid requirement type", async () => {
+  it("Invalid new ms fm json format, invalid requirement type", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidRequirementTypeFFv2.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidRequirementTypeNewMsFmSchema.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
@@ -591,13 +591,36 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Invalid Feature management schema json format, legacy schema should not appear in new msfm schema if already exists", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidMsFmSchema.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/invalid/featureflag/invalidMsFmSchemaWithBothSchemas.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
 
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Duplicate Feature Flags test, the later feature flag should win", async () => {
+    const options: StringSourceOptions = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/duplicateFeatureFlagsInBothSchemas.json")).toString(),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 2);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].contentType, featureFlagContentType);
+    const featureFlag1 = configurationSettings[0].value as MsFeatureFlagValue;
+    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.isFalse(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureA`);
+    assert.equal(configurationSettings[1].contentType, featureFlagContentType);
+    const featureFlag2 = configurationSettings[1].value as MsFeatureFlagValue;
+    assert.equal(featureFlag2.id, "FeatureA");
+    assert.isTrue(featureFlag2.enabled);
   });
 
 });

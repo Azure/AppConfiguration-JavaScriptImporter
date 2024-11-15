@@ -202,16 +202,24 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
             );
           }
 
-          if (featureFlags.some(existingFeatureFlag => existingFeatureFlag.id === featureFlag.id)) {
-            throw new ArgumentError(`Duplicate feature flag with id '${featureFlag.id}' is found.`);
-          }
-
           if (!this.validateFeatureName(featureFlag.id)) {
             throw new ArgumentError(
               `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed in feature name.`
             );
           }
-          featureFlags.push(this.getFeatureFlagDefinitionFromMsFmSchema(featureFlag));
+
+          const featureFlagDefinition = this.getFeatureFlagDefinitionFromMsFmSchema(featureFlag);
+
+          // Check if the featureFlag with the same id already exists
+          // Replace the existing flag with the later one, the later one always wins
+          const indexOfExistingFlag = featureFlags.findIndex(existingFeatureFlag => existingFeatureFlag.id === featureFlag.id);
+
+          if (indexOfExistingFlag !== -1) {
+            featureFlags[indexOfExistingFlag] = featureFlagDefinition;
+          } 
+          else {
+            featureFlags.push(featureFlagDefinition);
+          }
         }
       }
     }
