@@ -72,7 +72,7 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       if (foundLegacySchema &&
         Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
         throw new ArgumentError(
-          `Unable to proceed because data contains an already defined section with same schema corresponding to Feature Management with the key, ${legacySchemaFeatureManagementKeyWord}.`
+          `Unable to proceed because data contains an already defined legacy schema section with the key, ${legacySchemaFeatureManagementKeyWord}.`
         );
       }
 
@@ -204,7 +204,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
           if (!this.validateFeatureName(featureFlag.id)) {
             throw new ArgumentError(
-              `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed in feature name.`
+              `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed.`
             );
           }
 
