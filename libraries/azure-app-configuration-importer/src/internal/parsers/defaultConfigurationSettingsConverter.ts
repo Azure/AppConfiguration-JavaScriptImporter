@@ -41,8 +41,8 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
 
     let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
     let foundMsFmSchema = false;
-    let foundDotnetSchema = false;
-    let dotnetSchemaFeatureManagementKeyWord = "";
+    let foundDotnetFmSchema = false;
+    let dotnetFmSchemaKeyWord = "";
 
     const featureFlagsDict: any = {};
 
@@ -52,27 +52,27 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
 
     for (let i = 0; i < Constants.FeatureManagementKeyWords.length - 1; i++) {
       if (Constants.FeatureManagementKeyWords[i] in config) {
-        if (foundDotnetSchema) {
+        if (foundDotnetFmSchema) {
           throw new ArgumentError(
             `Unable to proceed because data contains multiple sections corresponding to Feature Management. with the key, ${Constants.FeatureManagementKeyWords[i]}`
           );
         }
         
-        foundDotnetSchema = true;
-        dotnetSchemaFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[i];
+        foundDotnetFmSchema = true;
+        dotnetFmSchemaKeyWord = Constants.FeatureManagementKeyWords[i];
 
-        const legacyFeatureManagementKey = dotnetSchemaFeatureManagementKeyWord as keyof object;
-        featureFlagsDict[legacyFeatureManagementKey] = config[legacyFeatureManagementKey];
-        delete config[legacyFeatureManagementKey];
+        const dotnetFmSchemaKey = dotnetFmSchemaKeyWord as keyof object;
+        featureFlagsDict[dotnetFmSchemaKey] = config[dotnetFmSchemaKey];
+        delete config[dotnetFmSchemaKey];
       }
     }
 
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
     if (msFeatureManagementKeyWord in config) {
-      if (foundDotnetSchema &&
+      if (foundDotnetFmSchema &&
         Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
         throw new ArgumentError(
-          `Unable to proceed because data contains an already defined dotnet schema section with the key, ${dotnetSchemaFeatureManagementKeyWord}.`
+          `Unable to proceed because data contains an already defined dotnet schema section with the key, ${dotnetFmSchemaKeyWord}.`
         );
       }
 
@@ -81,8 +81,8 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       }
 
       if (Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)){
-        foundDotnetSchema = true;
-        dotnetSchemaFeatureManagementKeyWord = msFeatureManagementKeyWord;
+        foundDotnetFmSchema = true;
+        dotnetFmSchemaKeyWord = msFeatureManagementKeyWord;
       }
 
       const featureManagementKey = msFeatureManagementKeyWord as keyof object;
@@ -90,9 +90,9 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       delete config[featureManagementKey];
     }
 
-    if ((foundDotnetSchema || foundMsFmSchema) && !options.skipFeatureFlags) {
+    if ((foundDotnetFmSchema || foundMsFmSchema) && !options.skipFeatureFlags) {
       const featureFlagConverter = new FeatureFlagConfigurationSettingsConverter(
-        dotnetSchemaFeatureManagementKeyWord,
+        dotnetFmSchemaKeyWord,
         foundMsFmSchema
       );
       featureFlagsConfigSettings = featureFlagConverter.Convert(featureFlagsDict, options);
@@ -167,16 +167,16 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
  * @internal
  * */
 class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettingsConverter {
-  dotnetSchemaFeatureManagementKeyWord: string;
+  dotnetFmSchemaKeyWord: string;
   foundMsFeatureManagement: boolean;
   ajv: Ajv;
 
-  constructor(dotnetSchemaFeatureManagementKeyWord: string, foundMsFeatureManagement: boolean) {
-    this.dotnetSchemaFeatureManagementKeyWord = dotnetSchemaFeatureManagementKeyWord;
+  constructor(dotnetFmSchemaKeyWord: string, foundMsFeatureManagement: boolean) {
+    this.dotnetFmSchemaKeyWord = dotnetFmSchemaKeyWord;
     this.foundMsFeatureManagement = foundMsFeatureManagement;
     this.ajv = new Ajv();
 
-    if (!this.dotnetSchemaFeatureManagementKeyWord && !this.foundMsFeatureManagement) {
+    if (!this.dotnetFmSchemaKeyWord && !this.foundMsFeatureManagement) {
       throw new ArgumentError("No feature management was found");
     }
   }
@@ -191,11 +191,11 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     const settings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
     const featureFlags = new Array<MsFeatureFlagValue>();
 
-    if (this.dotnetSchemaFeatureManagementKeyWord) {
-      const dotnetSchemaFeatureFlags = this.getDotnetSchemaFeatureFlags(config);
+    if (this.dotnetFmSchemaKeyWord) {
+      const dotnetSchemaFeatureFlags = this.getDotnetFmSchemaFeatureFlags(config);
 
       if (dotnetSchemaFeatureFlags) {
-        const featureManagementIndex = Constants.FeatureManagementKeyWords.indexOf(this.dotnetSchemaFeatureManagementKeyWord);
+        const featureManagementIndex = Constants.FeatureManagementKeyWords.indexOf(this.dotnetFmSchemaKeyWord);
 
         for (const featureFlag in dotnetSchemaFeatureFlags) {
           if (!this.validateFeatureName(featureFlag)) {
@@ -385,7 +385,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     if (featureFlag.display_name) {
       parsedFeatureFlag.displayName = featureFlag.display_name;
     }
-    
+
     if (featureFlag.conditions?.requirement_type) {
       parsedFeatureFlag.conditions.requirementType = featureFlag.conditions.requirement_type;
     }
@@ -430,15 +430,15 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureManagementSection[Constants.FeatureFlagsKeyWord];
   }
 
-  private getDotnetSchemaFeatureFlags(config: object): any {
+  private getDotnetFmSchemaFeatureFlags(config: object): any {
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
-    const featureManagementSection = config[this.dotnetSchemaFeatureManagementKeyWord as keyof object];
+    const featureManagementSection = config[this.dotnetFmSchemaKeyWord as keyof object];
 
     if (typeof featureManagementSection !== "object") {
-      throw new ArgumentError(`The ${this.dotnetSchemaFeatureManagementKeyWord} section must be an object.`);
+      throw new ArgumentError(`The ${this.dotnetFmSchemaKeyWord} section must be an object.`);
     }
 
-    if (this.dotnetSchemaFeatureManagementKeyWord === msFeatureManagementKeyWord) { //dotnet schema might be nested within msFmSchema
+    if (this.dotnetFmSchemaKeyWord === msFeatureManagementKeyWord) { //dotnet schema might be nested within msFmSchema
       const { feature_flags, ...dotnetSchemaFlags } = featureManagementSection as { [key: string]: any };
       if (Object.keys(dotnetSchemaFlags).length > 0) {
         return dotnetSchemaFlags;
