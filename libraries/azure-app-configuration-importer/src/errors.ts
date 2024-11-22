@@ -42,20 +42,20 @@ export class OperationTimeoutError extends Error {
  */
 export class ArgumentNullError extends Error {}
 
-export interface AjvError {
+export interface AjvErrorInfo {
   schemaPath: string;
   message: string;
 }
 
 export class AjvValidationError extends Error {
-  public errors: AjvError[];
+  public errors: AjvErrorInfo[];
 
   constructor(validationErrors: ErrorObject[]) {
     super();
     this.errors = this.parseAjvErrors(validationErrors);
   }
 
-  private parseAjvErrors(validationErrors: ErrorObject[]): AjvError[] {
+  private parseAjvErrors(validationErrors: ErrorObject[]): AjvErrorInfo[] {
     return validationErrors.map(error => ({
       schemaPath: error.schemaPath,
       message: error.message || ""

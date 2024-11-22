@@ -6,7 +6,6 @@ export interface MsFeatureFlagValue extends FeatureFlagValue {
         clientFilters: ClientFilter[];
         requirementType?: RequirementType
     };
-    displayName?: string;
     allocation?: Allocation;
     variants?: Variant[];
     telemetry?: {

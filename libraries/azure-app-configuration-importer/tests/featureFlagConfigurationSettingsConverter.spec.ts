@@ -458,7 +458,7 @@ describe("Parse FeatureFlag Json format file", () => {
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 
-  it("Respect both feature management schemas, legacy schema within feature_management in the same file", async () => {
+  it("Respect both feature management schemas, dotnet schema within feature_management in the same file", async () => {
     const options: StringSourceOptions = {
       data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaUnderscoreCase.json")).toString(),
       format: ConfigurationFormat.Json,
@@ -469,10 +469,10 @@ describe("Parse FeatureFlag Json format file", () => {
     const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
 
     assert.equal(configurationSettings.length, 3);
-    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureX`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
     const featureFlag1 = configurationSettings[0].value as MsFeatureFlagValue;
-    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.equal(featureFlag1.id, "FeatureX");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(JSON.stringify(featureFlag1.conditions), "{\"clientFilters\":[]}");
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
@@ -481,10 +481,10 @@ describe("Parse FeatureFlag Json format file", () => {
     assert.equal(featureFlag2.id, "FeatureY");
     assert.isFalse(featureFlag2.enabled);
     assert.equal(JSON.stringify(featureFlag2.conditions), "{\"clientFilters\":[]}");
-    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureZ`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
     const featureFlag3 = configurationSettings[2].value as MsFeatureFlagValue;
-    assert.equal(featureFlag3.id, "FeatureX");
+    assert.equal(featureFlag3.id, "FeatureZ");
     assert.isTrue(featureFlag3.enabled);
     assert.equal(JSON.stringify(featureFlag3.conditions), "{\"clientFilters\":[]}");
   });
@@ -500,20 +500,20 @@ describe("Parse FeatureFlag Json format file", () => {
     const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
 
     assert.equal(configurationSettings.length, 3);
-    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureX`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
     const featureFlag1 = configurationSettings[0].value as MsFeatureFlagValue;
-    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.equal(featureFlag1.id, "FeatureX");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
     const featureFlag2 = configurationSettings[1].value as MsFeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureY");
     assert.isFalse(featureFlag2.enabled);
-    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureZ`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
     const featureFlag3 = configurationSettings[2].value as MsFeatureFlagValue;
-    assert.equal(featureFlag3.id, "FeatureX");
+    assert.equal(featureFlag3.id, "FeatureZ");
     assert.isTrue(featureFlag3.enabled);
   });
 
@@ -540,20 +540,20 @@ describe("Parse FeatureFlag Json format file", () => {
     const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
 
     assert.equal(configurationSettings.length, 3);
-    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureX`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
     const featureFlag1 = configurationSettings[0].value as MsFeatureFlagValue;
-    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.equal(featureFlag1.id, "FeatureX");
     assert.isTrue(featureFlag1.enabled);
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
     const featureFlag2 = configurationSettings[1].value as MsFeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureY");
     assert.isFalse(featureFlag2.enabled);
-    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureZ`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
     const featureFlag3 = configurationSettings[2].value as MsFeatureFlagValue;
-    assert.equal(featureFlag3.id, "FeatureX");
+    assert.equal(featureFlag3.id, "FeatureZ");
     assert.isTrue(featureFlag3.enabled);
   });
 
@@ -568,25 +568,25 @@ describe("Parse FeatureFlag Json format file", () => {
     const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
 
     assert.equal(configurationSettings.length, 3);
-    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureX`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
     const featureFlag1 = configurationSettings[0].value as MsFeatureFlagValue;
-    assert.equal(featureFlag1.id, "FeatureZ");
+    assert.equal(featureFlag1.id, "FeatureX");
     assert.isTrue(featureFlag1.enabled);
+    assert.equal(
+      JSON.stringify(featureFlag1.conditions),
+      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
+    );
     assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureY`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
     const featureFlag2 = configurationSettings[1].value as MsFeatureFlagValue;
     assert.equal(featureFlag2.id, "FeatureY");
     assert.isFalse(featureFlag2.enabled);
-    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureX`);
+    assert.equal(configurationSettings[2].key, `${featureFlagPrefix}FeatureZ`);
     assert.equal(configurationSettings[2].contentType, featureFlagContentType);
     const featureFlag3 = configurationSettings[2].value as MsFeatureFlagValue;
-    assert.equal(featureFlag3.id, "FeatureX");
+    assert.equal(featureFlag3.id, "FeatureZ");
     assert.isTrue(featureFlag3.enabled);
-    assert.equal(
-      JSON.stringify(featureFlag3.conditions),
-      "{\"clientFilters\":[{\"name\":\"TimeWindow\",\"parameters\":{\"Start\":\"Wed, 01 May 2019 13:59:59 GMT\",\"End\":\"Mon, 01 July 2019 00:00:00 GMT\"}}]}"
-    );
   });
 
   it("Invalid Feature management schema json format, legacy schema should not appear in new msfm schema if already exists", async () => {
@@ -611,16 +611,16 @@ describe("Parse FeatureFlag Json format file", () => {
     const configurationSettings = await stringConfigurationSource.GetConfigurationSettings();
 
     assert.equal(configurationSettings.length, 2);
-    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureZ`);
+    assert.equal(configurationSettings[0].key, `${featureFlagPrefix}FeatureA`);
     assert.equal(configurationSettings[0].contentType, featureFlagContentType);
     const featureFlag1 = configurationSettings[0].value as MsFeatureFlagValue;
-    assert.equal(featureFlag1.id, "FeatureZ");
-    assert.isFalse(featureFlag1.enabled);
-    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureA`);
+    assert.equal(featureFlag1.id, "FeatureA");
+    assert.isTrue(featureFlag1.enabled);
+    assert.equal(configurationSettings[1].key, `${featureFlagPrefix}FeatureZ`);
     assert.equal(configurationSettings[1].contentType, featureFlagContentType);
     const featureFlag2 = configurationSettings[1].value as MsFeatureFlagValue;
-    assert.equal(featureFlag2.id, "FeatureA");
-    assert.isTrue(featureFlag2.enabled);
+    assert.equal(featureFlag2.id, "FeatureZ");
+    assert.isFalse(featureFlag2.enabled);
   });
 
 });

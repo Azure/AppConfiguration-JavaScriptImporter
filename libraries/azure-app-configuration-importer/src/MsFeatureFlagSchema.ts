@@ -1,6 +1,6 @@
 import { RequirementType, StatusOverride } from "./featureFlag";
 
-export const featureFlagValueSchema = {
+export const MsFeatureFlagValueSchema = {
   type: "object",
   properties: {
     id: { type: "string" },
