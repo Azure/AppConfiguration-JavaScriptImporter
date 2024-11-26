@@ -195,7 +195,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       const dotnetSchemaFeatureFlags = this.getDotnetFmSchemaFeatureFlags(config);
 
       if (dotnetSchemaFeatureFlags) {
-        const featureManagementIndex = Constants.FeatureManagementKeyWords.indexOf(this.dotnetFmSchemaKeyWord);
+        const featureManagementIndex: number = Constants.FeatureManagementKeyWords.indexOf(this.dotnetFmSchemaKeyWord);
 
         for (const featureFlag in dotnetSchemaFeatureFlags) {
           if (!this.validateFeatureName(featureFlag)) {
@@ -414,7 +414,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return true;
   }
 
-  private getMsFmSchemaFeatureFlags(config: object): any {
+  private getMsFmSchemaFeatureFlags(config: object): Array<{ [key: string]: any }>{
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
     const featureManagementKey =  msFeatureManagementKeyWord as keyof object;
     const featureManagementSection = config[featureManagementKey];
@@ -430,18 +430,18 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureManagementSection[Constants.FeatureFlagsKeyWord];
   }
 
-  private getDotnetFmSchemaFeatureFlags(config: object): any {
+  private getDotnetFmSchemaFeatureFlags(config: object): { [key: string]: any } | undefined {
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
-    const featureManagementSection = config[this.dotnetFmSchemaKeyWord as keyof object];
+    const featureManagementSection: object = config[this.dotnetFmSchemaKeyWord as keyof object];
 
     if (typeof featureManagementSection !== "object") {
       throw new ArgumentError(`The ${this.dotnetFmSchemaKeyWord} section must be an object.`);
     }
 
     if (this.dotnetFmSchemaKeyWord === msFeatureManagementKeyWord) { //dotnet schema might be nested within msFmSchema
-      const { feature_flags, ...dotnetSchemaFlags } = featureManagementSection as { [key: string]: any };
-      if (Object.keys(dotnetSchemaFlags).length > 0) {
-        return dotnetSchemaFlags;
+      const { feature_flags, ...dotnetSchemaFeatureFlags } = featureManagementSection as { [key: string]: any };
+      if (Object.keys(dotnetSchemaFeatureFlags).length > 0) {
+        return dotnetSchemaFeatureFlags;
       }
     }
     else {
