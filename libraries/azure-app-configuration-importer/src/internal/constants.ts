@@ -6,14 +6,20 @@ export const Constants = {
   FeatureManagementKeyWords: [
     "FeatureManagement",
     "featureManagement",
-    "feature_management",
-    "feature-management"
+    "feature-management",
+    "feature_management"
   ],
   EnabledForKeyWords: [
     "EnabledFor",
     "enabledFor",
-    "enabled_for",
-    "enabled-for"
+    "enabled-for",
+    "enabled_for"
+  ],
+  RequirementTypeKeyWords: [
+    "RequirementType",
+    "requirementType",
+    "requirement-type",
+    "requirement_type"
   ],
   Separators: [
     ".",
@@ -25,5 +31,6 @@ export const Constants = {
     "/",
     ":"
   ],
-  CorrelationRequestIdHeader: "x-ms-correlation-request-id"
+  CorrelationRequestIdHeader: "x-ms-correlation-request-id",
+  FeatureFlagsKeyWord: "feature_flags"
 };

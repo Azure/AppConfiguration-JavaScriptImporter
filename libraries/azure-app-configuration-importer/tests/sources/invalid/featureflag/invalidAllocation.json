@@ -1,0 +1,35 @@
+{
+    "feature_management": {
+        "feature_flags": [
+            {
+                "id": "TestVariants",
+                "description": "",
+                "enabled": true,
+                "allocation": {
+                    "user": [
+                        {
+                            "variant": "Alpha"
+                        },
+                        {
+                            "variant": "Beta",
+                            "users": [
+                                "Britney"
+                            ]
+                        }
+                    ]
+                },
+                "variants": [
+                    {
+                        "name": "Alpha",
+                        "configuration_value": "The Variant Alpha."
+                    },
+                    {
+                        "name": "Beta",
+                        "configuration_value": "The Variant Beta."
+                    }
+                ]
+        
+            }
+        ]
+    }
+}

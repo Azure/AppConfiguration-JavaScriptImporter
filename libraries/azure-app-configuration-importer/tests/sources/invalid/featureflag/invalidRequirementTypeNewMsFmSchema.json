@@ -1,0 +1,26 @@
+{
+    "feature_management": {
+        "feature_flags": [
+            {
+                "id": "Variant_Override_True",
+                "description": "",
+                "enabled": true,
+                "conditions": {
+                    "client_filters": [],
+                    "requirement_type": "invalid value"
+                },
+                "allocation": {
+                    "default_when_enabled": "True_Override"
+                },
+                "variants": [
+                    {
+                        "name": "True_Override",
+                        "status_override": "Disabled",
+                        "configuration_value": "default"
+                    }
+                ]
+        
+            }
+        ]
+    }
+}
