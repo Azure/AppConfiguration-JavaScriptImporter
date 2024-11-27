@@ -272,7 +272,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   }
 
   private getFeatureFlagValueFromDotnetSchema(
-    featureFlagName: any,
+    featureFlagName: string,
     featureData: any,
     enabledForKeyWord: string,
     requirementTypeKeyWord: string
