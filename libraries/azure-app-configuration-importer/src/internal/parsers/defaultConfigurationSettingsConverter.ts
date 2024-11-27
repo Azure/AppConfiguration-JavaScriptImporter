@@ -194,57 +194,53 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     if (this.dotnetFmSchemaKeyWord) {
       const dotnetSchemaFeatureFlags = this.getDotnetFmSchemaFeatureFlags(config);
 
-      if (dotnetSchemaFeatureFlags) {
-        const featureManagementIndex: number = Constants.FeatureManagementKeyWords.indexOf(this.dotnetFmSchemaKeyWord);
+      const featureManagementIndex: number = Constants.FeatureManagementKeyWords.indexOf(this.dotnetFmSchemaKeyWord);
 
-        for (const featureFlag in dotnetSchemaFeatureFlags) {
-          if (!this.validateFeatureName(featureFlag)) {
-            throw new ArgumentError(
-              `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
-            );
-          }
-
-          const featureFlagValue = this.getFeatureFlagValueFromDotnetSchema(
-            featureFlag,
-            dotnetSchemaFeatureFlags[featureFlag],
-            Constants.EnabledForKeyWords[featureManagementIndex],
-            Constants.RequirementTypeKeyWords[featureManagementIndex]
+      for (const featureFlag in dotnetSchemaFeatureFlags) {
+        if (!this.validateFeatureName(featureFlag)) {
+          throw new ArgumentError(
+            `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
           );
-          
-          featureFlags.push(featureFlagValue);
         }
+
+        const featureFlagValue = this.getFeatureFlagValueFromDotnetSchema(
+          featureFlag,
+          dotnetSchemaFeatureFlags[featureFlag],
+          Constants.EnabledForKeyWords[featureManagementIndex],
+          Constants.RequirementTypeKeyWords[featureManagementIndex]
+        );
+
+        featureFlags.push(featureFlagValue);
       }
     }
 
     if (this.foundMsFeatureManagement) {
       const msFmSectionFeatureFlags = this.getMsFmSchemaFeatureFlags(config);
 
-      if (msFmSectionFeatureFlags) {
-        for (const featureFlag of msFmSectionFeatureFlags) {
-          if (!featureFlag.id) {
-            throw new ArgumentError(
-              "Feature flag without id is found, id is a required property."
-            );
-          }
+      for (const featureFlag of msFmSectionFeatureFlags) {
+        if (!featureFlag.id) {
+          throw new ArgumentError(
+            "Feature flag without id is found, id is a required property."
+          );
+        }
 
-          if (!this.validateFeatureName(featureFlag.id)) {
-            throw new ArgumentError(
-              `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed.`
-            );
-          }
+        if (!this.validateFeatureName(featureFlag.id)) {
+          throw new ArgumentError(
+            `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed.`
+          );
+        }
 
-          const featureFlagValue = this.getFeatureFlagValueFromMsFmSchema(featureFlag);
+        const featureFlagValue = this.getFeatureFlagValueFromMsFmSchema(featureFlag);
 
-          // Check if the featureFlag with the same id already exists
-          // Replace the existing flag with the later one, the later one always wins
-          const indexOfExistingFlag = featureFlags.findIndex(existingFeatureFlag => existingFeatureFlag.id === featureFlag.id);
+        // Check if the featureFlag with the same id already exists
+        // Replace the existing flag with the later one, the later one always wins
+        const indexOfExistingFlag = featureFlags.findIndex(existingFeatureFlag => existingFeatureFlag.id === featureFlag.id);
 
-          if (indexOfExistingFlag !== -1) {
-            featureFlags[indexOfExistingFlag] = featureFlagValue;
-          } 
-          else {
-            featureFlags.push(featureFlagValue);
-          }
+        if (indexOfExistingFlag !== -1) {
+          featureFlags[indexOfExistingFlag] = featureFlagValue;
+        }
+        else {
+          featureFlags.push(featureFlagValue);
         }
       }
     }
@@ -430,7 +426,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return featureManagementSection[Constants.FeatureFlagsKeyWord];
   }
 
-  private getDotnetFmSchemaFeatureFlags(config: object): { [key: string]: any } | undefined {
+  private getDotnetFmSchemaFeatureFlags(config: object): { [key: string]: any } {
     const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
     const featureManagementSection: object = config[this.dotnetFmSchemaKeyWord as keyof object];
 
@@ -440,9 +436,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
     if (this.dotnetFmSchemaKeyWord === msFeatureManagementKeyWord) { //dotnet schema might be nested within msFmSchema
       const { feature_flags, ...dotnetSchemaFeatureFlags } = featureManagementSection as { [key: string]: any };
-      if (Object.keys(dotnetSchemaFeatureFlags).length > 0) {
-        return dotnetSchemaFeatureFlags;
-      }
+      return dotnetSchemaFeatureFlags;
     }
     else {
       return featureManagementSection;
