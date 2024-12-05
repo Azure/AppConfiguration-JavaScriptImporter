@@ -14,11 +14,6 @@ echo $PROJECT_BASE_DIR
 cd $PROJECT_BASE_DIR
 
 #Install dependencies, build, and test.
-echo "install pnpm"
-npm install pnpm
-
-echo "rush update"
-node common/scripts/install-run-rush.js update
 
 echo "rush install"
 node common/scripts/install-run-rush.js install
