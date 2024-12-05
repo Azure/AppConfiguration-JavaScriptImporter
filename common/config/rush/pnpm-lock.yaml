@@ -2,6 +2,8 @@ lockfileVersion: 5.4
 
 specifiers:
   '@azure/app-configuration': 1.5.0
+  '@azure/app-configuration-importer': ^1.0.0-preview
+  '@azure/core-client': ^1.9.2
   '@azure/core-http': ^3.0.1
   '@azure/core-paging': ^1.4.0
   '@azure/core-rest-pipeline': ^1.6.0
@@ -21,8 +23,10 @@ specifiers:
   '@types/mocha': ^7.0.2
   '@types/nodegit': ^0.22.5
   '@types/sinon': ^10.0.11
+  '@types/uuid': ^10.0.0
   '@typescript-eslint/eslint-plugin': ^5.30.0
   '@typescript-eslint/parser': ^5.30.0
+  ajv: ^8.17.1
   chai: ^4.2.0
   colors: 1.4.0
   cross-env: ^7.0.2
@@ -50,9 +54,12 @@ specifiers:
   ts-node: ^10.0.0
   tslib: ^2.2.0
   typescript: ^4.6.3
+  uuid: ^10.0.0
 
 dependencies:
   '@azure/app-configuration': 1.5.0
+  '@azure/app-configuration-importer': 1.0.0-preview
+  '@azure/core-client': 1.9.2
   '@azure/core-http': 3.0.4
   '@azure/core-paging': 1.6.2
   '@azure/core-rest-pipeline': 1.16.0
@@ -72,8 +79,10 @@ dependencies:
   '@types/mocha': 7.0.2
   '@types/nodegit': 0.22.7
   '@types/sinon': 10.0.20
+  '@types/uuid': 10.0.0
   '@typescript-eslint/eslint-plugin': 5.62.0_gceg25gd4xew4ky25uvc7u6nti
   '@typescript-eslint/parser': 5.62.0_4lxgoysztp3gakdxqfzw7vhg4u
+  ajv: 8.17.1
   chai: 4.4.1
   colors: 1.4.0
   cross-env: 7.0.3
@@ -101,6 +110,7 @@ dependencies:
   ts-node: 10.9.2_typescript@4.9.5
   tslib: 2.6.3
   typescript: 4.9.5
+  uuid: 10.0.0
 
 packages:
 
@@ -116,6 +126,23 @@ packages:
     engines: {node: '>=18.0.0'}
     dependencies:
       tslib: 2.6.3
+    dev: false
+
+  /@azure/app-configuration-importer/1.0.0-preview:
+    resolution: {integrity: sha512-fhic+1fdMTpoodl/5trKQtXvfc0pa0tpgjr9FuxyRpwb1SioI8K7Y/49rr93yc8BJTxUr7HW6KkhvyiYAiLkmA==}
+    dependencies:
+      '@azure/app-configuration': 1.5.0
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.16.0
+      flat: 5.0.2
+      js-yaml: 4.1.0
+      lodash: 4.17.21
+      properties-file: 3.5.4
+      rxjs: 7.8.1
+      strip-json-comments: 3.1.1
+      tslib: 2.6.3
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /@azure/app-configuration/1.5.0:
@@ -147,7 +174,7 @@ packages:
     dev: false
 
   /@azure/core-client/1.9.2:
-    resolution: {integrity: sha1-b8ac7igWiDq2xc3WU+5PL/l3T3Q=}
+    resolution: {integrity: sha512-kRdry/rav3fUKHl/aDLd/pDLcB+4pOFwPPTVEExuMyaI5r+JBbMWqRbCY1pn5BniDaU3lRxO9eaQ1AmSMehl/w==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@azure/abort-controller': 2.1.2
@@ -251,7 +278,7 @@ packages:
     dev: false
 
   /@azure/logger/1.1.2:
-    resolution: {integrity: sha1-P0uHbO+tMo3BSv+LhQ1jthHiSdw=}
+    resolution: {integrity: sha512-l170uE7bsKpIU6B/giRc9i4NI0Mj+tANMMMxf7Zi/5cKzEqPayP7+X1WPrG7e+91JgY8N+7K7nF2WOi7iVhXvg==}
     engines: {node: '>=18.0.0'}
     dependencies:
       tslib: 2.6.3
@@ -593,7 +620,7 @@ packages:
     dependencies:
       ajv: 8.13.0
       ajv-draft-04: 1.0.0_ajv@8.13.0
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1_ajv@8.13.0
       fs-extra: 7.0.1
       import-lazy: 4.0.0
       jju: 1.4.0
@@ -612,7 +639,7 @@ packages:
       '@types/node': 12.20.55
       ajv: 8.13.0
       ajv-draft-04: 1.0.0_ajv@8.13.0
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1_ajv@8.13.0
       fs-extra: 7.0.1
       import-lazy: 4.0.0
       jju: 1.4.0
@@ -631,7 +658,7 @@ packages:
       '@types/node': 18.19.34
       ajv: 8.13.0
       ajv-draft-04: 1.0.0_ajv@8.13.0
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1_ajv@8.13.0
       fs-extra: 7.0.1
       import-lazy: 4.0.0
       jju: 1.4.0
@@ -813,11 +840,11 @@ packages:
     dev: false
 
   /@types/node/12.20.55:
-    resolution: {integrity: sha1-wynL1DTEIWT4RrkJvW+FtVN/YkA=}
+    resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
 
   /@types/node/18.19.34:
-    resolution: {integrity: sha1-w/riu725S0pS/i0inQ3MzgLvPSc=}
+    resolution: {integrity: sha512-eXF4pfBNV5DAMKGbI02NnDtWrQ40hAN558/2vvS4gMpMIxaf6JmD7YjnZbq0Q9TDSSkKBamime8ewRoomHdt4g==}
     dependencies:
       undici-types: 5.26.5
     dev: false
@@ -864,6 +891,10 @@ packages:
     resolution: {integrity: sha1-8QnnMLBysxNjR1YfxVjJNYu4xuk=}
     dependencies:
       '@types/node': 20.14.2
+    dev: false
+
+  /@types/uuid/10.0.0:
+    resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
     dev: false
 
   /@typescript-eslint/eslint-plugin/5.62.0_gceg25gd4xew4ky25uvc7u6nti:
@@ -1047,8 +1078,10 @@ packages:
       ajv: 8.13.0
     dev: false
 
-  /ajv-formats/3.0.1:
+  /ajv-formats/3.0.1_ajv@8.13.0:
     resolution: {integrity: sha1-PV3HYryhdnnDwup+kK1rdTIwlXg=}
+    peerDependencies:
+      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -1057,7 +1090,7 @@ packages:
     dev: false
 
   /ajv/6.12.6:
-    resolution: {integrity: sha1-uvWmLoArB9l3A0WG+MO69a3ybfQ=}
+    resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
     dependencies:
       fast-deep-equal: 3.1.3
       fast-json-stable-stringify: 2.1.0
@@ -1066,7 +1099,7 @@ packages:
     dev: false
 
   /ajv/8.12.0:
-    resolution: {integrity: sha1-0aBScyPiL1NWLFZ8AJkVd9++GdE=}
+    resolution: {integrity: sha512-sRu1kpcO9yLtYxBKvqfTeh9KzZEwO3STyX1HT+4CaDzC6HpTGYhIhPIzj9XuKU7KYDwnaeh5hcOwjy1QuJzBPA==}
     dependencies:
       fast-deep-equal: 3.1.3
       json-schema-traverse: 1.0.0
@@ -1075,12 +1108,21 @@ packages:
     dev: false
 
   /ajv/8.13.0:
-    resolution: {integrity: sha1-o5Oersn7gNIX3fDDN2lIwCPyjJE=}
+    resolution: {integrity: sha512-PRA911Blj99jR5RMeTunVbNXMF6Lp4vZXnk5GQjcnUWUTsrXtekg/pnmFFI2u/I36Y/2bITGS30GZCXei6uNkA==}
     dependencies:
       fast-deep-equal: 3.1.3
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
+    dev: false
+
+  /ajv/8.17.1:
+    resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-uri: 3.0.3
+      json-schema-traverse: 1.0.0
+      require-from-string: 2.0.2
     dev: false
 
   /ansi-colors/4.1.1:
@@ -1609,6 +1651,10 @@ packages:
     resolution: {integrity: sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=}
     dev: false
 
+  /fast-uri/3.0.3:
+    resolution: {integrity: sha512-aLrHthzCjH5He4Z2H9YZ+v6Ujb9ocRuW6ZzkJQOrTxleEijANq4v1TsaPaVG1PZcuurEzrLcWRyYBYXD5cEiaw==}
+    dev: false
+
   /fastq/1.17.1:
     resolution: {integrity: sha1-KlI/B6TnsegaQrkbi/IlQQd1O0c=}
     dependencies:
@@ -1704,7 +1750,7 @@ packages:
     dev: false
 
   /fsevents/2.3.3:
-    resolution: {integrity: sha1-ysZAd4XQNnWipeGlMFxpezR9kNY=}
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -2018,7 +2064,7 @@ packages:
     dev: false
 
   /json-schema-traverse/1.0.0:
-    resolution: {integrity: sha1-rnvLNlard6c7pcSb9lTzjmtoYOI=}
+    resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
     dev: false
 
   /json-stable-stringify-without-jsonify/1.0.1:
@@ -2459,7 +2505,7 @@ packages:
     dev: false
 
   /require-from-string/2.0.2:
-    resolution: {integrity: sha1-iaf92TgmEmcxjq/hT5wy5ZjDaQk=}
+    resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
     dev: false
 
@@ -2889,7 +2935,7 @@ packages:
     dev: false
 
   /tslib/1.14.1:
-    resolution: {integrity: sha1-zy04vcNKE0vK8QkcQfZhni9nLQA=}
+    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
     dev: false
 
   /tslib/2.6.3:
@@ -2973,8 +3019,13 @@ packages:
     resolution: {integrity: sha1-2pN/emLiH+wf0Y1Js1wpNQZ6bHI=}
     dev: false
 
+  /uuid/10.0.0:
+    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    hasBin: true
+    dev: false
+
   /uuid/8.3.2:
-    resolution: {integrity: sha1-gNW1ztJxu5r2xEXyGhoExgbO++I=}
+    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
     dev: false
 
@@ -3095,11 +3146,12 @@ packages:
     dev: false
 
   file:projects/app-configuration-importer-file-source.tgz:
-    resolution: {integrity: sha512-W6X7xjr8LRpSnZaneTvCy15hr0tgxUO9Y4CL8MA4pIxKkPLh2mmut3SUuBV7Asa/9NtLmo8qA5R9iEZGCCT39A==, tarball: file:projects/app-configuration-importer-file-source.tgz}
+    resolution: {integrity: sha512-4xCzHa7z03XPTsMCUrJ/SySn4YkxWP236k7cMceoDiVfrYkN14aO9lMwlVOw6rgU6SDVFtR3k47MXnILa+LkNQ==, tarball: file:projects/app-configuration-importer-file-source.tgz}
     name: '@rush-temp/app-configuration-importer-file-source'
     version: 0.0.0
     dependencies:
       '@azure/app-configuration': 1.5.0
+      '@azure/app-configuration-importer': 1.0.0-preview
       '@microsoft/api-extractor': 7.47.0_@types+node@12.20.55
       '@rollup/plugin-commonjs': 21.1.0_rollup@2.79.1
       '@rollup/plugin-inject': 4.0.4_rollup@2.79.1
@@ -3144,11 +3196,12 @@ packages:
     dev: false
 
   file:projects/app-configuration-importer.tgz:
-    resolution: {integrity: sha512-Rj6K+2gyPtnBo6onoTEfEM9jRNnYGQgRG/U9wvJWrg/nP8OHBPRiEns7srxkzWPRr0jixTUmeTcSic0/ZNy8lA==, tarball: file:projects/app-configuration-importer.tgz}
+    resolution: {integrity: sha512-Hdl0XCklgRYHEbc8FXQd+lT+wn4L3epPFnig3ITqcwBwuoT31YDKvKKkw6nMClEDw8txT2ifTkmB3Fd8b4PdZw==, tarball: file:projects/app-configuration-importer.tgz}
     name: '@rush-temp/app-configuration-importer'
     version: 0.0.0
     dependencies:
       '@azure/app-configuration': 1.5.0
+      '@azure/core-client': 1.9.2
       '@azure/core-http': 3.0.4
       '@azure/core-paging': 1.6.2
       '@azure/core-rest-pipeline': 1.16.0
@@ -3167,8 +3220,10 @@ packages:
       '@types/node': 18.19.34
       '@types/nodegit': 0.22.7
       '@types/sinon': 10.0.20
+      '@types/uuid': 10.0.0
       '@typescript-eslint/eslint-plugin': 5.62.0_gceg25gd4xew4ky25uvc7u6nti
       '@typescript-eslint/parser': 5.62.0_4lxgoysztp3gakdxqfzw7vhg4u
+      ajv: 8.17.1
       chai: 4.4.1
       colors: 1.4.0
       cross-env: 7.0.3
@@ -3196,6 +3251,7 @@ packages:
       ts-node: 10.9.2_m7ofzv6lnhx3lcojvbogh5soli
       tslib: 2.6.3
       typescript: 4.9.5
+      uuid: 10.0.0
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
