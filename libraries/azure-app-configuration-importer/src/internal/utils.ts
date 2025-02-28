@@ -6,13 +6,16 @@ import {
   SetConfigurationSettingParam, 
   FeatureFlagValue,
   featureFlagContentType,
-  SecretReferenceValue } from "@azure/app-configuration";
+  SecretReferenceValue, 
+  ConfigurationSettingParam,
+  featureFlagPrefix} from "@azure/app-configuration";
 import { isEmpty, isEqual } from "lodash";
 import { Tags, FeatureFlagClientFilters } from "../models";
 import { SourceOptions } from "../importOptions";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
 import { Constants } from "../internal/constants";
+import { MsFeatureFlagValue } from "../featureFlag";
 
 /** @internal*/
 export function isJsonContentType(contentType?: string): boolean {
@@ -168,4 +171,33 @@ function toFeatureFlagValue(value: string): FeatureFlagValue {
     description:parsedJson.description,
     conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters}
   };
+}
+
+export function serializeFeatureFlagToConfigurationSettingParam(featureFlag: SetConfigurationSettingParam<MsFeatureFlagValue>): ConfigurationSettingParam {
+  if (!featureFlag.value) {
+    throw new TypeError(`FeatureFlag has an unexpected value - ${featureFlag.value}`);
+  }
+  let key = featureFlag.key;
+  if (typeof featureFlag.key === "string" && !featureFlag.key.startsWith(featureFlagPrefix)) {
+    key = featureFlagPrefix + featureFlag.key;
+  }
+  const jsonFeatureFlagValue: MsFeatureFlagValue = {
+    id: featureFlag.value.id ?? key.replace(featureFlagPrefix, ""),
+    enabled: featureFlag.value.enabled,
+    description: featureFlag.value.description,
+    conditions: {
+      clientFilters: featureFlag.value.conditions?.clientFilters
+    },
+    displayName: featureFlag.value.displayName,
+    allocation: featureFlag.value.allocation,
+    variants: featureFlag.value.variants,
+    telemetry: featureFlag.value.telemetry
+  };
+
+  const configSetting = {
+    ...featureFlag,
+    key,
+    value: JSON.stringify(jsonFeatureFlagValue)
+  };
+  return configSetting;
 }

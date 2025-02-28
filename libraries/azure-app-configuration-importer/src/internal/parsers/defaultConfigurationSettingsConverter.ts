@@ -3,9 +3,10 @@
 
 import {
   SetConfigurationSettingParam,
-  SecretReferenceValue,
   featureFlagPrefix,
-  featureFlagContentType
+  featureFlagContentType,
+  ConfigurationSettingParam,
+  SecretReferenceValue
 } from "@azure/app-configuration";
 import { SourceOptions } from "../../importOptions";
 import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
@@ -13,7 +14,7 @@ import { AjvValidationError, ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";
 import * as flat from "flat";
 import { ConfigurationFormat } from "../../enums";
-import { isJsonContentType } from "../utils";
+import { isJsonContentType, serializeFeatureFlagToConfigurationSettingParam } from "../utils";
 import { MsFeatureFlagValue, RequirementType } from "../../featureFlag";
 import { Constants } from "../constants";
 import { MsFeatureFlagValueSchema } from "../../MsFeatureFlagSchema";
@@ -39,7 +40,7 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       SetConfigurationSettingParam<string | MsFeatureFlagValue>
     >();
 
-    let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
+    let featureFlagsConfigSettings = new Array<ConfigurationSettingParam>();
     let foundMsFmSchema = false;
     let foundDotnetFmSchema = false;
     let dotnetFmSchemaKeyWord = "";
@@ -187,8 +188,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   Convert(
     config: object,
     options: SourceOptions
-  ): SetConfigurationSettingParam<MsFeatureFlagValue>[] {
-    const settings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
+  ): ConfigurationSettingParam[] {
+    const settings = new Array<ConfigurationSettingParam>();
     const featureFlags = new Array<MsFeatureFlagValue>();
 
     if (this.dotnetFmSchemaKeyWord) {
@@ -255,7 +256,9 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
         tags: options.tags
       };
 
-      settings.push(setting);
+      const serializedSetting: ConfigurationSettingParam = serializeFeatureFlagToConfigurationSettingParam(setting);
+
+      settings.push(serializedSetting);
     }
 
     return settings;
