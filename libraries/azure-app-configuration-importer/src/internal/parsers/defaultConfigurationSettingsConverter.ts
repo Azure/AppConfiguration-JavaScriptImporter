@@ -5,7 +5,6 @@ import {
   SetConfigurationSettingParam,
   featureFlagPrefix,
   featureFlagContentType,
-  ConfigurationSettingParam,
   SecretReferenceValue
 } from "@azure/app-configuration";
 import { SourceOptions } from "../../importOptions";
@@ -40,7 +39,7 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
       SetConfigurationSettingParam<string | MsFeatureFlagValue>
     >();
 
-    let featureFlagsConfigSettings = new Array<ConfigurationSettingParam>();
+    let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<string>>();
     let foundMsFmSchema = false;
     let foundDotnetFmSchema = false;
     let dotnetFmSchemaKeyWord = "";
@@ -188,8 +187,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   Convert(
     config: object,
     options: SourceOptions
-  ): ConfigurationSettingParam[] {
-    const settings = new Array<ConfigurationSettingParam>();
+  ): SetConfigurationSettingParam<string>[] {
+    const settings = new Array<SetConfigurationSettingParam<string>>();
     const featureFlags = new Array<MsFeatureFlagValue>();
 
     if (this.dotnetFmSchemaKeyWord) {
@@ -256,8 +255,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
         tags: options.tags
       };
 
-      const serializedSetting: ConfigurationSettingParam = serializeFeatureFlagToConfigurationSettingParam(setting);
-
+      const serializedSetting: SetConfigurationSettingParam<string> = serializeFeatureFlagToConfigurationSettingParam(setting);
       settings.push(serializedSetting);
     }
 

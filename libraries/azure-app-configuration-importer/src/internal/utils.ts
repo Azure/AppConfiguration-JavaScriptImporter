@@ -6,11 +6,10 @@ import {
   SetConfigurationSettingParam, 
   FeatureFlagValue,
   featureFlagContentType,
-  SecretReferenceValue, 
-  ConfigurationSettingParam,
-  featureFlagPrefix} from "@azure/app-configuration";
+  SecretReferenceValue,
+  featureFlagPrefix } from "@azure/app-configuration";
 import { isEmpty, isEqual } from "lodash";
-import { Tags, FeatureFlagClientFilters } from "../models";
+import { Tags, FeatureFlagClientFilters, JsonFeatureFlagValue } from "../models";
 import { SourceOptions } from "../importOptions";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
@@ -173,22 +172,24 @@ function toFeatureFlagValue(value: string): FeatureFlagValue {
   };
 }
 
-export function serializeFeatureFlagToConfigurationSettingParam(featureFlag: SetConfigurationSettingParam<MsFeatureFlagValue>): ConfigurationSettingParam {
+export function serializeFeatureFlagToConfigurationSettingParam(featureFlag: SetConfigurationSettingParam<MsFeatureFlagValue>): SetConfigurationSettingParam<string> {
   if (!featureFlag.value) {
     throw new TypeError(`FeatureFlag has an unexpected value - ${featureFlag.value}`);
   }
   let key = featureFlag.key;
+
   if (typeof featureFlag.key === "string" && !featureFlag.key.startsWith(featureFlagPrefix)) {
     key = featureFlagPrefix + featureFlag.key;
   }
-  const jsonFeatureFlagValue: MsFeatureFlagValue = {
+
+  const jsonFeatureFlagValue: JsonFeatureFlagValue = {
     id: featureFlag.value.id ?? key.replace(featureFlagPrefix, ""),
     enabled: featureFlag.value.enabled,
     description: featureFlag.value.description,
     conditions: {
-      clientFilters: featureFlag.value.conditions?.clientFilters
+      client_filters: featureFlag.value.conditions?.clientFilters
     },
-    displayName: featureFlag.value.displayName,
+    display_name: featureFlag.value.displayName,
     allocation: featureFlag.value.allocation,
     variants: featureFlag.value.variants,
     telemetry: featureFlag.value.telemetry
