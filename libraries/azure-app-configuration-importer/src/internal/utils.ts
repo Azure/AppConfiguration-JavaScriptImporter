@@ -13,6 +13,7 @@ import { SourceOptions } from "../importOptions";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
 import { Constants } from "../internal/constants";
+import { MsFeatureFlagValue, Variant } from "../featureFlag";
 
 /** @internal*/
 export function isJsonContentType(contentType?: string): boolean {
@@ -124,8 +125,8 @@ export function validateOptions(options: SourceOptions): void {
   }
 }
 
-function isFeatureFlagValueEqual(valueA: string | FeatureFlagValue, valueB: string): boolean {
-  let featureFlagAValue: FeatureFlagValue;
+function isFeatureFlagValueEqual(valueA: string | MsFeatureFlagValue, valueB: string): boolean {
+  let featureFlagAValue: MsFeatureFlagValue;
 
   if (typeof valueA == "string") {
     featureFlagAValue = toFeatureFlagValue(valueA);
@@ -134,7 +135,7 @@ function isFeatureFlagValueEqual(valueA: string | FeatureFlagValue, valueB: stri
     featureFlagAValue = valueA;
   }
 
-  const featureFlagBValue: FeatureFlagValue = toFeatureFlagValue(valueB);
+  const featureFlagBValue: MsFeatureFlagValue = toFeatureFlagValue(valueB);
 
   if (Object.keys(featureFlagAValue).length !== Object.keys(featureFlagBValue).length) {
     return false;
@@ -143,29 +144,38 @@ function isFeatureFlagValueEqual(valueA: string | FeatureFlagValue, valueB: stri
   return featureFlagAValue.id == featureFlagBValue.id &&
     featureFlagAValue.enabled == featureFlagBValue.enabled &&
     featureFlagAValue.description == featureFlagBValue.description &&
-    areFeatureFlagFiltersEqual(featureFlagAValue.conditions.clientFilters, featureFlagBValue.conditions.clientFilters);
+    areFeatureFlagFiltersEqual(featureFlagAValue.conditions.clientFilters, featureFlagBValue.conditions.clientFilters) &&
+    isEqual(featureFlagAValue.allocation, featureFlagBValue.allocation) &&
+    areFeatureFlagVariantsEqual(featureFlagAValue.variants ?? [], featureFlagBValue.variants ?? []) &&
+    isEqual(featureFlagAValue.telemetry, featureFlagBValue.telemetry);
 }
 
-function areFeatureFlagFiltersEqual(filterA: FeatureFlagClientFilters[], filterB: FeatureFlagClientFilters[]): boolean {
-  if (filterA.length !== filterB.length) {
+function areFeatureFlagArraysEqual<T>(arrayA: T[], arrayB: T[]): boolean {
+  if (arrayA.length !== arrayB.length) {
     return false;
   }
 
-  for (let i = 0; i < filterA.length; i++) {
-    if (!isEqual(filterA[i], filterB[i])) {
+  for (let i = 0; i < arrayA.length; i++) {
+    if (!isEqual(arrayA[i], arrayB[i])) {
       return false;
     }
   }
   return true;
 }
 
-function toFeatureFlagValue(value: string): FeatureFlagValue {
+const areFeatureFlagFiltersEqual = areFeatureFlagArraysEqual<FeatureFlagClientFilters>;
+const areFeatureFlagVariantsEqual = areFeatureFlagArraysEqual<Variant>;
+
+function toFeatureFlagValue(value: string): MsFeatureFlagValue {
   const parsedJson: any = JSON.parse(value);
 
   return {
     id: parsedJson.id,
     enabled: parsedJson.enabled,
     description:parsedJson.description,
-    conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters}
+    conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters},
+    allocation: parsedJson.allocation,
+    variants: parsedJson.variants,
+    telemetry: parsedJson.telemetry
   };
 }
