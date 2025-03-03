@@ -173,7 +173,7 @@ function toFeatureFlagValue(value: string): MsFeatureFlagValue {
     id: parsedJson.id,
     enabled: parsedJson.enabled,
     description:parsedJson.description,
-    conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters},
+    conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters}
   };
   
   if (parsedJson.allocation) {
