@@ -6,8 +6,7 @@ import {
   SetConfigurationSettingParam, 
   FeatureFlagValue,
   featureFlagContentType,
-  SecretReferenceValue,
-  featureFlagPrefix } from "@azure/app-configuration";
+  SecretReferenceValue } from "@azure/app-configuration";
 import { isEmpty, isEqual } from "lodash";
 import { Tags, FeatureFlagClientFilters, JsonFeatureFlagValue } from "../models";
 import { SourceOptions } from "../importOptions";
