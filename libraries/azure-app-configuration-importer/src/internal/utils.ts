@@ -169,13 +169,24 @@ const areFeatureFlagVariantsEqual = areFeatureFlagArraysEqual<Variant>;
 function toFeatureFlagValue(value: string): MsFeatureFlagValue {
   const parsedJson: any = JSON.parse(value);
 
-  return {
+  const msFeatureFlagValue: MsFeatureFlagValue = {
     id: parsedJson.id,
     enabled: parsedJson.enabled,
     description:parsedJson.description,
     conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters},
-    allocation: parsedJson.allocation,
-    variants: parsedJson.variants,
-    telemetry: parsedJson.telemetry
   };
+  
+  if (parsedJson.allocation) {
+    msFeatureFlagValue.allocation = parsedJson.allocation;
+  }
+
+  if (parsedJson.variants) {
+    msFeatureFlagValue.variants = parsedJson.variants;
+  }
+
+  if (parsedJson.telemetry) {
+    msFeatureFlagValue.telemetry = parsedJson.telemetry;
+  }
+
+  return msFeatureFlagValue;
 }
