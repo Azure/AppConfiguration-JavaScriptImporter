@@ -19,6 +19,7 @@ export interface JsonSecretReferenceValue {
 export type JsonFeatureFlagValue = {
   conditions: {
     client_filters: { name: string; parameters?: Record<string, unknown> }[];
+    requirement_type?: string;
   };
   enabled: boolean;
   description?: string;

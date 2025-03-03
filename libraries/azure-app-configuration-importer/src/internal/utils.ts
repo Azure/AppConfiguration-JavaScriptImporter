@@ -172,35 +172,24 @@ function toFeatureFlagValue(value: string): FeatureFlagValue {
   };
 }
 
-export function serializeFeatureFlagToConfigurationSettingParam(featureFlag: SetConfigurationSettingParam<MsFeatureFlagValue>): SetConfigurationSettingParam<string> {
-  if (!featureFlag.value) {
-    throw new TypeError(`FeatureFlag has an unexpected value - ${featureFlag.value}`);
-  }
-
-  let key = featureFlag.key;
-
-  if (typeof featureFlag.key === "string" && !featureFlag.key.startsWith(featureFlagPrefix)) {
-    key = featureFlagPrefix + featureFlag.key;
+export function serializeFeatureFlagValue(featureFlagValue: MsFeatureFlagValue): string {
+  if (!featureFlagValue) {
+    throw new TypeError(`FeatureFlag has an unexpected value - ${featureFlagValue}`);
   }
 
   const jsonFeatureFlagValue: JsonFeatureFlagValue = {
-    id: featureFlag.value.id ?? key.replace(featureFlagPrefix, ""),
-    enabled: featureFlag.value.enabled,
-    description: featureFlag.value.description,
+    id: featureFlagValue.id,
+    enabled: featureFlagValue.enabled,
+    description: featureFlagValue.description,
     conditions: {
-      client_filters: featureFlag.value.conditions?.clientFilters
+      client_filters: featureFlagValue.conditions?.clientFilters,
+      requirement_type: featureFlagValue.conditions?.requirementType
     },
-    display_name: featureFlag.value.displayName,
-    allocation: featureFlag.value.allocation,
-    variants: featureFlag.value.variants,
-    telemetry: featureFlag.value.telemetry
+    display_name: featureFlagValue.displayName,
+    allocation: featureFlagValue.allocation,
+    variants: featureFlagValue.variants,
+    telemetry: featureFlagValue.telemetry
   };
 
-  const configSetting: SetConfigurationSettingParam<string> = {
-    ...featureFlag,
-    key,
-    value: JSON.stringify(jsonFeatureFlagValue)
-  };
-
-  return configSetting;
+  return JSON.stringify(jsonFeatureFlagValue);
 }

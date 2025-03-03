@@ -13,7 +13,7 @@ import { AjvValidationError, ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";
 import * as flat from "flat";
 import { ConfigurationFormat } from "../../enums";
-import { isJsonContentType, serializeFeatureFlagToConfigurationSettingParam } from "../utils";
+import { isJsonContentType, serializeFeatureFlagValue } from "../utils";
 import { MsFeatureFlagValue, RequirementType } from "../../featureFlag";
 import { Constants } from "../constants";
 import { MsFeatureFlagValueSchema } from "../../MsFeatureFlagSchema";
@@ -247,16 +247,15 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
     const prefix: string = options.prefix ?? "";
     for (const featureFlag of featureFlags) {
-      const setting: SetConfigurationSettingParam<MsFeatureFlagValue> = {
+      const setting: SetConfigurationSettingParam<string> = {
         key: featureFlagPrefix + prefix + featureFlag.id,
         label: options.label,
-        value: featureFlag,
+        value: serializeFeatureFlagValue(featureFlag),
         contentType: featureFlagContentType,
         tags: options.tags
       };
 
-      const serializedSetting: SetConfigurationSettingParam<string> = serializeFeatureFlagToConfigurationSettingParam(setting);
-      settings.push(serializedSetting);
+      settings.push(setting);
     }
 
     return settings;
