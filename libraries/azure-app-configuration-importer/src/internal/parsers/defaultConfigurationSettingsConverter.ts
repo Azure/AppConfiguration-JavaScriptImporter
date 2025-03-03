@@ -34,9 +34,9 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
   public Convert(
     config: object,
     options: SourceOptions
-  ): SetConfigurationSettingParam<string | MsFeatureFlagValue | SecretReferenceValue>[] {
+  ): SetConfigurationSettingParam<string | SecretReferenceValue>[] {
     let configurationSettings = new Array<
-      SetConfigurationSettingParam<string | MsFeatureFlagValue>
+      SetConfigurationSettingParam<string>
     >();
 
     let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<string>>();

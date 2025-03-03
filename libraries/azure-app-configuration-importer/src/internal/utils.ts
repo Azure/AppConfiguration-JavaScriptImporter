@@ -176,6 +176,7 @@ export function serializeFeatureFlagToConfigurationSettingParam(featureFlag: Set
   if (!featureFlag.value) {
     throw new TypeError(`FeatureFlag has an unexpected value - ${featureFlag.value}`);
   }
+
   let key = featureFlag.key;
 
   if (typeof featureFlag.key === "string" && !featureFlag.key.startsWith(featureFlagPrefix)) {
@@ -195,10 +196,11 @@ export function serializeFeatureFlagToConfigurationSettingParam(featureFlag: Set
     telemetry: featureFlag.value.telemetry
   };
 
-  const configSetting = {
+  const configSetting: SetConfigurationSettingParam<string> = {
     ...featureFlag,
     key,
     value: JSON.stringify(jsonFeatureFlagValue)
   };
+
   return configSetting;
 }

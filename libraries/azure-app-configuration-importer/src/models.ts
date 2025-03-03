@@ -20,8 +20,8 @@ export type JsonFeatureFlagValue = {
   conditions: {
     client_filters: { name: string; parameters?: Record<string, unknown> }[];
   };
-  description?: string;
   enabled: boolean;
+  description?: string;
   id?: string;
   display_name?: string;
   allocation?: {
