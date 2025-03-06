@@ -129,13 +129,13 @@ function isFeatureFlagValueEqual(valueA: string | MsFeatureFlagValue, valueB: st
   let featureFlagAValue: MsFeatureFlagValue;
 
   if (typeof valueA == "string") {
-    featureFlagAValue = toFeatureFlagValue(valueA);
+    featureFlagAValue = toMsFeatureFlagValue(valueA);
   }
   else {
-    featureFlagAValue = valueA;
+    featureFlagAValue = valueA as MsFeatureFlagValue;
   }
 
-  const featureFlagBValue: MsFeatureFlagValue = toFeatureFlagValue(valueB);
+  const featureFlagBValue: MsFeatureFlagValue = toMsFeatureFlagValue(valueB);
 
   if (Object.keys(featureFlagAValue).length !== Object.keys(featureFlagBValue).length) {
     return false;
@@ -150,7 +150,7 @@ function isFeatureFlagValueEqual(valueA: string | MsFeatureFlagValue, valueB: st
     isEqual(featureFlagAValue.telemetry, featureFlagBValue.telemetry);
 }
 
-function areFeatureFlagArraysEqual<T>(arrayA: T[], arrayB: T[]): boolean {
+function areArrayEqual<T>(arrayA: T[], arrayB: T[]): boolean {
   if (arrayA.length !== arrayB.length) {
     return false;
   }
@@ -163,10 +163,10 @@ function areFeatureFlagArraysEqual<T>(arrayA: T[], arrayB: T[]): boolean {
   return true;
 }
 
-const areFeatureFlagFiltersEqual = areFeatureFlagArraysEqual<FeatureFlagClientFilters>;
-const areFeatureFlagVariantsEqual = areFeatureFlagArraysEqual<Variant>;
+const areFeatureFlagFiltersEqual = areArrayEqual<FeatureFlagClientFilters>;
+const areFeatureFlagVariantsEqual = areArrayEqual<Variant>;
 
-function toFeatureFlagValue(value: string): MsFeatureFlagValue {
+function toMsFeatureFlagValue(value: string): MsFeatureFlagValue {
   const parsedJson: any = JSON.parse(value);
 
   const msFeatureFlagValue: MsFeatureFlagValue = {
