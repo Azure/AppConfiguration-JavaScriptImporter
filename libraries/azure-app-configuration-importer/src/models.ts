@@ -16,30 +16,6 @@ export interface JsonSecretReferenceValue {
 /**
  * @internal
  */
-export type JsonFeatureFlagValue = {
-  conditions: {
-    client_filters: { name: string; parameters?: Record<string, unknown> }[];
-    requirement_type?: string;
-  };
-  enabled: boolean;
-  description?: string;
-  id?: string;
-  display_name?: string;
-  allocation?: {
-    user?: { variant: string; users: string[] }[];
-    group?: { variant: string; groups: string[] }[];
-    default_when_enabled?: string;
-    default_when_disabled?: string;
-    percentile?: { variant: string; from: number; to: number }[];
-    seed?: string;
-  };
-  variants?: { name: string; configuration_value?: string | number | object | boolean; status_override?: string }[];
-  telemetry?: { enabled?: boolean; metadata?: object };
-};
-
-/**
- * @internal
- */
 export type KvSetConfigurationItem = {
   key: string;
   value?: string;

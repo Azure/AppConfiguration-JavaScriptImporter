@@ -8,7 +8,7 @@ import {
   featureFlagContentType,
   SecretReferenceValue } from "@azure/app-configuration";
 import { isEmpty, isEqual } from "lodash";
-import { Tags, FeatureFlagClientFilters, JsonFeatureFlagValue } from "../models";
+import { Tags, FeatureFlagClientFilters } from "../models";
 import { SourceOptions } from "../importOptions";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
@@ -176,19 +176,31 @@ export function serializeFeatureFlagValue(featureFlagValue: MsFeatureFlagValue):
     throw new TypeError(`FeatureFlag has an unexpected value - ${featureFlagValue}`);
   }
 
-  const jsonFeatureFlagValue: JsonFeatureFlagValue = {
+  const jsonFeatureFlagValue: any = {
     id: featureFlagValue.id,
     enabled: featureFlagValue.enabled,
     description: featureFlagValue.description,
     conditions: {
-      client_filters: featureFlagValue.conditions?.clientFilters,
-      requirement_type: featureFlagValue.conditions?.requirementType
+      client_filters: featureFlagValue.conditions?.clientFilters
     },
-    display_name: featureFlagValue.displayName,
-    allocation: featureFlagValue.allocation,
-    variants: featureFlagValue.variants,
-    telemetry: featureFlagValue.telemetry
+    display_name: featureFlagValue.displayName
   };
+
+  if (featureFlagValue.conditions && featureFlagValue.conditions.requirementType) {
+    jsonFeatureFlagValue.conditions.requirement_type = featureFlagValue.conditions.requirementType;
+  }
+
+  if (featureFlagValue.allocation) {
+    jsonFeatureFlagValue.allocation = featureFlagValue.allocation;
+  }
+
+  if (featureFlagValue.variants) {
+    jsonFeatureFlagValue.variants = featureFlagValue.variants;
+  }
+
+  if (featureFlagValue.telemetry) {
+    jsonFeatureFlagValue.telemetry = featureFlagValue.telemetry;
+  }
 
   return JSON.stringify(jsonFeatureFlagValue);
 }
