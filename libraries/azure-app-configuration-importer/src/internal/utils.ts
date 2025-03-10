@@ -173,7 +173,7 @@ function toFeatureFlagValue(value: string): FeatureFlagValue {
 
 export function serializeFeatureFlagValue(featureFlagValue: MsFeatureFlagValue): string {
   if (!featureFlagValue) {
-    throw new TypeError(`Invalid feature flag value - ${featureFlagValue}`);
+    throw new TypeError("Invalid feature flag value");
   }
 
   const jsonFeatureFlagValue: any = {
