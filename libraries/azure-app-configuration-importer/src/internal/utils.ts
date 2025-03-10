@@ -190,3 +190,37 @@ function toMsFeatureFlagValue(value: string): MsFeatureFlagValue {
 
   return msFeatureFlagValue;
 }
+
+export function serializeFeatureFlagValue(featureFlagValue: MsFeatureFlagValue): string {
+  if (!featureFlagValue) {
+    throw new TypeError("Invalid feature flag value");
+  }
+
+  const jsonFeatureFlagValue: any = {
+    id: featureFlagValue.id,
+    enabled: featureFlagValue.enabled,
+    description: featureFlagValue.description,
+    conditions: {
+      client_filters: featureFlagValue.conditions?.clientFilters
+    },
+    display_name: featureFlagValue.displayName
+  };
+
+  if (featureFlagValue.conditions && featureFlagValue.conditions.requirementType) {
+    jsonFeatureFlagValue.conditions.requirement_type = featureFlagValue.conditions.requirementType;
+  }
+
+  if (featureFlagValue.allocation) {
+    jsonFeatureFlagValue.allocation = featureFlagValue.allocation;
+  }
+
+  if (featureFlagValue.variants) {
+    jsonFeatureFlagValue.variants = featureFlagValue.variants;
+  }
+
+  if (featureFlagValue.telemetry) {
+    jsonFeatureFlagValue.telemetry = featureFlagValue.telemetry;
+  }
+
+  return JSON.stringify(jsonFeatureFlagValue);
+}
