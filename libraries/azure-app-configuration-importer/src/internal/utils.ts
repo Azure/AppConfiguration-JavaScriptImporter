@@ -13,6 +13,7 @@ import { SourceOptions } from "../importOptions";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
 import { Constants } from "../internal/constants";
+import { MsFeatureFlagValue } from "../featureFlag";
 
 /** @internal*/
 export function isJsonContentType(contentType?: string): boolean {
@@ -168,4 +169,38 @@ function toFeatureFlagValue(value: string): FeatureFlagValue {
     description:parsedJson.description,
     conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters}
   };
+}
+
+export function serializeFeatureFlagValue(featureFlagValue: MsFeatureFlagValue): string {
+  if (!featureFlagValue) {
+    throw new TypeError("Invalid feature flag value");
+  }
+
+  const jsonFeatureFlagValue: any = {
+    id: featureFlagValue.id,
+    enabled: featureFlagValue.enabled,
+    description: featureFlagValue.description,
+    conditions: {
+      client_filters: featureFlagValue.conditions?.clientFilters
+    },
+    display_name: featureFlagValue.displayName
+  };
+
+  if (featureFlagValue.conditions && featureFlagValue.conditions.requirementType) {
+    jsonFeatureFlagValue.conditions.requirement_type = featureFlagValue.conditions.requirementType;
+  }
+
+  if (featureFlagValue.allocation) {
+    jsonFeatureFlagValue.allocation = featureFlagValue.allocation;
+  }
+
+  if (featureFlagValue.variants) {
+    jsonFeatureFlagValue.variants = featureFlagValue.variants;
+  }
+
+  if (featureFlagValue.telemetry) {
+    jsonFeatureFlagValue.telemetry = featureFlagValue.telemetry;
+  }
+
+  return JSON.stringify(jsonFeatureFlagValue);
 }

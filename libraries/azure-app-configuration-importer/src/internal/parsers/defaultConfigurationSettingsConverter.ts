@@ -3,9 +3,9 @@
 
 import {
   SetConfigurationSettingParam,
-  SecretReferenceValue,
   featureFlagPrefix,
-  featureFlagContentType
+  featureFlagContentType,
+  SecretReferenceValue
 } from "@azure/app-configuration";
 import { SourceOptions } from "../../importOptions";
 import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
@@ -13,7 +13,7 @@ import { AjvValidationError, ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";
 import * as flat from "flat";
 import { ConfigurationFormat } from "../../enums";
-import { isJsonContentType } from "../utils";
+import { isJsonContentType, serializeFeatureFlagValue } from "../utils";
 import { MsFeatureFlagValue, RequirementType } from "../../featureFlag";
 import { Constants } from "../constants";
 import { MsFeatureFlagValueSchema } from "../../MsFeatureFlagSchema";
@@ -34,12 +34,12 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
   public Convert(
     config: object,
     options: SourceOptions
-  ): SetConfigurationSettingParam<string | MsFeatureFlagValue | SecretReferenceValue>[] {
+  ): SetConfigurationSettingParam<string | SecretReferenceValue>[] {
     let configurationSettings = new Array<
-      SetConfigurationSettingParam<string | MsFeatureFlagValue>
+      SetConfigurationSettingParam<string>
     >();
 
-    let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
+    let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<string>>();
     let foundMsFmSchema = false;
     let foundDotnetFmSchema = false;
     let dotnetFmSchemaKeyWord = "";
@@ -187,8 +187,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   Convert(
     config: object,
     options: SourceOptions
-  ): SetConfigurationSettingParam<MsFeatureFlagValue>[] {
-    const settings = new Array<SetConfigurationSettingParam<MsFeatureFlagValue>>();
+  ): SetConfigurationSettingParam<string>[] {
+    const settings = new Array<SetConfigurationSettingParam<string>>();
     const featureFlags = new Array<MsFeatureFlagValue>();
 
     if (this.dotnetFmSchemaKeyWord) {
@@ -247,10 +247,10 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
 
     const prefix: string = options.prefix ?? "";
     for (const featureFlag of featureFlags) {
-      const setting: SetConfigurationSettingParam<MsFeatureFlagValue> = {
+      const setting: SetConfigurationSettingParam<string> = {
         key: featureFlagPrefix + prefix + featureFlag.id,
         label: options.label,
-        value: featureFlag,
+        value: serializeFeatureFlagValue(featureFlag),
         contentType: featureFlagContentType,
         tags: options.tags
       };
