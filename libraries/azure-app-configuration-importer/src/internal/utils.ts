@@ -144,9 +144,9 @@ function isFeatureFlagValueEqual(valueA: string | MsFeatureFlagValue, valueB: st
   return featureFlagAValue.id == featureFlagBValue.id &&
     featureFlagAValue.enabled == featureFlagBValue.enabled &&
     featureFlagAValue.description == featureFlagBValue.description &&
-    areFeatureFlagFiltersEqual(featureFlagAValue.conditions.clientFilters, featureFlagBValue.conditions.clientFilters) &&
+    areArrayEqual<FeatureFlagClientFilters>(featureFlagAValue.conditions.clientFilters, featureFlagBValue.conditions.clientFilters) &&
     isEqual(featureFlagAValue.allocation, featureFlagBValue.allocation) &&
-    areFeatureFlagVariantsEqual(featureFlagAValue.variants ?? [], featureFlagBValue.variants ?? []) &&
+    areArrayEqual<Variant>(featureFlagAValue.variants ?? [], featureFlagBValue.variants ?? []) &&
     isEqual(featureFlagAValue.telemetry, featureFlagBValue.telemetry);
 }
 
@@ -162,9 +162,6 @@ function areArrayEqual<T>(arrayA: T[], arrayB: T[]): boolean {
   }
   return true;
 }
-
-const areFeatureFlagFiltersEqual = areArrayEqual<FeatureFlagClientFilters>;
-const areFeatureFlagVariantsEqual = areArrayEqual<Variant>;
 
 function toMsFeatureFlagValue(value: string): MsFeatureFlagValue {
   const parsedJson: any = JSON.parse(value);
