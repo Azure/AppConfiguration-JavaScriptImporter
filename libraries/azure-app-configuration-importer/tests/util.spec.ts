@@ -4,6 +4,7 @@
 import { assert } from "chai";
 import { areTagsEqual, isJsonContentType, isConfigSettingEqual } from "../src/internal/utils";
 import { ConfigurationSetting, FeatureFlagValue, SetConfigurationSettingParam } from "@azure/app-configuration";
+import { MsFeatureFlagValue } from "../src/featureFlag";
 
 describe("Test the utility methods", () => {
   it("Determine the content type is json contentType", async () => {
@@ -244,9 +245,92 @@ describe("Test the utility methods", () => {
       isReadOnly: true
     };
 
+    const testKeyValue7: SetConfigurationSettingParam<MsFeatureFlagValue> = {
+      key: "FeatureX",
+      label: "test",
+      value: {
+        id: "time001",
+        enabled: true,
+        description: "",
+        conditions: {
+          clientFilters: []
+        },
+        allocation: {
+          percentile: [
+            {
+              variant: "Off",
+              from: 0,
+              to: 23
+            },
+            {
+              variant: "On",
+              from: 23,
+              to: 100
+            }
+          ],
+          group: [
+            {
+              variant: "On",
+              groups: [
+                "m1"
+              ]
+            },
+            {
+              variant: "Off",
+              groups: [
+                "m2",
+                "m3"
+              ]
+            }
+          ],
+          user: [
+            {
+              variant: "Off",
+              users: [
+                "user1",
+                "user3"
+              ]
+            },
+            {
+              variant: "On",
+              users: [
+                "user2"
+              ]
+            }
+          ],
+          seed: "bcngrfgnfgn",
+          default_when_enabled: "On",
+          default_when_disabled: "On"
+        },
+        variants: [
+          {
+            name: "Off",
+            configuration_value: false
+          },
+          {
+            name: "On",
+            configuration_value: true
+          }
+        ]
+      },
+      contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+      tags: {tag1: "tag1"}
+    };
+ 
+    const testKeyValue8: ConfigurationSetting = {
+      key: "FeatureX",
+      label: "test",
+      value: "{\"id\":\"time001\",\"enabled\":true,\"description\":\"\",\"conditions\":{\"client_filters\":[]},\"allocation\":{\"percentile\":[{\"variant\":\"Off\",\"from\":0,\"to\":23},{\"variant\":\"On\",\"from\":23,\"to\":100}],\"group\":[{\"variant\":\"On\",\"groups\":[\"m1\"]},{\"variant\":\"Off\",\"groups\":[\"m2\",\"m3\"]}],\"user\":[{\"variant\":\"Off\",\"users\":[\"user1\",\"user3\"]},{\"variant\":\"On\",\"users\":[\"user2\"]}],\"seed\":\"bcngrfgnfgn\",\"default_when_enabled\":\"On\",\"default_when_disabled\":\"On\"},\"variants\":[{\"name\":\"Off\",\"configuration_value\":false},{\"name\":\"On\",\"configuration_value\":true}]}",
+      contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+      tags: {tag1: "tag1"},
+      isReadOnly: true
+    };
+
+
     assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2));
     assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4));
     assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6));
+    assert.isTrue(isConfigSettingEqual(testKeyValue7, testKeyValue8));
   });
 
   it("Determine if feature flag values with different values are not equal", async()=> {
@@ -339,9 +423,91 @@ describe("Test the utility methods", () => {
       isReadOnly: true
     };
 
+    const testKeyValue9: SetConfigurationSettingParam<MsFeatureFlagValue> = {
+      key: "FeatureX",
+      label: "test",
+      value: {
+        id: "time001",
+        enabled: true,
+        description: "",
+        conditions: {
+          clientFilters: []
+        },
+        allocation: {
+          percentile: [
+            {
+              variant: "Off",
+              from: 0,
+              to: 23
+            },
+            {
+              variant: "On",
+              from: 23,
+              to: 100
+            }
+          ],
+          group: [
+            {
+              variant: "On",
+              groups: [
+                "m1"
+              ]
+            },
+            {
+              variant: "Off",
+              groups: [
+                "m2",
+                "m3"
+              ]
+            }
+          ],
+          user: [
+            {
+              variant: "Off",
+              users: [
+                "user1",
+                "user3"
+              ]
+            },
+            {
+              variant: "On",
+              users: [
+                "user2"
+              ]
+            }
+          ],
+          seed: "bcngrfgnfgn",
+          default_when_enabled: "On",
+          default_when_disabled: "On"
+        },
+        variants: [
+          {
+            name: "Off",
+            configuration_value: false
+          },
+          {
+            name: "On",
+            configuration_value: true
+          }
+        ]
+      },
+      contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+      tags: { tag1: "tag1" }
+    };
+
+    const testKeyValue10: ConfigurationSetting = {
+      key: "FeatureX",
+      label: "test",
+      value: "{\"id\":\"time001\",\"enabled\":true,\"description\":\"\",\"conditions\":{\"client_filters\":[]},\"allocation\":{\"percentile\":[{\"variant\":\"Off\",\"from\":0,\"to\":23},{\"variant\":\"On\",\"from\":23,\"to\":100}],\"group\":[{\"variant\":\"On\",\"groups\":[\"m1\"]},{\"variant\":\"Off\",\"groups\":[\"m2\",\"m3\"]}],\"user\":[{\"variant\":\"Off\",\"users\":[\"user1\",\"user3\"]},{\"variant\":\"On\",\"users\":[\"user2\"]}],\"seed\":\"bcngrfgnfgn\",\"default_when_enabled\":\"On\",\"default_when_disabled\":\"On\"},\"variants\":[{\"name\":\"Off\",\"configuration_value\":false},{\"name\":\"On\",\"configuration_value\":true,\"status_override\":\"None\"}]}",
+      contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
+      tags: {},
+      isReadOnly: true
+    };
+
     assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2));
     assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4));
     assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6));
     assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8));
+    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10));
   });
 });

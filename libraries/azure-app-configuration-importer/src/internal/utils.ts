@@ -13,7 +13,7 @@ import { SourceOptions } from "../importOptions";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
 import { Constants } from "../internal/constants";
-import { MsFeatureFlagValue } from "../featureFlag";
+import { MsFeatureFlagValue, Variant } from "../featureFlag";
 
 /** @internal*/
 export function isJsonContentType(contentType?: string): boolean {
@@ -125,17 +125,17 @@ export function validateOptions(options: SourceOptions): void {
   }
 }
 
-function isFeatureFlagValueEqual(valueA: string | FeatureFlagValue, valueB: string): boolean {
-  let featureFlagAValue: FeatureFlagValue;
+function isFeatureFlagValueEqual(valueA: string | MsFeatureFlagValue, valueB: string): boolean {
+  let featureFlagAValue: MsFeatureFlagValue;
 
   if (typeof valueA == "string") {
-    featureFlagAValue = toFeatureFlagValue(valueA);
+    featureFlagAValue = toMsFeatureFlagValue(valueA);
   }
   else {
-    featureFlagAValue = valueA;
+    featureFlagAValue = valueA as MsFeatureFlagValue;
   }
 
-  const featureFlagBValue: FeatureFlagValue = toFeatureFlagValue(valueB);
+  const featureFlagBValue: MsFeatureFlagValue = toMsFeatureFlagValue(valueB);
 
   if (Object.keys(featureFlagAValue).length !== Object.keys(featureFlagBValue).length) {
     return false;
@@ -144,31 +144,48 @@ function isFeatureFlagValueEqual(valueA: string | FeatureFlagValue, valueB: stri
   return featureFlagAValue.id == featureFlagBValue.id &&
     featureFlagAValue.enabled == featureFlagBValue.enabled &&
     featureFlagAValue.description == featureFlagBValue.description &&
-    areFeatureFlagFiltersEqual(featureFlagAValue.conditions.clientFilters, featureFlagBValue.conditions.clientFilters);
+    areArrayEqual<FeatureFlagClientFilters>(featureFlagAValue.conditions.clientFilters, featureFlagBValue.conditions.clientFilters) &&
+    isEqual(featureFlagAValue.allocation, featureFlagBValue.allocation) &&
+    areArrayEqual<Variant>(featureFlagAValue.variants ?? [], featureFlagBValue.variants ?? []) &&
+    isEqual(featureFlagAValue.telemetry, featureFlagBValue.telemetry);
 }
 
-function areFeatureFlagFiltersEqual(filterA: FeatureFlagClientFilters[], filterB: FeatureFlagClientFilters[]): boolean {
-  if (filterA.length !== filterB.length) {
+function areArrayEqual<T>(arrayA: T[], arrayB: T[]): boolean {
+  if (arrayA.length !== arrayB.length) {
     return false;
   }
 
-  for (let i = 0; i < filterA.length; i++) {
-    if (!isEqual(filterA[i], filterB[i])) {
+  for (let i = 0; i < arrayA.length; i++) {
+    if (!isEqual(arrayA[i], arrayB[i])) {
       return false;
     }
   }
   return true;
 }
 
-function toFeatureFlagValue(value: string): FeatureFlagValue {
+function toMsFeatureFlagValue(value: string): MsFeatureFlagValue {
   const parsedJson: any = JSON.parse(value);
 
-  return {
+  const msFeatureFlagValue: MsFeatureFlagValue = {
     id: parsedJson.id,
     enabled: parsedJson.enabled,
     description:parsedJson.description,
     conditions: isEmpty(parsedJson.conditions) ? {clientFilters: []} : {clientFilters: parsedJson.conditions.client_filters}
   };
+  
+  if (parsedJson.allocation) {
+    msFeatureFlagValue.allocation = parsedJson.allocation;
+  }
+
+  if (parsedJson.variants) {
+    msFeatureFlagValue.variants = parsedJson.variants;
+  }
+
+  if (parsedJson.telemetry) {
+    msFeatureFlagValue.telemetry = parsedJson.telemetry;
+  }
+
+  return msFeatureFlagValue;
 }
 
 export function serializeFeatureFlagValue(featureFlagValue: MsFeatureFlagValue): string {
