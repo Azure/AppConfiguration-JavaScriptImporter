@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@azure/app-configuration": "1.5.0",
-    "@azure/app-configuration-importer": "^1.0.0-preview"
+    "@azure/app-configuration-importer": "^1.1.1-preview"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.22.2",
