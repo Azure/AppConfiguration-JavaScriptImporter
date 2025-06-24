@@ -2,7 +2,7 @@
   "name": "@azure/app-configuration-importer",
   "author": "Microsoft Corporation",
   "description": "A client library for importing/exporting key-values between configuration sources and Azure App Configuration service",
-  "version": "1.1.1-preview",
+  "version": "1.1.2-preview",
   "sdk-type": "client",
   "keywords": [
     "node",
