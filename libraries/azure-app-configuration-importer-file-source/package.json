@@ -32,7 +32,7 @@
     "clean": "rimraf dist dist-* types *.tgz *.log"
   },
   "dependencies": {
-    "@azure/app-configuration": "1.5.0",
+    "@azure/app-configuration": "^1.9.0",
     "@azure/app-configuration-importer": "1.1.2-preview"
   },
   "devDependencies": {
