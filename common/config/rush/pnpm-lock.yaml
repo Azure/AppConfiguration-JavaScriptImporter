@@ -1,8 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@azure/app-configuration': 1.5.0
-  '@azure/app-configuration-importer': ^1.0.0-preview
+  '@azure/app-configuration': ^1.9.0
   '@azure/core-client': ^1.9.2
   '@azure/core-http': ^3.0.1
   '@azure/core-paging': ^1.4.0
@@ -57,8 +56,7 @@ specifiers:
   uuid: ^10.0.0
 
 dependencies:
-  '@azure/app-configuration': 1.5.0
-  '@azure/app-configuration-importer': 1.0.0-preview
+  '@azure/app-configuration': 1.9.0
   '@azure/core-client': 1.9.2
   '@azure/core-http': 3.0.4
   '@azure/core-paging': 1.6.2
@@ -164,6 +162,25 @@ packages:
       - supports-color
     dev: false
 
+  /@azure/app-configuration/1.9.0:
+    resolution: {integrity: sha512-X0AVDQygL4AGLtplLYW+W0QakJpJ417sQldOacqwcBQ882tAPdUVs6V3mZ4jUjwVsgr+dV1v9zMmijvsp6XBxA==}
+    engines: {node: '>=18.0.0'}
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.7.2
+      '@azure/core-client': 1.9.2
+      '@azure/core-http-compat': 2.1.2
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.16.0
+      '@azure/core-tracing': 1.1.2
+      '@azure/core-util': 1.9.0
+      '@azure/logger': 1.1.2
+      tslib: 2.6.3
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /@azure/core-auth/1.7.2:
     resolution: {integrity: sha1-VYt8t90SsAvuwHrl31kH103x69k=}
     engines: {node: '>=18.0.0'}
@@ -189,7 +206,7 @@ packages:
     dev: false
 
   /@azure/core-http-compat/2.1.2:
-    resolution: {integrity: sha1-0Vha2iS6dQ3BYdgWFpszs192Lw0=}
+    resolution: {integrity: sha512-5MnV1yqzZwgNLLjlizsU3QqOeQChkIXw781Fwh1xdAqJR5AA32IUaq6xv1BICJvfbHoa+JYcaij2HFkhLbNTJQ==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@azure/abort-controller': 2.1.2
@@ -222,7 +239,7 @@ packages:
     dev: false
 
   /@azure/core-lro/2.7.2:
-    resolution: {integrity: sha1-eHEFAnog5Fx3ZRqYsBpNOwG3Wgg=}
+    resolution: {integrity: sha512-0YIpccoX8m/k00O7mDDMdJpbr6mf1yWo2dfmxt5A8XVZVVMz2SSKaEbMCeJRvgQ0IaSlqhjT47p4hVIRRy90xw==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@azure/abort-controller': 2.1.2
@@ -270,7 +287,7 @@ packages:
     dev: false
 
   /@azure/core-util/1.9.0:
-    resolution: {integrity: sha1-Rpr9fmRS1TiLGJ+Q0z93VrCyENE=}
+    resolution: {integrity: sha512-AfalUQ1ZppaKuxPPMsFEUdX6GZPB3d9paR9d/TTL7Ow2De8cJaC7ibi7kWVlFAVPCYo31OcnGymc0R89DX8Oaw==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@azure/abort-controller': 2.1.2
@@ -3146,11 +3163,11 @@ packages:
     dev: false
 
   file:projects/app-configuration-importer-file-source.tgz:
-    resolution: {integrity: sha512-4xCzHa7z03XPTsMCUrJ/SySn4YkxWP236k7cMceoDiVfrYkN14aO9lMwlVOw6rgU6SDVFtR3k47MXnILa+LkNQ==, tarball: file:projects/app-configuration-importer-file-source.tgz}
+    resolution: {integrity: sha512-lylhd1EhxgkTt/mulHlU6rCcjtL+SQwsh02wbyqVRQXiMxkOKd+9/1Pf+jmw/dq7MJGFhgzVlhtvBC562xl/cA==, tarball: file:projects/app-configuration-importer-file-source.tgz}
     name: '@rush-temp/app-configuration-importer-file-source'
     version: 0.0.0
     dependencies:
-      '@azure/app-configuration': 1.5.0
+      '@azure/app-configuration': 1.9.0
       '@azure/app-configuration-importer': 1.0.0-preview
       '@microsoft/api-extractor': 7.47.0_@types+node@12.20.55
       '@rollup/plugin-commonjs': 21.1.0_rollup@2.79.1
@@ -3196,11 +3213,11 @@ packages:
     dev: false
 
   file:projects/app-configuration-importer.tgz:
-    resolution: {integrity: sha512-Hdl0XCklgRYHEbc8FXQd+lT+wn4L3epPFnig3ITqcwBwuoT31YDKvKKkw6nMClEDw8txT2ifTkmB3Fd8b4PdZw==, tarball: file:projects/app-configuration-importer.tgz}
+    resolution: {integrity: sha512-2f1actadmt36eQNkuORdme5qtI/2Y9KowWl4dz3J0QrG94Hi8yii7/mBKG30F0VsZKX7TVtxrXJ5rPYs0cnOJw==, tarball: file:projects/app-configuration-importer.tgz}
     name: '@rush-temp/app-configuration-importer'
     version: 0.0.0
     dependencies:
-      '@azure/app-configuration': 1.5.0
+      '@azure/app-configuration': 1.9.0
       '@azure/core-client': 1.9.2
       '@azure/core-http': 3.0.4
       '@azure/core-paging': 1.6.2
