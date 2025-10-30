@@ -11,7 +11,7 @@ import { ConfigurationSettingsSource } from "./settingsImport/configurationSetti
 import { ImportMode } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup } from "./models";
+import { ImportProgress, KeyLabelLookup, ConfigurationDiff } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
@@ -43,7 +43,8 @@ export class AppConfigurationImporter {
    * @param timeout - Seconds of entire import progress timeout
    * @param progressCallback - Callback for report the progress of import
    * @param importMode - Determines the behavior when importing key-values. The default value, 'All' will import all key-values in the input file to App Configuration. 'Ignore-Match' will only import settings that have no matching key-value in App Configuration.
-   * @param dryRun - When dry run is enabled, no updates  will be performed to App Configuration. Instead, any updates that would have been performed in a normal run will be printed to the console for review
+   * @param dryRun - When enabled, no updates will be performed to App Configuration. Returns a ConfigurationDiff object and prints changes to console for review.
+   * @returns ConfigurationDiff when dryRun=true, otherwise void
    */
   public async Import(
     configSettingsSource: ConfigurationSettingsSource,
@@ -52,7 +53,7 @@ export class AppConfigurationImporter {
     progressCallback?: (progress: ImportProgress) => unknown,
     importMode?: ImportMode,
     dryRun?: boolean
-  ) {
+  ): Promise<ConfigurationDiff | void> {
     if (importMode == undefined) {
       importMode = ImportMode.IgnoreMatch;
     }
@@ -61,9 +62,37 @@ export class AppConfigurationImporter {
     }
     this.validateImportMode(importMode);
 
-    const configSettings = await configSettingsSource.GetConfigurationSettings();
+    const configurationDiff: ConfigurationDiff = await this.analyzeConfigurationChanges(configSettingsSource, strict, importMode);
+    
+    // Generate correlation ID for operations
+    const customCorrelationRequestId: string = uuidv4();
+    const customHeadersOption: OperationOptions = {
+      requestOptions: {
+        customHeaders: {
+          [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
+        }
+      }
+    };
+   
+    if (dryRun) {
+      this.printUpdatesToConsole(configurationDiff.Added, configurationDiff.Deleted);
+      return configurationDiff;
+    }
+    else {
+      await this.applyUpdatesToServer(configurationDiff.Added, configurationDiff.Deleted, timeout, customHeadersOption, progressCallback);
+    }
+  }
 
+  private async analyzeConfigurationChanges(
+    configSettingsSource: ConfigurationSettingsSource,
+    strict: boolean,
+    importMode: ImportMode
+  ): Promise<ConfigurationDiff> {
+    const configSettings = await configSettingsSource.GetConfigurationSettings();
+    
     const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
+    const configurationSettingToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const srcKeyLabelLookUp: KeyLabelLookup = {};
     
     configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
@@ -73,7 +102,9 @@ export class AppConfigurationImporter {
       srcKeyLabelLookUp[config.key][config.label || ""] = true;
     });
 
-    // generate correlationRequestId for operations in the same activity
+    configurationSettingToAdd.push(...configSettings);
+
+    // Generate correlation ID for operations
     const customCorrelationRequestId: string = uuidv4();
     const customHeadersOption: OperationOptions = {
       requestOptions: {
@@ -83,32 +114,42 @@ export class AppConfigurationImporter {
       }
     };
 
-    if (strict || importMode == ImportMode.IgnoreMatch) {
-      for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
-
-        const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
+    for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
+      const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
+      if (strict && !isKeyLabelPresent) {
+        configurationSettingToDelete.push(existing);
+      }
+     
+      const incoming = configSettings.find(configSetting => configSetting.key == existing.key && 
+        configSetting.label == existing.label);
+      
+      if (incoming) {
+        const settingsAreEqual: boolean = isConfigSettingEqual(incoming, existing);
         
-        if (strict && !isKeyLabelPresent) {
-          configurationSettingToDelete.push(existing);
-        }
-       
-        if (importMode == ImportMode.IgnoreMatch) {
-          const incoming = configSettings.find(configSetting => configSetting.key == existing.key && 
-            configSetting.label == existing.label);
-           
-          if (incoming && isConfigSettingEqual(incoming, existing)) {
-            configSettings.splice(configSettings.indexOf(incoming), 1);
+        if (!settingsAreEqual) {
+          configurationSettingToModify.push(incoming);
+          // Remove from add list since it's a modification, not an addition
+          const addIndex: number = configurationSettingToAdd.findIndex(addSetting => 
+            addSetting.key === incoming.key && addSetting.label === incoming.label);
+          if (addIndex !== -1) {
+            configurationSettingToAdd.splice(addIndex, 1);
+          }
+        } else if (importMode == ImportMode.IgnoreMatch) {
+          // Remove unchanged settings from add list
+          const addIndex = configurationSettingToAdd.findIndex(addSetting => 
+            addSetting.key === incoming.key && addSetting.label === incoming.label);
+          if (addIndex !== -1) {
+            configurationSettingToAdd.splice(addIndex, 1);
           }
         }
       }
     }
-   
-    if (dryRun) {
-      this.printUpdatesToConsole(configSettings, configurationSettingToDelete);
-    }
-    else {
-      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, customHeadersOption, progressCallback);
-    }
+
+    return {
+      Added: configurationSettingToAdd,
+      Modified: configurationSettingToModify,
+      Deleted: configurationSettingToDelete
+    };
   }
 
   private printUpdatesToConsole(
