@@ -134,7 +134,8 @@ export class AppConfigurationImporter {
           if (addIndex !== -1) {
             configurationSettingToAdd.splice(addIndex, 1);
           }
-        } else if (importMode == ImportMode.IgnoreMatch) {
+        }
+        else if (importMode == ImportMode.IgnoreMatch) {
           // Remove unchanged settings from add list
           const addIndex = configurationSettingToAdd.findIndex(addSetting => 
             addSetting.key === incoming.key && addSetting.label === incoming.label);
