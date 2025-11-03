@@ -61,9 +61,7 @@ export class AppConfigurationImporter {
       dryRun = false;
     }
     this.validateImportMode(importMode);
-
-    const configurationDiff: ConfigurationDiff = await this.analyzeConfigurationChanges(configSettingsSource, strict, importMode);
-    
+      
     // Generate correlation ID for operations
     const customCorrelationRequestId: string = uuidv4();
     const customHeadersOption: OperationOptions = {
@@ -73,9 +71,11 @@ export class AppConfigurationImporter {
         }
       }
     };
-   
+
+    const configurationDiff: ConfigurationDiff = await this.analyzeConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
+
     if (dryRun) {
-      this.printUpdatesToConsole(configurationDiff.Added, configurationDiff.Deleted);
+      this.printUpdatesToConsole([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted);
       return configurationDiff;
     }
     else {
@@ -86,7 +86,8 @@ export class AppConfigurationImporter {
   private async analyzeConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
     strict: boolean,
-    importMode: ImportMode
+    importMode: ImportMode,
+    customHeadersOption: OperationOptions
   ): Promise<ConfigurationDiff> {
     const configSettings = await configSettingsSource.GetConfigurationSettings();
     
@@ -103,16 +104,6 @@ export class AppConfigurationImporter {
     });
 
     configurationSettingToAdd.push(...configSettings);
-
-    // Generate correlation ID for operations
-    const customCorrelationRequestId: string = uuidv4();
-    const customHeadersOption: OperationOptions = {
-      requestOptions: {
-        customHeaders: {
-          [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
-        }
-      }
-    };
 
     for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
       const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
