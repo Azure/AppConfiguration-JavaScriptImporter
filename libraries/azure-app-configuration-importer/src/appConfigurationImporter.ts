@@ -72,18 +72,18 @@ export class AppConfigurationImporter {
       }
     };
 
-    const configurationDiff: ConfigurationDiff = await this.analyzeConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
+    const configurationDiff: ConfigurationDiff = await this.getConfigurationDiff(configSettingsSource, strict, importMode, customHeadersOption);
 
     if (dryRun) {
       this.printUpdatesToConsole([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted);
       return configurationDiff;
     }
     else {
-      await this.applyUpdatesToServer(configurationDiff.Added, configurationDiff.Deleted, timeout, customHeadersOption, progressCallback);
+      await this.applyUpdatesToServer([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted, timeout, customHeadersOption, progressCallback);
     }
   }
 
-  private async analyzeConfigurationChanges(
+  private async getConfigurationDiff(
     configSettingsSource: ConfigurationSettingsSource,
     strict: boolean,
     importMode: ImportMode,
