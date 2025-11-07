@@ -231,22 +231,16 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     assert.equal(total, 3);
   });
 
-  describe("Call Import API to import configurations from file and pass dryRun and Import mode options",async()=>{
-    let spy: sinon.SinonSpy;
+  describe("Call getConfigurationChanges API to get configurations changes from file and pass Import mode options", () => {
     let appConfigurationImporter: AppConfigurationImporter;
 
     beforeEach(function () {
-      spy = sinon.spy(console,"log");
       const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
       AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
       appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
     });
 
-    afterEach(function () {
-      spy.restore();
-    });
-
-    it("Succeed to import and log all key-values with importMode as All, profile as default", async()=>{
+  it("Succeed to get configuration changes with importMode as All, profile as default", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/default.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -254,26 +248,15 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
         label: "Dev",
         separator: ":"
       };
-
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-      let finished = 0;
-      let total = 0;
-      const reportImportProgress = (importProgress: ImportProgress) => {
-        finished = importProgress.successCount;
-        total = importProgress.importCount;
-      };
-      await appConfigurationImporter.Import(stringConfigurationSource, 3, false, reportImportProgress, ImportMode.All, true);
-   
-      // All key-values in App Configuration will be updated
-      assert.equal(spy.getCall(1).args[0], "\nThe following settings will be written to App Configuration:");
-      assert.equal(spy.getCall(2).args[0], "{\"key\":\"app:Settings:FontSize\",\"label\":\"Dev\"}");
-      assert.equal(spy.getCall(3).args[0], "{\"key\":\"app:Settings:BackgroundColor\",\"label\":\"Dev\"}");
-      assert.equal(spy.getCall(4).args[0], "{\"key\":\"app:Settings:FontColor\",\"label\":\"Dev\"}");
-      assert.equal(finished, 0);
-      assert.equal(total, 0);
+      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
+      assert.equal(configurationChanges.Added.length, 2);
+      assert.equal(configurationChanges.Modified.length, 1);
+      assert.equal(configurationChanges.Deleted.length, 0);
+      assert.equal(configurationChanges.Modified[0].key, "app:Settings:FontColor");
     });
 
-    it("Succeed to import and log no matching key values updates with importMode as IgnoreMatch and profile as default", async()=>{
+  it("Succeed to get configuration changes and return no matching key values updates with importMode as IgnoreMatch and profile as default", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/default.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -281,72 +264,46 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
         label: "Dev",
         separator: ":"
       };
-
-      const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-      let finished = 0;
-      let total = 0;
-      const reportImportProgress = (importProgress: ImportProgress) => {
-        finished = importProgress.successCount;
-        total = importProgress.importCount;
-      };
-      await appConfigurationImporter.Import(stringConfigurationSource, 3, false, reportImportProgress, ImportMode.IgnoreMatch, true);
-   
+      const source = new StringConfigurationSettingsSource(options);
+      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(source, false, ImportMode.IgnoreMatch);
       // Only keys with no matching key-values in App Configuration will be updated
-      assert.equal(spy.getCall(1).args[0], "\nThe following settings will be written to App Configuration:");
-      assert.equal(spy.getCall(2).args[0], "{\"key\":\"app:Settings:FontColor\",\"label\":\"Dev\"}");
-      assert.equal(finished, 0);
-      assert.equal(total, 0);
+      assert.equal(configurationChanges.Added.length, 0);
+      assert.equal(configurationChanges.Modified.length, 1);
+      assert.equal(configurationChanges.Modified[0].key, "app:Settings:FontColor");
+      assert.equal(configurationChanges.Deleted.length, 0);
     });
 
-    it("Succeed to import key-values file with importMode as All and profile as kvset", async()=>{
+  it("Succeed to get configuration changes from key-values file with importMode as All and profile as kvset", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvset.json")).toString(),
         format: ConfigurationFormat.Json,
         profile: ConfigurationProfile.KvSet
       };
-
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-      let finished = 0;
-      let total = 0;
-      const reportImportProgress = (importProgress: ImportProgress) => {
-        finished = importProgress.successCount;
-        total = importProgress.importCount;
-      };
-      await appConfigurationImporter.Import(stringConfigurationSource, 3, false, reportImportProgress, ImportMode.All, true);
-   
+      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
       //All key-values in App Configuration will be updated
-      assert.equal(spy.getCall(1).args[0], "\nThe following settings will be written to App Configuration:");
-      assert.equal(spy.getCall(2).args[0], "{\"key\":\".appconfig.featureflag/Test\",\"label\":\"dev\",\"contentType\":\"application/vnd.microsoft.appconfig.ff+json;charset=utf-8\",\"tags\":{}}");
-      assert.equal(spy.getCall(3).args[0], "{\"key\":\"Database:ConnectionString\",\"label\":\"test\",\"contentType\":\"application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8\",\"tags\":{}}");
-      assert.equal(spy.getCall(4).args[0], "{\"key\":\"TestEnv\",\"label\":\"dev\",\"contentType\":null,\"tags\":{\"tag1\":\"value1\",\"tag2\":\"value2\"}}");
-      assert.equal(finished, 0);
-      assert.equal(total, 0);
+      assert.equal(configurationChanges.Added.length, 2);
+      assert.equal(configurationChanges.Modified.length, 1);
+      assert.equal(configurationChanges.Modified[0].key, "TestEnv");
+      assert.equal(configurationChanges.Deleted.length, 0);
     });
 
-    it("Succeed to import key-values and log no matching key values with importMode as IgnoreMatch and profile as kvset", async()=>{
+  it("Succeed to get configuration changes and return no matching key values with importMode as IgnoreMatch and profile as kvset", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvset.json")).toString(),
         format: ConfigurationFormat.Json,
         profile: ConfigurationProfile.KvSet
       };
-
-      const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-      let finished = 0;
-      let total = 0;
-      const reportImportProgress = (importProgress: ImportProgress) => {
-        finished = importProgress.successCount;
-        total = importProgress.importCount;
-      };
-      await appConfigurationImporter.Import(stringConfigurationSource, 3, false, reportImportProgress, ImportMode.IgnoreMatch, true);
-   
-      //Only keys with no matching key-values in App Configuration will be updated
-      assert.equal(spy.getCall(1).args[0], "\nThe following settings will be written to App Configuration:");
-      assert.equal(spy.getCall(2).args[0], "{\"key\":\"TestEnv\",\"label\":\"dev\",\"contentType\":null,\"tags\":{\"tag1\":\"value1\",\"tag2\":\"value2\"}}");
-      assert.equal(finished, 0);
-      assert.equal(total, 0);
+      const source = new StringConfigurationSettingsSource(options);
+      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(source, false, ImportMode.IgnoreMatch);
+      // Only changed key (TestEnv) should be in Modified
+      assert.equal(configurationChanges.Added.length, 0);
+      assert.equal(configurationChanges.Modified.length, 1);
+      assert.equal(configurationChanges.Modified[0].key, "TestEnv");
+      assert.equal(configurationChanges.Deleted.length, 0);
     });
 
-    it("Fail when an invalid import mode is provided", async()=> {
+  it("Fail when an invalid import mode is provided", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvset.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -355,7 +312,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
     
       try {
-        await appConfigurationImporter.Import(stringConfigurationSource, 3, false, undefined, 9, false);
+        await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, 9 as unknown as ImportMode);
       }
       catch (error) {
         assert.isTrue(error instanceof ArgumentError);

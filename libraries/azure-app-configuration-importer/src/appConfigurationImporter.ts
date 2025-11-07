@@ -43,23 +43,19 @@ export class AppConfigurationImporter {
    * @param timeout - Seconds of entire import progress timeout
    * @param progressCallback - Callback for report the progress of import
    * @param importMode - Determines the behavior when importing key-values. The default value, 'All' will import all key-values in the input file to App Configuration. 'Ignore-Match' will only import settings that have no matching key-value in App Configuration.
-   * @param dryRun - When enabled, no updates will be performed to App Configuration. Returns a ConfigurationDiff object and prints changes to console for review.
-   * @returns ConfigurationDiff when dryRun=true, otherwise void
+   * @returns void
    */
   public async Import(
     configSettingsSource: ConfigurationSettingsSource,
     timeout: number,
     strict = false,
     progressCallback?: (progress: ImportProgress) => unknown,
-    importMode?: ImportMode,
-    dryRun?: boolean
+    importMode?: ImportMode
   ): Promise<ConfigurationDiff | void> {
     if (importMode == undefined) {
       importMode = ImportMode.IgnoreMatch;
     }
-    if (dryRun == undefined) {
-      dryRun = false;
-    }
+
     this.validateImportMode(importMode);
       
     // Generate correlation ID for operations
@@ -72,23 +68,42 @@ export class AppConfigurationImporter {
       }
     };
 
-    const configurationDiff: ConfigurationDiff = await this.getConfigurationDiff(configSettingsSource, strict, importMode, customHeadersOption);
+    const configurationDiff: ConfigurationDiff = await this.getConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
 
-    if (dryRun) {
-      this.printUpdatesToConsole([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted);
-      return configurationDiff;
-    }
-    else {
-      await this.applyUpdatesToServer([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted, timeout, customHeadersOption, progressCallback);
-    }
+    await this.applyUpdatesToServer([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted, timeout, customHeadersOption, progressCallback);
   }
 
-  private async getConfigurationDiff(
+  /**
+   * Get configuration differences between source settings and Azure App Configuration service without any applying changes
+   *
+   * Example usage:
+   * ```ts
+   * const fileData = fs.readFileSync("mylocalPath").toString();
+   * const diff = await client.getConfigurationChanges(
+   *   new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}),
+   *   false,
+   *   ImportMode.All,
+   *   options
+   * );
+   * ```
+   * @param configSettingsSource - A ConfigurationSettingsSource instance.
+   * @param strict - Use strict mode to delete settings not in source.
+   * @param importMode - Determines the behavior when analyzing key-values. 'All' will include all key-values. 'Ignore-Match' will exclude settings that have matching key-values in App Configuration.
+   * @param customHeadersOption - Custom headers for the operation.
+   * @returns ConfigurationDiff object containing Added, Modified, and Deleted settings
+   */
+  public async getConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
-    strict: boolean,
-    importMode: ImportMode,
-    customHeadersOption: OperationOptions
+    strict: boolean = false,
+    importMode?: ImportMode,
+    customHeadersOption?: OperationOptions
   ): Promise<ConfigurationDiff> {
+    if (importMode == undefined) {
+      importMode = ImportMode.IgnoreMatch;
+    }
+
+    this.validateImportMode(importMode);
+
     const configSettings = await configSettingsSource.GetConfigurationSettings();
     
     const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
@@ -142,23 +157,6 @@ export class AppConfigurationImporter {
       Modified: configurationSettingToModify,
       Deleted: configurationSettingToDelete
     };
-  }
-
-  private printUpdatesToConsole(
-    settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
-    settingsToDelete: ConfigurationSetting<string>[]
-  ): void {
-    console.log("The following settings will be removed from App Configuration:");
-    for (const setting of settingsToDelete) {
-
-      console.log(JSON.stringify({key: setting.key, label: setting.label, contentType: setting.contentType, tags: setting.tags}));
-    } 
-
-    console.log("\nThe following settings will be written to App Configuration:");
-    for (const setting of settingsToAdd) {
-
-      console.log(JSON.stringify({key: setting.key, label: setting.label, contentType: setting.contentType, tags: setting.tags}));
-    }
   }
 
   private async applyUpdatesToServer(

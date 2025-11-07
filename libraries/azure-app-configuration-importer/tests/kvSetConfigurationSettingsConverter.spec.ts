@@ -190,7 +190,6 @@ describe("Parse kvset format file", () => {
   });
 
   it("Delete key-values present in the store but not available in the config file", async()=>{
-    const spy = sinon.spy(console,"log");
     const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
     AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
@@ -201,18 +200,15 @@ describe("Parse kvset format file", () => {
     };
     
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 3, true, undefined, ImportMode.All, true);
-   
+    const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
+
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    assert.equal(spy.getCall(0).args[0], "The following settings will be removed from App Configuration:");
-    assert.equal(spy.getCall(1).args[0], "{\"key\":\"app:Settings:FontSize\",\"label\":\"Dev\"}");
-    assert.equal(spy.getCall(2).args[0], "{\"key\":\"app:Settings:BackgroundColor\",\"label\":\"Dev\",\"tags\":{}}");
-    assert.equal(spy.getCall(3).args[0], "{\"key\":\"app:Settings:FontColor\",\"label\":\"Dev\",\"tags\":{\"tag1\":\"value1\",\"tag2\":\"value2\"}}");
-    spy.restore();
+    const deletedKeys = configurationChanges.Deleted.map(d => d.key);
+    assert.equal(configurationChanges.Deleted.length, 3);
+    assert.includeMembers(deletedKeys, ["app:Settings:FontSize", "app:Settings:BackgroundColor", "app:Settings:FontColor"]);
   });
 
   it("Delete key-values present in the store but not available in the config file, with similar key but different label", async()=>{
-    const spy = sinon.spy(console,"log");
     const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
     AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
@@ -223,15 +219,17 @@ describe("Parse kvset format file", () => {
     };
     
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 3, true, undefined, ImportMode.All, true);
-   
+    const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
+
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    assert.equal(spy.getCall(0).args[0], "The following settings will be removed from App Configuration:");
-    assert.equal(spy.getCall(1).args[0], "{\"key\":\"app:Settings:FontSize\",\"label\":\"Dev\"}");
-    assert.equal(spy.getCall(2).args[0], "{\"key\":\"app:Settings:BackgroundColor\",\"label\":\"Dev\",\"tags\":{}}");
-    assert.equal(spy.getCall(3).args[0], "{\"key\":\"app:Settings:FontColor\",\"label\":\"Dev\",\"tags\":{\"tag1\":\"value1\",\"tag2\":\"value2\"}}");
-    assert.equal(spy.getCall(4).args[0], "{\"key\":\".appconfig.featureflag/Test\",\"label\":\"dev\",\"contentType\":\"application/vnd.microsoft.appconfig.ff+json;charset=utf-8\",\"tags\":{}}");
-    assert.equal(spy.getCall(5).args[0], "{\"key\":\"Database:ConnectionString\",\"label\":\"test\",\"contentType\":\"application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8\"}");
-    spy.restore();
+    const deletedKeys = configurationChanges.Deleted.map(d => `key: ${d.key}, label: ${d.label || ''}`);
+    assert.equal(configurationChanges.Deleted.length, 5);
+    assert.includeMembers(deletedKeys, [
+      "key: app:Settings:FontSize, label: Dev",
+      "key: app:Settings:BackgroundColor, label: Dev",
+      "key: app:Settings:FontColor, label: Dev",
+      "key: .appconfig.featureflag/Test, label: dev",
+      "key: Database:ConnectionString, label: test"
+    ]);
   });
 });
