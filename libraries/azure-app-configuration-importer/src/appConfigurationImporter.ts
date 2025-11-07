@@ -11,7 +11,7 @@ import { ConfigurationSettingsSource } from "./settingsImport/configurationSetti
 import { ImportMode } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup, ConfigurationDiff } from "./models";
+import { ImportProgress, KeyLabelLookup, ConfigurationChanges } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
@@ -51,7 +51,7 @@ export class AppConfigurationImporter {
     strict = false,
     progressCallback?: (progress: ImportProgress) => unknown,
     importMode?: ImportMode
-  ): Promise<ConfigurationDiff | void> {
+  ): Promise<void> {
     if (importMode == undefined) {
       importMode = ImportMode.IgnoreMatch;
     }
@@ -68,18 +68,18 @@ export class AppConfigurationImporter {
       }
     };
 
-    const configurationDiff: ConfigurationDiff = await this.getConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
+    const configurationChanges: ConfigurationChanges = await this.getConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
 
-    await this.applyUpdatesToServer([...configurationDiff.Added, ...configurationDiff.Modified], configurationDiff.Deleted, timeout, customHeadersOption, progressCallback);
+    await this.applyUpdatesToServer([...configurationChanges.Added, ...configurationChanges.Modified], configurationChanges.Deleted, timeout, customHeadersOption, progressCallback);
   }
 
   /**
-   * Get configuration differences between source settings and Azure App Configuration service without any applying changes
+   * Get configuration changes between source settings and Azure App Configuration service without any applying changes
    *
    * Example usage:
    * ```ts
    * const fileData = fs.readFileSync("mylocalPath").toString();
-   * const diff = await client.getConfigurationChanges(
+   * const configurationChanges = await client.getConfigurationChanges(
    *   new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}),
    *   false,
    *   ImportMode.All,
@@ -90,14 +90,14 @@ export class AppConfigurationImporter {
    * @param strict - Use strict mode to delete settings not in source.
    * @param importMode - Determines the behavior when analyzing key-values. 'All' will include all key-values. 'Ignore-Match' will exclude settings that have matching key-values in App Configuration.
    * @param customHeadersOption - Custom headers for the operation.
-   * @returns ConfigurationDiff object containing Added, Modified, and Deleted settings
+   * @returns ConfigurationChanges object containing Added, Modified, and Deleted settings
    */
   public async getConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
     strict: boolean = false,
     importMode?: ImportMode,
     customHeadersOption?: OperationOptions
-  ): Promise<ConfigurationDiff> {
+  ): Promise<ConfigurationChanges> {
     if (importMode == undefined) {
       importMode = ImportMode.IgnoreMatch;
     }

@@ -9,7 +9,7 @@ export {
 } from "./importOptions";
 export * from "./enums";
 export * from "./errors";
-export { ImportProgress as ImportResult, ConfigurationDiff } from "./models";
+export { ImportProgress as ImportResult, ConfigurationChanges } from "./models";
 export { StringConfigurationSettingsSource } from "./settingsImport/stringConfigurationSettingsSource";
 export { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
 export { IterableConfigurationSettingsSource } from "./settingsImport/iterableConfigurationSettingsSource";

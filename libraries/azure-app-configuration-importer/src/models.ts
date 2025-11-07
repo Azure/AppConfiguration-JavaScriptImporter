@@ -51,7 +51,7 @@ export interface KeyLabelLookup {
   }
 }
 
-export interface ConfigurationDiff {
+export interface ConfigurationChanges {
   Deleted: ConfigurationSetting<string>[];
   Modified: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
   Added: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
