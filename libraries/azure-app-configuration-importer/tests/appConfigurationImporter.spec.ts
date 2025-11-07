@@ -240,7 +240,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
     });
 
-  it("Succeed to get configuration changes with importMode as All, profile as default", async () => {
+    it("Succeed to get configuration changes with importMode as All, profile as default", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/default.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -256,7 +256,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       assert.equal(configurationChanges.Modified[0].key, "app:Settings:FontColor");
     });
 
-  it("Succeed to get configuration changes and return no matching key values updates with importMode as IgnoreMatch and profile as default", async () => {
+    it("Succeed to get configuration changes and return no matching key values updates with importMode as IgnoreMatch and profile as default", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/default.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -273,7 +273,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       assert.equal(configurationChanges.Deleted.length, 0);
     });
 
-  it("Succeed to get configuration changes from key-values file with importMode as All and profile as kvset", async () => {
+    it("Succeed to get configuration changes from key-values file with importMode as All and profile as kvset", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvset.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -288,7 +288,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       assert.equal(configurationChanges.Deleted.length, 0);
     });
 
-  it("Succeed to get configuration changes and return no matching key values with importMode as IgnoreMatch and profile as kvset", async () => {
+    it("Succeed to get configuration changes and return no matching key values with importMode as IgnoreMatch and profile as kvset", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvset.json")).toString(),
         format: ConfigurationFormat.Json,
@@ -303,14 +303,14 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       assert.equal(configurationChanges.Deleted.length, 0);
     });
 
-  it("Fail when an invalid import mode is provided", async () => {
+    it("Fail when an invalid import mode is provided", async () => {
       const options = {
         data: fs.readFileSync(path.join("__dirname", "../tests/sources/kvset.json")).toString(),
         format: ConfigurationFormat.Json,
         profile: ConfigurationProfile.KvSet
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    
+
       try {
         await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, 9 as unknown as ImportMode);
       }

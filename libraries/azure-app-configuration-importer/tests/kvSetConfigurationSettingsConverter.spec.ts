@@ -222,7 +222,7 @@ describe("Parse kvset format file", () => {
     const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    const deletedKeys = configurationChanges.Deleted.map(d => `key: ${d.key}, label: ${d.label || ''}`);
+    const deletedKeys = configurationChanges.Deleted.map(d => `key: ${d.key}, label: ${d.label}`);
     assert.equal(configurationChanges.Deleted.length, 5);
     assert.includeMembers(deletedKeys, [
       "key: app:Settings:FontSize, label: Dev",

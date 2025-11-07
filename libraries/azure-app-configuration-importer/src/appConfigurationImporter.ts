@@ -94,7 +94,7 @@ export class AppConfigurationImporter {
    */
   public async getConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
-    strict: boolean = false,
+    strict = false,
     importMode?: ImportMode,
     customHeadersOption?: OperationOptions
   ): Promise<ConfigurationChanges> {
