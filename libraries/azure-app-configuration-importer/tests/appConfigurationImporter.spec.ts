@@ -231,7 +231,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     assert.equal(total, 3);
   });
 
-  describe("Call getConfigurationChanges API to get configurations changes from file and pass Import mode options", () => {
+  describe("Call GetConfigurationChanges API to get configurations changes from file and pass Import mode options", () => {
     let appConfigurationImporter: AppConfigurationImporter;
 
     beforeEach(function () {
@@ -249,7 +249,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
         separator: ":"
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
+      const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
       assert.equal(configurationChanges.Added.length, 2);
       assert.equal(configurationChanges.Modified.length, 1);
       assert.equal(configurationChanges.Deleted.length, 0);
@@ -265,7 +265,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
         separator: ":"
       };
       const source = new StringConfigurationSettingsSource(options);
-      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(source, false, ImportMode.IgnoreMatch);
+      const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(source, false, ImportMode.IgnoreMatch);
       // Only keys with no matching key-values in App Configuration will be updated
       assert.equal(configurationChanges.Added.length, 0);
       assert.equal(configurationChanges.Modified.length, 1);
@@ -280,8 +280,8 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
         profile: ConfigurationProfile.KvSet
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
-      //All key-values in App Configuration will be updated
+      const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
+      // All key-values in App Configuration will be updated
       assert.equal(configurationChanges.Added.length, 2);
       assert.equal(configurationChanges.Modified.length, 1);
       assert.equal(configurationChanges.Modified[0].key, "TestEnv");
@@ -295,7 +295,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
         profile: ConfigurationProfile.KvSet
       };
       const source = new StringConfigurationSettingsSource(options);
-      const configurationChanges = await appConfigurationImporter.getConfigurationChanges(source, false, ImportMode.IgnoreMatch);
+      const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(source, false, ImportMode.IgnoreMatch);
       // Only changed key (TestEnv) should be in Modified
       assert.equal(configurationChanges.Added.length, 0);
       assert.equal(configurationChanges.Modified.length, 1);
@@ -312,7 +312,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
 
       try {
-        await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, false, 9 as unknown as ImportMode);
+        await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, 9 as unknown as ImportMode);
       }
       catch (error) {
         assert.isTrue(error instanceof ArgumentError);

@@ -52,7 +52,7 @@ export class AppConfigurationImporter {
     progressCallback?: (progress: ImportProgress) => unknown,
     importMode?: ImportMode
   ): Promise<void> {
-    if (importMode == undefined) {
+    if (importMode === undefined) {
       importMode = ImportMode.IgnoreMatch;
     }
 
@@ -68,7 +68,7 @@ export class AppConfigurationImporter {
       }
     };
 
-    const configurationChanges: ConfigurationChanges = await this.getConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
+    const configurationChanges: ConfigurationChanges = await this.GetConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
 
     await this.applyUpdatesToServer([...configurationChanges.Added, ...configurationChanges.Modified], configurationChanges.Deleted, timeout, customHeadersOption, progressCallback);
   }
@@ -88,11 +88,13 @@ export class AppConfigurationImporter {
    * ```
    * @param configSettingsSource - A ConfigurationSettingsSource instance.
    * @param strict - Use strict mode to delete settings not in source.
-   * @param importMode - Determines the behavior when analyzing key-values. 'All' will include all key-values. 'Ignore-Match' will exclude settings that have matching key-values in App Configuration.
+   * @param importMode - Determines the behavior when analyzing key-values.
+   *  'All' will include all key-values. 
+   *  'Ignore-Match' will exclude settings that have matching key-values in App Configuration.
    * @param customHeadersOption - Custom headers for the operation.
    * @returns ConfigurationChanges object containing Added, Modified, and Deleted settings
    */
-  public async getConfigurationChanges(
+  public async GetConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
     strict = false,
     importMode?: ImportMode,
@@ -127,7 +129,7 @@ export class AppConfigurationImporter {
       }
      
       const incoming = configSettings.find(configSetting => configSetting.key == existing.key && 
-        configSetting.label == existing.label);
+        configSetting.label === existing.label);
       
       if (incoming) {
         const settingsAreEqual: boolean = isConfigSettingEqual(incoming, existing);
@@ -135,16 +137,14 @@ export class AppConfigurationImporter {
         if (!settingsAreEqual) {
           configurationSettingToModify.push(incoming);
           // Remove from add list since it's a modification, not an addition
-          const addIndex: number = configurationSettingToAdd.findIndex(addSetting => 
-            addSetting.key === incoming.key && addSetting.label === incoming.label);
+          const addIndex = configurationSettingToAdd.indexOf(incoming);
           if (addIndex !== -1) {
             configurationSettingToAdd.splice(addIndex, 1);
           }
         }
-        else if (importMode == ImportMode.IgnoreMatch) {
+        else if (importMode === ImportMode.IgnoreMatch) {
           // Remove unchanged settings from add list
-          const addIndex = configurationSettingToAdd.findIndex(addSetting => 
-            addSetting.key === incoming.key && addSetting.label === incoming.label);
+          const addIndex = configurationSettingToAdd.indexOf(incoming);
           if (addIndex !== -1) {
             configurationSettingToAdd.splice(addIndex, 1);
           }

@@ -200,7 +200,7 @@ describe("Parse kvset format file", () => {
     };
     
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
+    const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
     const deletedKeys = configurationChanges.Deleted.map(d => d.key);
@@ -219,7 +219,7 @@ describe("Parse kvset format file", () => {
     };
     
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    const configurationChanges = await appConfigurationImporter.getConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
+    const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
     const deletedKeys = configurationChanges.Deleted.map(d => `key: ${d.key}, label: ${d.label}`);
