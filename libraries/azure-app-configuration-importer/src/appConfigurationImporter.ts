@@ -43,7 +43,7 @@ export class AppConfigurationImporter {
    * @param timeout - Seconds of entire import progress timeout
    * @param progressCallback - Callback for report the progress of import
    * @param importMode - Determines the behavior when importing key-values. The default value, 'All' will import all key-values in the input file to App Configuration. 'Ignore-Match' will only import settings that have no matching key-value in App Configuration.
-   * @returns void
+   * @returns Promise<void>
    */
   public async Import(
     configSettingsSource: ConfigurationSettingsSource,
