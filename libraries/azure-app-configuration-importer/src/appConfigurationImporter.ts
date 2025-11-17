@@ -106,6 +106,18 @@ export class AppConfigurationImporter {
 
     this.validateImportMode(importMode);
 
+    // Generate correlation ID
+    if (!customHeadersOption) {
+      const customCorrelationRequestId: string = uuidv4();
+      customHeadersOption = {
+        requestOptions: {
+          customHeaders: {
+            [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
+          }
+        }
+      };
+    }
+
     const configSettings = await configSettingsSource.GetConfigurationSettings();
     
     const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
