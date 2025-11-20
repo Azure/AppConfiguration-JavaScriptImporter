@@ -53,8 +53,8 @@ export class AppConfigurationImporter {
     importMode = ImportMode.IgnoreMatch
   ): Promise<void> {
     this.validateImportMode(importMode);
-      
-    // Generate correlation ID for operations
+
+    // Generate correlationRequestId for operations in the same activity
     const customCorrelationRequestId: string = uuidv4();
     const customHeadersOption: OperationOptions = {
       requestOptions: {
@@ -66,11 +66,11 @@ export class AppConfigurationImporter {
 
     const configurationChanges: ConfigurationChanges = await this.GetConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
 
-    await this.applyUpdatesToServer([...configurationChanges.Added, ...configurationChanges.Modified], configurationChanges.Deleted, timeout, customHeadersOption, progressCallback);
+    await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
   }
 
   /**
-   * Get configuration changes between source settings and Azure App Configuration service without any applying changes
+   * Get configuration changes between source settings and existing settings in Azure App Configuration service without applying any changes
    *
    * Example usage:
    * ```ts
@@ -98,7 +98,7 @@ export class AppConfigurationImporter {
   ): Promise<ConfigurationChanges> {
     this.validateImportMode(importMode);
 
-    // Generate correlation ID
+    // Generate correlationRequestId for operations in the same activity
     if (!customHeadersOption) {
       const customCorrelationRequestId: string = uuidv4();
       customHeadersOption = {
@@ -141,25 +141,19 @@ export class AppConfigurationImporter {
         if (!settingsAreEqual) {
           configurationSettingToModify.push(incoming);
           // Remove from add list since it's a modification, not an addition
-          const addIndex = configurationSettingToAdd.indexOf(incoming);
-          if (addIndex !== -1) {
-            configurationSettingToAdd.splice(addIndex, 1);
-          }
+          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
         }
         else if (importMode === ImportMode.IgnoreMatch) {
           // Remove unchanged settings from add list
-          const addIndex = configurationSettingToAdd.indexOf(incoming);
-          if (addIndex !== -1) {
-            configurationSettingToAdd.splice(addIndex, 1);
-          }
+          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
         }
       }
     }
 
     return {
-      Added: configurationSettingToAdd,
-      Modified: configurationSettingToModify,
-      Deleted: configurationSettingToDelete
+      ToAdd: configurationSettingToAdd,
+      ToModify: configurationSettingToModify,
+      ToDelete: configurationSettingToDelete
     };
   }
 

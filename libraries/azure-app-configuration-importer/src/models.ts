@@ -52,7 +52,7 @@ export interface KeyLabelLookup {
 }
 
 export interface ConfigurationChanges {
-  Deleted: ConfigurationSetting<string>[];
-  Modified: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
-  Added: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+  ToDelete: ConfigurationSetting<string>[];
+  ToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+  ToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
 }
