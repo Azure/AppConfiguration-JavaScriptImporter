@@ -50,12 +50,8 @@ export class AppConfigurationImporter {
     timeout: number,
     strict = false,
     progressCallback?: (progress: ImportProgress) => unknown,
-    importMode?: ImportMode
+    importMode = ImportMode.IgnoreMatch
   ): Promise<void> {
-    if (importMode === undefined) {
-      importMode = ImportMode.IgnoreMatch;
-    }
-
     this.validateImportMode(importMode);
       
     // Generate correlation ID for operations
@@ -97,13 +93,9 @@ export class AppConfigurationImporter {
   public async GetConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
     strict = false,
-    importMode?: ImportMode,
+    importMode = ImportMode.IgnoreMatch,
     customHeadersOption?: OperationOptions
   ): Promise<ConfigurationChanges> {
-    if (importMode == undefined) {
-      importMode = ImportMode.IgnoreMatch;
-    }
-
     this.validateImportMode(importMode);
 
     // Generate correlation ID
