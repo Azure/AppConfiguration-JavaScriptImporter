@@ -48,11 +48,38 @@ export class AppConfigurationImporter {
   public async Import(
     configSettingsSource: ConfigurationSettingsSource,
     timeout: number,
-    strict = false,
     progressCallback?: (progress: ImportProgress) => unknown,
-    importMode = ImportMode.IgnoreMatch
+    strict?: boolean,
+    importMode?: ImportMode
+  ): Promise<void>;
+
+  /**
+   * Import pre-calculated configuration changes.
+   * Use when changes were previously obtained via GetConfigurationChanges().
+   *
+   * Example usage:
+   * ```ts
+   * const changes = await importer.GetConfigurationChanges(source);
+   * then:
+   * await importer.Import(changes, 60);
+   * ```
+   * @param configurationChanges - Pre-calculated changes object.
+   * @param timeout - Seconds of entire import progress timeout.
+   * @param progressCallback - Callback to report progress of import.
+   */
+  public async Import(
+    configurationChanges: ConfigurationChanges,
+    timeout: number,
+    progressCallback?: (progress: ImportProgress) => unknown
+  ): Promise<void>;
+
+  public async Import(
+    configuration: ConfigurationSettingsSource | ConfigurationChanges,
+    timeout: number,
+    progressCallback?: ((progress: ImportProgress) => unknown),
+    strict: boolean = false,
+    importMode: ImportMode = ImportMode.IgnoreMatch
   ): Promise<void> {
-    this.validateImportMode(importMode);
 
     // Generate correlationRequestId for operations in the same activity
     const customCorrelationRequestId: string = uuidv4();
@@ -64,9 +91,16 @@ export class AppConfigurationImporter {
       }
     };
 
-    const configurationChanges: ConfigurationChanges = await this.GetConfigurationChanges(configSettingsSource, strict, importMode, customHeadersOption);
+    if (this.isConfigurationChanges(configuration)) {
+      const configurationChanges = configuration as ConfigurationChanges;
+      return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
+    }
 
-    await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
+    const source = configuration as ConfigurationSettingsSource;
+    this.validateImportMode(importMode);
+
+    const configurationChanges: ConfigurationChanges = await this.GetConfigurationChanges(source, strict, importMode, customHeadersOption);
+    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
   }
 
   /**
@@ -205,5 +239,17 @@ export class AppConfigurationImporter {
       importMode == ImportMode.All)) {
       throw new ArgumentError("Only options supported for Import Mode are 'All' and 'Ignore-Match'.");
     }
+  }
+
+  /**
+   * Type guard to detect a ConfigurationChanges object.
+   * @internal
+   */
+  private isConfigurationChanges(obj: unknown): obj is ConfigurationChanges {
+    if (obj === null || typeof obj !== "object") {
+      return false;
+    }
+    const configChanges = obj as Partial<ConfigurationChanges>;
+    return Array.isArray(configChanges.ToAdd) && Array.isArray(configChanges.ToModify) && Array.isArray(configChanges.ToDelete);
   }
 }
