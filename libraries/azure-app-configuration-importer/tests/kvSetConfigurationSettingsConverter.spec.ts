@@ -203,9 +203,9 @@ describe("Parse kvset format file", () => {
     const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    const deletedKeys = configurationChanges.Deleted.map(d => d.key);
-    assert.equal(configurationChanges.Deleted.length, 3);
-    assert.includeMembers(deletedKeys, ["app:Settings:FontSize", "app:Settings:BackgroundColor", "app:Settings:FontColor"]);
+    const DeleteKeys = configurationChanges.ToDelete.map(d => d.key);
+    assert.equal(configurationChanges.ToDelete.length, 3);
+    assert.includeMembers(DeleteKeys, ["app:Settings:FontSize", "app:Settings:BackgroundColor", "app:Settings:FontColor"]);
   });
 
   it("Delete key-values present in the store but not available in the config file, with similar key but different label", async()=>{
@@ -222,9 +222,9 @@ describe("Parse kvset format file", () => {
     const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    const deletedKeys = configurationChanges.Deleted.map(d => `key: ${d.key}, label: ${d.label}`);
-    assert.equal(configurationChanges.Deleted.length, 5);
-    assert.includeMembers(deletedKeys, [
+    const DeleteKeys = configurationChanges.ToDelete.map(d => `key: ${d.key}, label: ${d.label}`);
+    assert.equal(configurationChanges.ToDelete.length, 5);
+    assert.includeMembers(DeleteKeys, [
       "key: app:Settings:FontSize, label: Dev",
       "key: app:Settings:BackgroundColor, label: Dev",
       "key: app:Settings:FontColor, label: Dev",

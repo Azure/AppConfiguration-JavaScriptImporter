@@ -50,7 +50,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(stringConfigurationSource, 3, false, reportImportProgress);
+    await appConfigurationImporter.Import(stringConfigurationSource, 3, reportImportProgress, false);
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -66,7 +66,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    const importPromise = appConfigurationImporter.Import(stringConfigurationSource, 1, false);
+    const importPromise = appConfigurationImporter.Import(stringConfigurationSource, 1, undefined, false);
     importPromise.catch((e) => {
       expect(e.message).to.eq("server error"); 
     });
@@ -101,7 +101,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
     try {
-      await appConfigurationImporter.Import(stringConfigurationSource, 1, false);
+      await appConfigurationImporter.Import(stringConfigurationSource, 1, undefined, false);
     }
     catch (error) {
       assert.isTrue(error instanceof OperationTimeoutError);
@@ -144,7 +144,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       total = importProgress.importCount;
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, false, reportImportProgress);
+    await appConfigurationImporter.Import(stringConfigurationSource, 10, reportImportProgress, false);
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -159,7 +159,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, false);
+    await appConfigurationImporter.Import(stringConfigurationSource, 10, undefined, false);
   });
 
   it("Try import an empty file, no error", async () => {
@@ -172,7 +172,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, false);
+    await appConfigurationImporter.Import(stringConfigurationSource, 10, undefined, false);
   });
 
   it("Succeed to import simple key value file in strict mode", async () => {
@@ -226,7 +226,72 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(stringConfigurationSource, 5, true, reportImportProgress);
+    await appConfigurationImporter.Import(stringConfigurationSource, 5, reportImportProgress, true);
+    assert.equal(finished, 3);
+    assert.equal(total, 3);
+  });
+
+  it("Succeed to import configuration changes with Import API", async () => {
+    const headerLike = sinon.createStubInstance(MockUpHttpHeaderLike);
+    const resourceLike = sinon.createStubInstance(MockupResourceLike);
+    const mockedResponse: SetConfigurationSettingResponse = {
+      key: "fakeKey",
+      isReadOnly: false,
+      _response: {
+        status: 200,
+        request: resourceLike,
+        headers: headerLike,
+        parsedHeaders: {},
+        bodyAsText: "fakeBody"
+      }
+    };
+    const mockedDeleteResponse: DeleteConfigurationSettingResponse = {
+      _response: {
+        status: 200,
+        request: resourceLike,
+        headers: headerLike,
+        parsedHeaders: {},
+        bodyAsText: "fakeBody"
+      },
+      statusCode: 200
+    };
+
+    const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
+    AppConfigurationClientStub.setConfigurationSetting.resolves(mockedResponse);
+    AppConfigurationClientStub.deleteConfigurationSetting.resolves(mockedDeleteResponse);
+    AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
+    const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
+
+    const options = {
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/default.json")).toString(),
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.Default,
+      label: "Dev",
+      separator: ":"
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+    
+    // Call GetConfigurationChanges to get the changes we would import
+    const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(
+      stringConfigurationSource, 
+      false, 
+      ImportMode.All
+    );
+
+    assert.equal(configurationChanges.ToAdd.length, 2);
+    assert.equal(configurationChanges.ToModify.length, 1);
+    assert.equal(configurationChanges.ToDelete.length, 0);
+    assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+
+    let finished = 0;
+    let total = 0;
+    const reportImportProgress = (importProgress: ImportProgress) => {
+      finished = importProgress.successCount;
+      total = importProgress.importCount;
+    };
+
+    // Use Import API with pre-calculated changes
+    await appConfigurationImporter.Import(configurationChanges, 5, reportImportProgress); 
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -250,10 +315,10 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
-      assert.equal(configurationChanges.Added.length, 2);
-      assert.equal(configurationChanges.Modified.length, 1);
-      assert.equal(configurationChanges.Deleted.length, 0);
-      assert.equal(configurationChanges.Modified[0].key, "app:Settings:FontColor");
+      assert.equal(configurationChanges.ToAdd.length, 2);
+      assert.equal(configurationChanges.ToModify.length, 1);
+      assert.equal(configurationChanges.ToDelete.length, 0);
+      assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
     });
 
     it("Succeed to get configuration changes and return no matching key values updates with importMode as IgnoreMatch and profile as default", async () => {
@@ -267,10 +332,10 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const source = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(source, false, ImportMode.IgnoreMatch);
       // Only keys with no matching key-values in App Configuration will be updated
-      assert.equal(configurationChanges.Added.length, 0);
-      assert.equal(configurationChanges.Modified.length, 1);
-      assert.equal(configurationChanges.Modified[0].key, "app:Settings:FontColor");
-      assert.equal(configurationChanges.Deleted.length, 0);
+      assert.equal(configurationChanges.ToAdd.length, 0);
+      assert.equal(configurationChanges.ToModify.length, 1);
+      assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+      assert.equal(configurationChanges.ToDelete.length, 0);
     });
 
     it("Succeed to get configuration changes from key-values file with importMode as All and profile as kvset", async () => {
@@ -282,10 +347,10 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
       // All key-values in App Configuration will be updated
-      assert.equal(configurationChanges.Added.length, 2);
-      assert.equal(configurationChanges.Modified.length, 1);
-      assert.equal(configurationChanges.Modified[0].key, "TestEnv");
-      assert.equal(configurationChanges.Deleted.length, 0);
+      assert.equal(configurationChanges.ToAdd.length, 2);
+      assert.equal(configurationChanges.ToModify.length, 1);
+      assert.equal(configurationChanges.ToModify[0].key, "TestEnv");
+      assert.equal(configurationChanges.ToDelete.length, 0);
     });
 
     it("Succeed to get configuration changes and return no matching key values with importMode as IgnoreMatch and profile as kvset", async () => {
@@ -296,11 +361,11 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       };
       const source = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(source, false, ImportMode.IgnoreMatch);
-      // Only changed key (TestEnv) should be in Modified
-      assert.equal(configurationChanges.Added.length, 0);
-      assert.equal(configurationChanges.Modified.length, 1);
-      assert.equal(configurationChanges.Modified[0].key, "TestEnv");
-      assert.equal(configurationChanges.Deleted.length, 0);
+      // Only changed key (TestEnv) should be in ToModify
+      assert.equal(configurationChanges.ToAdd.length, 0);
+      assert.equal(configurationChanges.ToModify.length, 1);
+      assert.equal(configurationChanges.ToModify[0].key, "TestEnv");
+      assert.equal(configurationChanges.ToDelete.length, 0);
     });
 
     it("Fail when an invalid import mode is provided", async () => {

@@ -63,7 +63,7 @@ describe("Iterator configuration source test", () => {
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(iteratorConfigurationSettingsSource, 3, false, reportImportProgress);
+    await appConfigurationImporter.Import(iteratorConfigurationSettingsSource, 3, reportImportProgress, false);
     assert.equal(finished, 6);
     assert.equal(total, 6);
   });
@@ -100,7 +100,7 @@ describe("Iterator configuration source test", () => {
       total = importProgress.importCount;
     };
 
-    await appConfigurationImporter.Import(iteratorConfigurationSettingsSource, 3, false, reportImportProgress, ImportMode.All);
+    await appConfigurationImporter.Import(iteratorConfigurationSettingsSource, 3, reportImportProgress, false, ImportMode.All);
     assert.equal(finished, 6);
     assert.equal(total, 6);
   });
@@ -137,7 +137,7 @@ describe("Iterator configuration source test", () => {
       total = importProgress.importCount;
     };
 
-    await appConfigurationImporter.Import(iteratorConfigurationSettingsSource, 3, false, reportImportProgress, ImportMode.IgnoreMatch); // Ignore-Match is default import mode
+    await appConfigurationImporter.Import(iteratorConfigurationSettingsSource, 3, reportImportProgress, false, ImportMode.IgnoreMatch); // Ignore-Match is default import mode
     assert.equal(finished, 0);
     assert.equal(total, 0);
   });
