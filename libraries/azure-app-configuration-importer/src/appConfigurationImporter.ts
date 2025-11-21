@@ -77,7 +77,7 @@ export class AppConfigurationImporter {
     configuration: ConfigurationSettingsSource | ConfigurationChanges,
     timeout: number,
     progressCallback?: ((progress: ImportProgress) => unknown),
-    strict: boolean = false,
+    strict = false,
     importMode: ImportMode = ImportMode.IgnoreMatch
   ): Promise<void> {
 
