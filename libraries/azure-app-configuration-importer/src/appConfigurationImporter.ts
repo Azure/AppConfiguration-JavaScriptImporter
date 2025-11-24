@@ -171,12 +171,13 @@ export class AppConfigurationImporter {
       
       if (incoming) {
         const settingsAreEqual: boolean = isConfigSettingEqual(incoming, existing);
-        
+
         if (!settingsAreEqual) {
           configurationSettingToModify.push(incoming);
           // Mark for removal from add list since it's a modification, not an addition
           settingsToRemove.add(incoming);
-        } else if (importMode === ImportMode.IgnoreMatch) {
+        }
+        else if (importMode === ImportMode.IgnoreMatch) {
           // Mark unchanged settings for removal from add list
           settingsToRemove.add(incoming);
         }
