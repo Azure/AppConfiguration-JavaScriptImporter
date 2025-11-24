@@ -158,7 +158,7 @@ export class AppConfigurationImporter {
       srcKeyLabelLookUp[config.key][config.label || ""] = true;
     });
 
-    configurationSettingToAdd.push(...configSettings);
+    const settingsToRemove = new Set();
 
     for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
       const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
@@ -174,15 +174,17 @@ export class AppConfigurationImporter {
         
         if (!settingsAreEqual) {
           configurationSettingToModify.push(incoming);
-          // Remove from add list since it's a modification, not an addition
-          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
-        }
-        else if (importMode === ImportMode.IgnoreMatch) {
-          // Remove unchanged settings from add list
-          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
+          // Mark for removal from add list since it's a modification, not an addition
+          settingsToRemove.add(incoming);
+        } else if (importMode === ImportMode.IgnoreMatch) {
+          // Mark unchanged settings for removal from add list
+          settingsToRemove.add(incoming);
         }
       }
     }
+    
+    // Filter out items marked for removal
+    configurationSettingToAdd.push(...configSettings.filter(item => !settingsToRemove.has(item)));
 
     return {
       ToAdd: configurationSettingToAdd,
