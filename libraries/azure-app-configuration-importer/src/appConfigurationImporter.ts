@@ -60,7 +60,7 @@ export class AppConfigurationImporter {
    * Example usage:
    * ```ts
    * const changes = await importer.GetConfigurationChanges(source);
-   * then:
+   * Then call Import:
    * await importer.Import(changes, 60);
    * ```
    * @param configurationChanges - Pre-calculated changes object.
@@ -109,7 +109,7 @@ export class AppConfigurationImporter {
    * Example usage:
    * ```ts
    * const fileData = fs.readFileSync("mylocalPath").toString();
-   * const configurationChanges = await client.getConfigurationChanges(
+   * const configurationChanges = await client.GetConfigurationChanges(
    *   new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}),
    *   false,
    *   ImportMode.All,
@@ -166,7 +166,7 @@ export class AppConfigurationImporter {
         configurationSettingToDelete.push(existing);
       }
      
-      const incoming = configSettings.find(configSetting => configSetting.key == existing.key && 
+      const incoming = configSettings.find(configSetting => configSetting.key === existing.key && 
         configSetting.label === existing.label);
       
       if (incoming) {
