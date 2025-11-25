@@ -91,16 +91,19 @@ export class AppConfigurationImporter {
       }
     };
 
-    if (this.isConfigurationChanges(configuration)) {
-      const configurationChanges = configuration as ConfigurationChanges;
-      return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
-    }
-
-    const source = configuration as ConfigurationSettingsSource;
     this.validateImportMode(importMode);
 
-    const configurationChanges: ConfigurationChanges = await this.GetConfigurationChanges(source, strict, importMode, customHeadersOption);
-    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
+    let configurationChangesToApply: ConfigurationChanges;
+
+    if (this.isConfigurationChanges(configuration)) {
+      configurationChangesToApply = configuration as ConfigurationChanges;
+    }
+    else {
+      const source = configuration as ConfigurationSettingsSource;
+      configurationChangesToApply = await this.GetConfigurationChanges(source, strict, importMode, customHeadersOption);
+    }
+
+    return await this.applyUpdatesToServer([...configurationChangesToApply.ToAdd, ...configurationChangesToApply.ToModify], configurationChangesToApply.ToDelete, timeout, customHeadersOption, progressCallback);
   }
 
   /**
@@ -158,34 +161,30 @@ export class AppConfigurationImporter {
       srcKeyLabelLookUp[config.key][config.label || ""] = true;
     });
 
-    const settingsToRemove = new Set();
+    configurationSettingToAdd.push(...configSettings);
 
     for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
       const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
       if (strict && !isKeyLabelPresent) {
         configurationSettingToDelete.push(existing);
       }
-     
-      const incoming = configSettings.find(configSetting => configSetting.key === existing.key && 
-        configSetting.label === existing.label);
-      
+
+      const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
+
       if (incoming) {
         const settingsAreEqual: boolean = isConfigSettingEqual(incoming, existing);
 
         if (!settingsAreEqual) {
           configurationSettingToModify.push(incoming);
-          // Mark for removal from add list since it's a modification, not an addition
-          settingsToRemove.add(incoming);
+          // Remove from add list since it's a modification, not an addition
+          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
         }
         else if (importMode === ImportMode.IgnoreMatch) {
-          // Mark unchanged settings for removal from add list
-          settingsToRemove.add(incoming);
+          // Remove unchanged settings from add list
+          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
         }
       }
     }
-    
-    // Filter out items marked for removal
-    configurationSettingToAdd.push(...configSettings.filter(item => !settingsToRemove.has(item)));
 
     return {
       ToAdd: configurationSettingToAdd,
@@ -195,7 +194,7 @@ export class AppConfigurationImporter {
   }
 
   private async applyUpdatesToServer(
-    settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
+    settingsToPut: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
     settingsToDelete: ConfigurationSetting<string>[],
     timeout: number,
     options: OperationOptions,
@@ -208,7 +207,7 @@ export class AppConfigurationImporter {
     const deleteTimeConsumed = (endTime - startTime) / 1000;
     timeout -= deleteTimeConsumed;
 
-    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToAdd);
+    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToPut);
     await this.executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
   }
 
