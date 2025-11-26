@@ -6,6 +6,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "../src/enums";
 import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { ConfigurationChangesSource } from "../src/settingsImport/configurationChangesSource";
 import { 
   AppConfigurationClient, 
   ConfigurationSetting, 
@@ -291,9 +292,31 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     };
 
     // Use Import API with pre-calculated changes
-    await appConfigurationImporter.Import(configurationChanges, 5, reportImportProgress); 
+    const changesSourceForTest = new ConfigurationChangesSource(configurationChanges);
+    await appConfigurationImporter.Import(changesSourceForTest, 5, reportImportProgress);
     assert.equal(finished, 3);
     assert.equal(total, 3);
+  });
+
+  it("Fail to import ConfigurationChangesSource when both strict and importMode parameters are provided", async () => {
+    const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
+    const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
+
+    const configurationChanges = {
+      ToAdd: [{ key: "testKey", value: "testValue" }],
+      ToModify: [],
+      ToDelete: []
+    };
+    
+    const changesSource = new ConfigurationChangesSource(configurationChanges);
+
+    try {
+      await appConfigurationImporter.Import(changesSource, 5, undefined, true, ImportMode.All);
+    }
+    catch (error) {
+      expect(error).to.be.instanceOf(ArgumentError);
+      expect((error as ArgumentError).message).to.contain("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes");
+    }
   });
 
   describe("Call GetConfigurationChanges API to get configurations changes from file and pass Import mode options", () => {

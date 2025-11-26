@@ -8,6 +8,7 @@ import {
   FeatureFlagValue, 
   SecretReferenceValue } from "@azure/app-configuration";
 import { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
+import { ConfigurationChangesSource } from "./settingsImport/configurationChangesSource";
 import { ImportMode } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
@@ -60,7 +61,7 @@ export class AppConfigurationImporter {
    * Example usage:
    * ```ts
    * const changes = await importer.GetConfigurationChanges(source);
-   * Then call Import:
+   * // Then call Import:
    * await importer.Import(changes, 60);
    * ```
    * @param configurationChanges - Pre-calculated changes object.
@@ -68,19 +69,18 @@ export class AppConfigurationImporter {
    * @param progressCallback - Callback to report progress of import.
    */
   public async Import(
-    configurationChanges: ConfigurationChanges,
+    configurationChangesSource: ConfigurationChangesSource,
     timeout: number,
     progressCallback?: (progress: ImportProgress) => unknown
   ): Promise<void>;
 
   public async Import(
-    configuration: ConfigurationSettingsSource | ConfigurationChanges,
+    configurationSettingsSource: ConfigurationSettingsSource,
     timeout: number,
     progressCallback?: ((progress: ImportProgress) => unknown),
     strict = false,
     importMode: ImportMode = ImportMode.IgnoreMatch
   ): Promise<void> {
-
     // Generate correlationRequestId for operations in the same activity
     const customCorrelationRequestId: string = uuidv4();
     const customHeadersOption: OperationOptions = {
@@ -93,17 +93,15 @@ export class AppConfigurationImporter {
 
     this.validateImportMode(importMode);
 
-    let configurationChangesToApply: ConfigurationChanges;
-
-    if (this.isConfigurationChanges(configuration)) {
-      configurationChangesToApply = configuration as ConfigurationChanges;
-    }
-    else {
-      const source = configuration as ConfigurationSettingsSource;
-      configurationChangesToApply = await this.GetConfigurationChanges(source, strict, importMode, customHeadersOption);
+    if (configurationSettingsSource instanceof ConfigurationChangesSource) {
+      // When using ConfigurationChanges, strict and importMode parameters are not applicable
+      if (strict !== false || importMode !== ImportMode.IgnoreMatch) {
+        throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
+      }
     }
 
-    return await this.applyUpdatesToServer([...configurationChangesToApply.ToAdd, ...configurationChangesToApply.ToModify], configurationChangesToApply.ToDelete, timeout, customHeadersOption, progressCallback);
+    const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, strict, importMode, customHeadersOption);
+    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
   }
 
   /**
@@ -147,8 +145,15 @@ export class AppConfigurationImporter {
       };
     }
 
-    const configSettings = await configSettingsSource.GetConfigurationSettings();
-    
+    const configSettingsResult = await configSettingsSource.GetConfigurationSettings();
+
+    // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
+    // return them directly without further processing since changes are already calculated
+    if (this.isConfigurationChanges(configSettingsResult)) {
+      return configSettingsResult as ConfigurationChanges;
+    }
+  
+    const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
     const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
     const configurationSettingToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
@@ -172,9 +177,8 @@ export class AppConfigurationImporter {
       const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
 
       if (incoming) {
-        const settingsAreEqual: boolean = isConfigSettingEqual(incoming, existing);
 
-        if (!settingsAreEqual) {
+        if (!isConfigSettingEqual(incoming, existing)) {
           configurationSettingToModify.push(incoming);
           // Remove from add list since it's a modification, not an addition
           configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
