@@ -78,9 +78,27 @@ export class AppConfigurationImporter {
     configurationSettingsSource: ConfigurationSettingsSource,
     timeout: number,
     progressCallback?: ((progress: ImportProgress) => unknown),
-    strict = false,
-    importMode: ImportMode = ImportMode.IgnoreMatch
+    strict?: boolean,
+    importMode?: ImportMode
   ): Promise<void> {
+
+    if (configurationSettingsSource instanceof ConfigurationChangesSource) {
+      // When using ConfigurationChanges, strict and importMode parameters are not applicable
+      if (strict || importMode) {
+        throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
+      }
+    }
+    else {
+      if (importMode === undefined) {
+        importMode = ImportMode.IgnoreMatch;
+      }
+
+      this.validateImportMode(importMode);
+      if (strict === undefined) {
+        strict = false;
+      }
+    }
+
     // Generate correlationRequestId for operations in the same activity
     const customCorrelationRequestId: string = uuidv4();
     const customHeadersOption: OperationOptions = {
@@ -90,15 +108,6 @@ export class AppConfigurationImporter {
         }
       }
     };
-
-    this.validateImportMode(importMode);
-
-    if (configurationSettingsSource instanceof ConfigurationChangesSource) {
-      // When using ConfigurationChanges, strict and importMode parameters are not applicable
-      if (strict !== false || importMode !== ImportMode.IgnoreMatch) {
-        throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
-      }
-    }
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, strict, importMode, customHeadersOption);
     return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
