@@ -17,6 +17,7 @@ import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
 import { OperationOptions } from "@azure/core-client";
+import { ImportOptions } from "./importOptions";
 
 /**
  * Entrypoint class for sync configuration
@@ -40,18 +41,16 @@ export class AppConfigurationImporter {
    * const result = await asyncClient.Import(new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}));
    * ```
    * @param configSettingsSource - A ConfigurationSettingsSource instance.
-   * @param strict - Use strict mode or not.
    * @param timeout - Seconds of entire import progress timeout
    * @param progressCallback - Callback for report the progress of import
-   * @param importMode - Determines the behavior when importing key-values. The default value, 'All' will import all key-values in the input file to App Configuration. 'Ignore-Match' will only import settings that have no matching key-value in App Configuration.
+   * @param options - Import options which include strict and import mode
    * @returns Promise<void>
    */
   public async Import(
     configSettingsSource: ConfigurationSettingsSource,
     timeout: number,
     progressCallback?: (progress: ImportProgress) => unknown,
-    strict?: boolean,
-    importMode?: ImportMode
+    options?: ImportOptions
   ): Promise<void>;
 
   /**
@@ -78,24 +77,12 @@ export class AppConfigurationImporter {
     configurationSettingsSource: ConfigurationSettingsSource,
     timeout: number,
     progressCallback?: ((progress: ImportProgress) => unknown),
-    strict?: boolean,
-    importMode?: ImportMode
+    options?: ImportOptions
   ): Promise<void> {
-
     if (configurationSettingsSource instanceof ConfigurationChangesSource) {
       // When using ConfigurationChanges, strict and importMode parameters are not applicable
-      if (strict || importMode) {
+      if (options?.strict || options?.importMode) {
         throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
-      }
-    }
-    else {
-      if (importMode === undefined) {
-        importMode = ImportMode.IgnoreMatch;
-      }
-
-      this.validateImportMode(importMode);
-      if (strict === undefined) {
-        strict = false;
       }
     }
 
@@ -109,7 +96,7 @@ export class AppConfigurationImporter {
       }
     };
 
-    const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, strict, importMode, customHeadersOption);
+    const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
     return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
   }
 

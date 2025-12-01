@@ -5,7 +5,8 @@ export { AppConfigurationImporter } from "./appConfigurationImporter";
 export {
   StringSourceOptions,
   IterableSourceOptions,
-  ReadableStreamSourceOptions
+  ReadableStreamSourceOptions,
+  ImportOptions
 } from "./importOptions";
 export * from "./enums";
 export * from "./errors";

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
-import { ConfigurationFormat, ConfigurationProfile } from "./enums";
+import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "./enums";
 import { Tags } from "./models";
 import { ConfigurationSetting, ListConfigurationSettingPage } from "@azure/app-configuration";
 
@@ -33,3 +33,19 @@ export type SourceOptions = {
 export type StringSourceOptions = SourceOptions & {data: string; };
 export type IterableSourceOptions = Options & { data: PagedAsyncIterableIterator<ConfigurationSetting<string>, ListConfigurationSettingPage, PageSettings>;  trimPrefix?: string; };
 export type ReadableStreamSourceOptions = SourceOptions & { data: ReadableStream<Uint8Array> | NodeJS.ReadableStream };
+
+/**
+ * Options for importing configuration settings
+ */
+export interface ImportOptions {
+  /**
+   * Use strict mode or not.
+   */
+  strict?: boolean;
+  /**
+   * Determines the behavior when importing key-values. 
+   * The default value, 'All' will import all key-values in the input file to App Configuration. 
+   * 'Ignore-Match' will only import settings that have no matching key-value in App Configuration.
+   */
+  importMode?: ImportMode;
+}
