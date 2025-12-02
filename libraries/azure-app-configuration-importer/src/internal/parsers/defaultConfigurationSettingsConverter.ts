@@ -7,7 +7,7 @@ import {
   featureFlagContentType,
   SecretReferenceValue
 } from "@azure/app-configuration";
-import { SourceOptions } from "../../importOptions";
+import { SourceOptions } from "../../options";
 import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
 import { AjvValidationError, ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";

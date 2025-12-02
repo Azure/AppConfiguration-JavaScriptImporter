@@ -7,7 +7,7 @@ export {
   IterableSourceOptions,
   ReadableStreamSourceOptions,
   ImportOptions
-} from "./importOptions";
+} from "./options";
 export * from "./enums";
 export * from "./errors";
 export { ImportProgress as ImportResult, ConfigurationChanges } from "./models";

@@ -13,7 +13,7 @@ import {
   featureFlagContentType,
   featureFlagPrefix,
   secretReferenceContentType} from "@azure/app-configuration";
-import { IterableSourceOptions } from "../importOptions";
+import { IterableSourceOptions } from "../options";
 import { ArgumentError } from "../errors";
 
 export class IterableConfigurationSettingsSource implements ConfigurationSettingsSource {

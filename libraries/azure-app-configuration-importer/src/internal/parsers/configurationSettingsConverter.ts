@@ -6,7 +6,7 @@ import {
   FeatureFlagValue,
   SecretReferenceValue
 } from "@azure/app-configuration";
-import { SourceOptions } from "../../importOptions";
+import { SourceOptions } from "../../options";
 
 /**
  * ConfigurationSettings converter for different configuration content.

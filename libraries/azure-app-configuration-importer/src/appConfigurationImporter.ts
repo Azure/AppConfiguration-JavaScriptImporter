@@ -17,7 +17,7 @@ import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
 import { OperationOptions } from "@azure/core-client";
-import { ImportOptions } from "./importOptions";
+import { ImportOptions } from "./options";
 
 /**
  * Entrypoint class for sync configuration
