@@ -51,7 +51,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(stringConfigurationSource, 3, reportImportProgress, { strict: false });
+    await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 3, progressCallback: reportImportProgress, strict: false });
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -67,7 +67,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    const importPromise = appConfigurationImporter.Import(stringConfigurationSource, 1, undefined, { strict: false });
+    const importPromise = appConfigurationImporter.Import(stringConfigurationSource, { timeout: 1, strict: false });
     importPromise.catch((e) => {
       expect(e.message).to.eq("server error"); 
     });
@@ -102,7 +102,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
     try {
-      await appConfigurationImporter.Import(stringConfigurationSource, 1, undefined, { strict: false });
+      await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 1, strict: false });
     }
     catch (error) {
       assert.isTrue(error instanceof OperationTimeoutError);
@@ -145,7 +145,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       total = importProgress.importCount;
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, reportImportProgress, { strict: false });
+    await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 10, progressCallback: reportImportProgress, strict: false });
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -160,7 +160,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, undefined, { strict: false });
+    await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 10, strict: false });
   });
 
   it("Try import an empty file, no error", async () => {
@@ -173,7 +173,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, undefined, { strict: false });
+    await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 10, strict: false });
   });
 
   it("Succeed to import simple key value file in strict mode", async () => {
@@ -227,7 +227,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(stringConfigurationSource, 10, reportImportProgress, { strict: false });
+    await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 10, progressCallback: reportImportProgress, strict: false });
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -293,7 +293,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
 
     // Use Import API with pre-calculated changes
     const changesSourceForTest = new ConfigurationChangesSource(configurationChanges);
-    await appConfigurationImporter.Import(changesSourceForTest, 5, reportImportProgress);
+    await appConfigurationImporter.Import(changesSourceForTest, { timeout: 5, progressCallback: reportImportProgress });
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });
@@ -311,7 +311,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const changesSource = new ConfigurationChangesSource(configurationChanges);
 
     try {
-      await appConfigurationImporter.Import(changesSource, 5, undefined, { strict: true, importMode: ImportMode.All });
+      await appConfigurationImporter.Import(changesSource, { timeout: 5, strict: true, importMode: ImportMode.All });
     }
     catch (error) {
       expect(error).to.be.instanceOf(ArgumentError);

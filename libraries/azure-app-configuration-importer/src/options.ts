@@ -3,7 +3,7 @@
 
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "./enums";
-import { Tags } from "./models";
+import { Tags, ImportProgress } from "./models";
 import { ConfigurationSetting, ListConfigurationSettingPage } from "@azure/app-configuration";
 
 type Options = {
@@ -39,7 +39,15 @@ export type ReadableStreamSourceOptions = SourceOptions & { data: ReadableStream
  */
 export interface ImportOptions {
   /**
-   * Use strict mode or not.
+   * Seconds of entire import progress timeout.
+   */
+  timeout: number;
+  /**
+   * Callback to report the progress of import.
+   */
+  progressCallback?: (progress: ImportProgress) => unknown;
+  /**
+   * Use strict mode to delete settings not in source.
    */
   strict?: boolean;
   /**

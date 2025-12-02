@@ -161,7 +161,7 @@ describe("Readable stream configuration settings source tests", () => {
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(readableConfigurationSettingsSource, 3, reportImportProgress, { strict: false });
+    await appConfigurationImporter.Import(readableConfigurationSettingsSource, { timeout: 3, progressCallback: reportImportProgress, strict: false });
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });

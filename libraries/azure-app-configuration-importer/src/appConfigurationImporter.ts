@@ -38,19 +38,16 @@ export class AppConfigurationImporter {
    * Example usage:
    * ```ts
    * const fileData = fs.readFileSync("mylocalPath").toString();
-   * const result = await asyncClient.Import(new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}));
+   * const source = new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json});
+   * await importer.Import(source, { timeout: 60 });
    * ```
    * @param configSettingsSource - A ConfigurationSettingsSource instance.
-   * @param timeout - Seconds of entire import progress timeout
-   * @param progressCallback - Callback for report the progress of import
-   * @param options - Import options which include strict and import mode
+   * @param options - Import options including timeout, progress callback, strict mode, and import mode
    * @returns Promise<void>
    */
   public async Import(
     configSettingsSource: ConfigurationSettingsSource,
-    timeout: number,
-    progressCallback?: (progress: ImportProgress) => unknown,
-    options?: ImportOptions
+    options: ImportOptions
   ): Promise<void>;
 
   /**
@@ -60,24 +57,20 @@ export class AppConfigurationImporter {
    * Example usage:
    * ```ts
    * const changes = await importer.GetConfigurationChanges(source);
-   * // Then call Import:
-   * await importer.Import(changes, 60);
+   * await importer.Import(changes, { timeout: 60 });
    * ```
    * @param configurationChanges - Pre-calculated changes object.
-   * @param timeout - Seconds of entire import progress timeout.
-   * @param progressCallback - Callback to report progress of import.
+   * @param options - Import options including timeout and progress callback.
+   * @returns Promise<void>
    */
   public async Import(
     configurationChangesSource: ConfigurationChangesSource,
-    timeout: number,
-    progressCallback?: (progress: ImportProgress) => unknown
+    options: ImportOptions
   ): Promise<void>;
 
   public async Import(
     configurationSettingsSource: ConfigurationSettingsSource,
-    timeout: number,
-    progressCallback?: ((progress: ImportProgress) => unknown),
-    options?: ImportOptions
+    options: ImportOptions
   ): Promise<void> {
     if (configurationSettingsSource instanceof ConfigurationChangesSource) {
       // When using ConfigurationChanges, strict and importMode parameters are not applicable
@@ -97,7 +90,7 @@ export class AppConfigurationImporter {
     };
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
-    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, timeout, customHeadersOption, progressCallback);
+    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
   /**

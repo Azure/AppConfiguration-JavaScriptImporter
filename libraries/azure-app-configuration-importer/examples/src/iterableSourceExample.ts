@@ -44,10 +44,12 @@ export async function main() {
   try {
     await appConfigurationImporterClient.Import(
       new IterableConfigurationSettingsSource(options),
-      timeout,
-      false,
-      progressCallBack,
-      ImportMode.IgnoreMatch
+      {
+        timeout: timeout,
+        progressCallback: progressCallBack,
+        strict: false,
+        importMode: ImportMode.IgnoreMatch
+      }
     );
   }
   catch (error) {
