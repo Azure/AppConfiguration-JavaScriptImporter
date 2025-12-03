@@ -145,15 +145,11 @@ export class AppConfigurationImporter {
       const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
 
       if (incoming) {
+        // Remove from add list since it already exists
+        configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
 
-        if (!isConfigSettingEqual(incoming, existing)) {
+        if (!isConfigSettingEqual(incoming, existing) || importMode === ImportMode.All) {
           configurationSettingToModify.push(incoming);
-          // Remove from add list since it's a modification, not an addition
-          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
-        }
-        else if (importMode === ImportMode.IgnoreMatch) {
-          // Remove unchanged settings from add list
-          configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
         }
       }
     }

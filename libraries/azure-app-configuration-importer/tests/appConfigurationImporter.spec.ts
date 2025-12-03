@@ -279,10 +279,10 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       ImportMode.All
     );
 
-    assert.equal(configurationChanges.ToAdd.length, 2);
-    assert.equal(configurationChanges.ToModify.length, 1);
+    assert.equal(configurationChanges.ToAdd.length, 0);
+    assert.equal(configurationChanges.ToModify.length, 3);
     assert.equal(configurationChanges.ToDelete.length, 0);
-    assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+    assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontSize");
 
     let finished = 0;
     let total = 0;
@@ -338,10 +338,10 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
-      assert.equal(configurationChanges.ToAdd.length, 2);
-      assert.equal(configurationChanges.ToModify.length, 1);
+      assert.equal(configurationChanges.ToAdd.length, 0);
+      assert.equal(configurationChanges.ToModify.length, 3);
       assert.equal(configurationChanges.ToDelete.length, 0);
-      assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+      assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontSize");
     });
 
     it("Succeed to get configuration changes and return no matching key values updates with importMode as IgnoreMatch and profile as default", async () => {
@@ -370,9 +370,9 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
       // All key-values in App Configuration will be updated
-      assert.equal(configurationChanges.ToAdd.length, 2);
-      assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].key, "TestEnv");
+      assert.equal(configurationChanges.ToAdd.length, 0);
+      assert.equal(configurationChanges.ToModify.length, 3);
+      assert.equal(configurationChanges.ToModify[0].key, ".appconfig.featureflag/Test");
       assert.equal(configurationChanges.ToDelete.length, 0);
     });
 
