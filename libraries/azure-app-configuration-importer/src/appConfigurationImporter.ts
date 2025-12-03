@@ -33,41 +33,19 @@ export class AppConfigurationImporter {
   }
 
   /**
-   * Import source settings into the Azure App Configuration service
-   *
+   * Import settings into the Azure App Configuration service.
+   * 
    * Example usage:
    * ```ts
    * const fileData = fs.readFileSync("mylocalPath").toString();
    * const source = new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json});
    * await importer.Import(source, { timeout: 60 });
    * ```
-   * @param configSettingsSource - A ConfigurationSettingsSource instance.
-   * @param options - Import options including timeout, progress callback, strict mode, and import mode
+   * 
+   * @param configurationSettingsSource - A ConfigurationSettingsSource instance.
+   * @param options - Import options including timeout, progress callback, strict mode, and import mode.
    * @returns Promise<void>
    */
-  public async Import(
-    configSettingsSource: ConfigurationSettingsSource,
-    options: ImportOptions
-  ): Promise<void>;
-
-  /**
-   * Import pre-calculated configuration changes.
-   * Use when changes were previously obtained via GetConfigurationChanges().
-   *
-   * Example usage:
-   * ```ts
-   * const changes = await importer.GetConfigurationChanges(source);
-   * await importer.Import(changes, { timeout: 60 });
-   * ```
-   * @param configurationChanges - Pre-calculated changes object.
-   * @param options - Import options including timeout and progress callback.
-   * @returns Promise<void>
-   */
-  public async Import(
-    configurationChangesSource: ConfigurationChangesSource,
-    options: ImportOptions
-  ): Promise<void>;
-
   public async Import(
     configurationSettingsSource: ConfigurationSettingsSource,
     options: ImportOptions
@@ -90,6 +68,7 @@ export class AppConfigurationImporter {
     };
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
+
     return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
