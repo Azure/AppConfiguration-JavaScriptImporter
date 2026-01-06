@@ -69,7 +69,7 @@ export class AppConfigurationImporter {
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
 
-    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
+    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify, ...configurationChanges.ToRefresh], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
   /**
@@ -125,6 +125,7 @@ export class AppConfigurationImporter {
     const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
     const configurationSettingToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const configurationSettingToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const srcKeyLabelLookUp: KeyLabelLookup = {};
     
     configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
@@ -148,8 +149,12 @@ export class AppConfigurationImporter {
         // Remove from add list since it already exists
         configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
 
-        if (!isConfigSettingEqual(incoming, existing) || importMode === ImportMode.All) {
+        if (!isConfigSettingEqual(incoming, existing)) {
+          // Key-value has changed, add to ToModify
           configurationSettingToModify.push(incoming);
+        } else if (importMode === ImportMode.All) {
+          // Key-value is unchanged but importMode is All, add to ToRefresh
+          configurationSettingToRefresh.push(incoming);
         }
       }
     }
@@ -157,7 +162,8 @@ export class AppConfigurationImporter {
     return {
       ToAdd: configurationSettingToAdd,
       ToModify: configurationSettingToModify,
-      ToDelete: configurationSettingToDelete
+      ToDelete: configurationSettingToDelete,
+      ToRefresh: configurationSettingToRefresh
     };
   }
 
@@ -220,6 +226,9 @@ export class AppConfigurationImporter {
       return false;
     }
     const configChanges = obj as Partial<ConfigurationChanges>;
-    return Array.isArray(configChanges.ToAdd) && Array.isArray(configChanges.ToModify) && Array.isArray(configChanges.ToDelete);
+    return Array.isArray(configChanges.ToAdd) && 
+           Array.isArray(configChanges.ToModify) && 
+           Array.isArray(configChanges.ToDelete) && 
+           Array.isArray(configChanges.ToRefresh);
   }
 }

@@ -55,4 +55,5 @@ export interface ConfigurationChanges {
   ToDelete: ConfigurationSetting<string>[];
   ToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
   ToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+  ToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
 }
