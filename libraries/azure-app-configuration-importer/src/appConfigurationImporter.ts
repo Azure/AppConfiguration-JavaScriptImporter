@@ -154,7 +154,7 @@ export class AppConfigurationImporter {
           configurationSettingToModify.push(incoming);
         } 
         else if (importMode === ImportMode.All) {
-          // Key-value is unchanged but importMode is All, add to ToRefresh
+          // Key-value is unchanged and importMode is All, add to ToRefresh
           configurationSettingToRefresh.push(incoming);
         }
       }
