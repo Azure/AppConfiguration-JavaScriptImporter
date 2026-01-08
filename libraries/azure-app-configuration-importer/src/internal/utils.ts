@@ -9,7 +9,7 @@ import {
   SecretReferenceValue } from "@azure/app-configuration";
 import { isEmpty, isEqual } from "lodash";
 import { Tags, FeatureFlagClientFilters } from "../models";
-import { SourceOptions } from "../importOptions";
+import { SourceOptions } from "../options";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
 import { Constants } from "../internal/constants";

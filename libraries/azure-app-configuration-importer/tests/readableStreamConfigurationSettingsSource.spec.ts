@@ -11,7 +11,7 @@ import { AppConfigurationImporter } from "../src/appConfigurationImporter";
 import { MockUpHttpHeaderLike, MockupResourceLike } from "./appConfigurationImporter.spec";
 import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
 import { ReadableStreamConfigurationSettingsSource } from "../src/settingsImport/readableStreamConfigurationSettingsSource";
-import  { ReadableStreamSourceOptions } from "../src/importOptions";
+import  { ReadableStreamSourceOptions } from "../src/options";
 import { assertThrowAsync, listConfigurationSettings } from "./utlis";
 import { ParseError } from "../src/errors";
 
@@ -161,7 +161,7 @@ describe("Readable stream configuration settings source tests", () => {
       finished = importProgress.successCount;
       total = importProgress.importCount;
     };
-    await appConfigurationImporter.Import(readableConfigurationSettingsSource, 3, false, reportImportProgress);
+    await appConfigurationImporter.Import(readableConfigurationSettingsSource, { timeout: 3, progressCallback: reportImportProgress, strict: false });
     assert.equal(finished, 3);
     assert.equal(total, 3);
   });

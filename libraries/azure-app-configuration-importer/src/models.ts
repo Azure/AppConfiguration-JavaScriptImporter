@@ -1,6 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { 
+  SecretReferenceValue,
+  ConfigurationSetting,
+  SetConfigurationSettingParam,
+  FeatureFlagValue
+} from "@azure/app-configuration";
+
 /**
  * @internal
  */
@@ -42,4 +49,11 @@ export interface KeyLabelLookup {
   [key: string]: {
     [label: string] : boolean
   }
+}
+
+export interface ConfigurationChanges {
+  ToDelete: ConfigurationSetting<string>[];
+  ToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+  ToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+  ToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
 }

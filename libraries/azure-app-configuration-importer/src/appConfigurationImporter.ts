@@ -8,14 +8,16 @@ import {
   FeatureFlagValue, 
   SecretReferenceValue } from "@azure/app-configuration";
 import { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
+import { ConfigurationChangesSource } from "./settingsImport/configurationChangesSource";
 import { ImportMode } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup } from "./models";
+import { ImportProgress, KeyLabelLookup, ConfigurationChanges } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
 import { OperationOptions } from "@azure/core-client";
+import { ImportOptions } from "./options";
 
 /**
  * Entrypoint class for sync configuration
@@ -31,49 +33,31 @@ export class AppConfigurationImporter {
   }
 
   /**
-   * Import source settings into the Azure App Configuration service
-   *
+   * Import settings into the Azure App Configuration service.
+   * 
    * Example usage:
    * ```ts
    * const fileData = fs.readFileSync("mylocalPath").toString();
-   * const result = await asyncClient.Import(new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}));
+   * const source = new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json});
+   * await importer.Import(source, { timeout: 60 });
    * ```
-   * @param configSettingsSource - A ConfigurationSettingsSource instance.
-   * @param strict - Use strict mode or not.
-   * @param timeout - Seconds of entire import progress timeout
-   * @param progressCallback - Callback for report the progress of import
-   * @param importMode - Determines the behavior when importing key-values. The default value, 'All' will import all key-values in the input file to App Configuration. 'Ignore-Match' will only import settings that have no matching key-value in App Configuration.
-   * @param dryRun - When dry run is enabled, no updates  will be performed to App Configuration. Instead, any updates that would have been performed in a normal run will be printed to the console for review
+   * 
+   * @param configurationSettingsSource - A ConfigurationSettingsSource instance.
+   * @param options - Import options including timeout, progress callback, strict mode, and import mode.
+   * @returns Promise<void>
    */
   public async Import(
-    configSettingsSource: ConfigurationSettingsSource,
-    timeout: number,
-    strict = false,
-    progressCallback?: (progress: ImportProgress) => unknown,
-    importMode?: ImportMode,
-    dryRun?: boolean
-  ) {
-    if (importMode == undefined) {
-      importMode = ImportMode.IgnoreMatch;
-    }
-    if (dryRun == undefined) {
-      dryRun = false;
-    }
-    this.validateImportMode(importMode);
-
-    const configSettings = await configSettingsSource.GetConfigurationSettings();
-
-    const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
-    const srcKeyLabelLookUp: KeyLabelLookup = {};
-    
-    configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
-      if (!srcKeyLabelLookUp[config.key]) {
-        srcKeyLabelLookUp[config.key] = {};
+    configurationSettingsSource: ConfigurationSettingsSource,
+    options: ImportOptions
+  ): Promise<void> {
+    if (configurationSettingsSource instanceof ConfigurationChangesSource) {
+      // When using ConfigurationChanges, strict and importMode parameters are not applicable
+      if (options?.strict || options?.importMode) {
+        throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
       }
-      srcKeyLabelLookUp[config.key][config.label || ""] = true;
-    });
+    }
 
-    // generate correlationRequestId for operations in the same activity
+    // Generate correlationRequestId for operations in the same activity
     const customCorrelationRequestId: string = uuidv4();
     const customHeadersOption: OperationOptions = {
       requestOptions: {
@@ -83,53 +67,109 @@ export class AppConfigurationImporter {
       }
     };
 
-    if (strict || importMode == ImportMode.IgnoreMatch) {
-      for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
+    const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
 
-        const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
-        
-        if (strict && !isKeyLabelPresent) {
-          configurationSettingToDelete.push(existing);
-        }
-       
-        if (importMode == ImportMode.IgnoreMatch) {
-          const incoming = configSettings.find(configSetting => configSetting.key == existing.key && 
-            configSetting.label == existing.label);
-           
-          if (incoming && isConfigSettingEqual(incoming, existing)) {
-            configSettings.splice(configSettings.indexOf(incoming), 1);
+    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify, ...configurationChanges.ToRefresh], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
+  }
+
+  /**
+   * Get configuration changes between source settings and existing settings in Azure App Configuration service without applying any changes
+   *
+   * Example usage:
+   * ```ts
+   * const fileData = fs.readFileSync("mylocalPath").toString();
+   * const configurationChanges = await client.GetConfigurationChanges(
+   *   new StringConfigurationSettingsSource({data:fileData, format: ConfigurationFormat.Json}),
+   *   false,
+   *   ImportMode.All,
+   *   options
+   * );
+   * ```
+   * @param configSettingsSource - A ConfigurationSettingsSource instance.
+   * @param strict - Use strict mode to delete settings not in source.
+   * @param importMode - Determines the behavior when analyzing key-values.
+   *  'All' will include all key-values. 
+   *  'Ignore-Match' will exclude settings that have matching key-values in App Configuration.
+   * @param customHeadersOption - Custom headers for the operation.
+   * @returns ConfigurationChanges object containing Added, Modified, and Deleted settings
+   */
+  public async GetConfigurationChanges(
+    configSettingsSource: ConfigurationSettingsSource,
+    strict = false,
+    importMode = ImportMode.IgnoreMatch,
+    customHeadersOption?: OperationOptions
+  ): Promise<ConfigurationChanges> {
+    this.validateImportMode(importMode);
+
+    // Generate correlationRequestId for operations in the same activity
+    if (!customHeadersOption) {
+      const customCorrelationRequestId: string = uuidv4();
+      customHeadersOption = {
+        requestOptions: {
+          customHeaders: {
+            [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
           }
+        }
+      };
+    }
+
+    const configSettingsResult = await configSettingsSource.GetConfigurationSettings();
+
+    // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
+    // return them directly without further processing since changes are already calculated
+    if (this.isConfigurationChanges(configSettingsResult)) {
+      return configSettingsResult as ConfigurationChanges;
+    }
+  
+    const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
+    const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
+    const configurationSettingToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const configurationSettingToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const srcKeyLabelLookUp: KeyLabelLookup = {};
+    
+    configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
+      if (!srcKeyLabelLookUp[config.key]) {
+        srcKeyLabelLookUp[config.key] = {};
+      }
+      srcKeyLabelLookUp[config.key][config.label || ""] = true;
+    });
+
+    configurationSettingToAdd.push(...configSettings);
+
+    for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
+      const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
+      if (strict && !isKeyLabelPresent) {
+        configurationSettingToDelete.push(existing);
+      }
+
+      const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
+
+      if (incoming) {
+        // Remove from add list since it already exists
+        configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
+
+        if (!isConfigSettingEqual(incoming, existing)) {
+          // Key-value has changed, add to ToModify
+          configurationSettingToModify.push(incoming);
+        } 
+        else if (importMode === ImportMode.All) {
+          // Key-value is unchanged and importMode is All, add to ToRefresh
+          configurationSettingToRefresh.push(incoming);
         }
       }
     }
-   
-    if (dryRun) {
-      this.printUpdatesToConsole(configSettings, configurationSettingToDelete);
-    }
-    else {
-      await this.applyUpdatesToServer(configSettings, configurationSettingToDelete, timeout, customHeadersOption, progressCallback);
-    }
-  }
 
-  private printUpdatesToConsole(
-    settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
-    settingsToDelete: ConfigurationSetting<string>[]
-  ): void {
-    console.log("The following settings will be removed from App Configuration:");
-    for (const setting of settingsToDelete) {
-
-      console.log(JSON.stringify({key: setting.key, label: setting.label, contentType: setting.contentType, tags: setting.tags}));
-    } 
-
-    console.log("\nThe following settings will be written to App Configuration:");
-    for (const setting of settingsToAdd) {
-
-      console.log(JSON.stringify({key: setting.key, label: setting.label, contentType: setting.contentType, tags: setting.tags}));
-    }
+    return {
+      ToAdd: configurationSettingToAdd,
+      ToModify: configurationSettingToModify,
+      ToDelete: configurationSettingToDelete,
+      ToRefresh: configurationSettingToRefresh
+    };
   }
 
   private async applyUpdatesToServer(
-    settingsToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
+    settingsToPut: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[], 
     settingsToDelete: ConfigurationSetting<string>[],
     timeout: number,
     options: OperationOptions,
@@ -142,7 +182,7 @@ export class AppConfigurationImporter {
     const deleteTimeConsumed = (endTime - startTime) / 1000;
     timeout -= deleteTimeConsumed;
 
-    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToAdd);
+    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToPut);
     await this.executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
   }
 
@@ -176,5 +216,20 @@ export class AppConfigurationImporter {
       importMode == ImportMode.All)) {
       throw new ArgumentError("Only options supported for Import Mode are 'All' and 'Ignore-Match'.");
     }
+  }
+
+  /**
+   * Type guard to detect a ConfigurationChanges object.
+   * @internal
+   */
+  private isConfigurationChanges(obj: unknown): obj is ConfigurationChanges {
+    if (obj === null || typeof obj !== "object") {
+      return false;
+    }
+    const configChanges = obj as Partial<ConfigurationChanges>;
+    return Array.isArray(configChanges.ToAdd) && 
+           Array.isArray(configChanges.ToModify) && 
+           Array.isArray(configChanges.ToDelete) && 
+           Array.isArray(configChanges.ToRefresh);
   }
 }

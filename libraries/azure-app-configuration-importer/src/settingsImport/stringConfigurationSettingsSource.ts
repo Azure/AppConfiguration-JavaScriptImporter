@@ -10,7 +10,7 @@ import {
 import * as jsyaml from "js-yaml";
 import stripJSONComments from "strip-json-comments";
 import { getProperties  } from "properties-file";
-import { SourceOptions, StringSourceOptions } from "../importOptions";
+import { SourceOptions, StringSourceOptions } from "../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ParseError } from "../errors";

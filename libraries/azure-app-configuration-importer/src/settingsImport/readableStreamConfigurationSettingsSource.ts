@@ -3,7 +3,7 @@
 
 import { SetConfigurationSettingParam, FeatureFlagValue, SecretReferenceValue, ListConfigurationSettingsOptions } from "@azure/app-configuration";
 import { toWebStream } from "../internal/stream";
-import { ReadableStreamSourceOptions, SourceOptions } from "../importOptions";
+import { ReadableStreamSourceOptions, SourceOptions } from "../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { ConfigurationProfile } from "../enums";
 import { StringConfigurationSettingsSource } from "./stringConfigurationSettingsSource";
