@@ -51,9 +51,19 @@ export interface KeyLabelLookup {
   }
 }
 
+/**
+ * Represents a modified configuration setting with both incoming and existing values for diff display.
+ */
+export interface ModifiedSetting {
+  /** The new configuration setting from the source that will be imported */
+  incoming: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>;
+  /** The existing configuration setting currently in the App Configuration store */
+  existing: ConfigurationSetting<string>;
+}
+
 export interface ConfigurationChanges {
   ToDelete: ConfigurationSetting<string>[];
-  ToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+  ToModify: ModifiedSetting[];
   ToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
   ToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
 }

@@ -281,7 +281,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
 
     assert.equal(configurationChanges.ToAdd.length, 0);
     assert.equal(configurationChanges.ToModify.length, 1);
-    assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+    assert.equal(configurationChanges.ToModify[0].incoming.key, "app:Settings:FontColor");
     assert.equal(configurationChanges.ToRefresh.length, 2);
     assert.equal(configurationChanges.ToDelete.length, 0);
 
@@ -342,7 +342,8 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
       assert.equal(configurationChanges.ToAdd.length, 0);
       assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+      assert.equal(configurationChanges.ToModify[0].incoming.key, "app:Settings:FontColor");
+      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
       assert.equal(configurationChanges.ToRefresh.length, 2);
       assert.equal(configurationChanges.ToDelete.length, 0);
     });
@@ -360,7 +361,8 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       // Only keys with no matching key-values in App Configuration will be updated
       assert.equal(configurationChanges.ToAdd.length, 0);
       assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].key, "app:Settings:FontColor");
+      assert.equal(configurationChanges.ToModify[0].incoming.key, "app:Settings:FontColor");
+      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
       assert.equal(configurationChanges.ToRefresh.length, 0);
       assert.equal(configurationChanges.ToDelete.length, 0);
     });
@@ -376,7 +378,8 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       // Changed key-values go to ToModify, unchanged go to ToRefresh
       assert.equal(configurationChanges.ToAdd.length, 0);
       assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].key, "TestEnv");
+      assert.equal(configurationChanges.ToModify[0].incoming.key, "TestEnv");
+      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
       assert.equal(configurationChanges.ToRefresh.length, 2);
       assert.equal(configurationChanges.ToDelete.length, 0);
     });
@@ -392,7 +395,8 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       // Only changed key (TestEnv) should be in ToModify
       assert.equal(configurationChanges.ToAdd.length, 0);
       assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].key, "TestEnv");
+      assert.equal(configurationChanges.ToModify[0].incoming.key, "TestEnv");
+      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
       assert.equal(configurationChanges.ToRefresh.length, 0);
       assert.equal(configurationChanges.ToDelete.length, 0);
     });

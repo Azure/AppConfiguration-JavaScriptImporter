@@ -12,7 +12,7 @@ import { ConfigurationChangesSource } from "./settingsImport/configurationChange
 import { ImportMode } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup, ConfigurationChanges } from "./models";
+import { ImportProgress, KeyLabelLookup, ConfigurationChanges, ModifiedSetting } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
@@ -68,8 +68,9 @@ export class AppConfigurationImporter {
     };
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
+    const modifiedSettings: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = configurationChanges.ToModify.map(modified => modified.incoming);
 
-    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify, ...configurationChanges.ToRefresh], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
+    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...modifiedSettings, ...configurationChanges.ToRefresh], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
   /**
@@ -123,7 +124,7 @@ export class AppConfigurationImporter {
   
     const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
     const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
-    const configurationSettingToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const configurationSettingToModify: ModifiedSetting[] = [];
     const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const configurationSettingToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const srcKeyLabelLookUp: KeyLabelLookup = {};
@@ -151,7 +152,7 @@ export class AppConfigurationImporter {
 
         if (!isConfigSettingEqual(incoming, existing)) {
           // Key-value has changed, add to ToModify
-          configurationSettingToModify.push(incoming);
+          configurationSettingToModify.push({ incoming, existing });
         } 
         else if (importMode === ImportMode.All) {
           // Key-value is unchanged and importMode is All, add to ToRefresh
