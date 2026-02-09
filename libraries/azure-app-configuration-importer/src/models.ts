@@ -51,9 +51,6 @@ export interface KeyLabelLookup {
   }
 }
 
-/**
- * Represents a modified configuration setting with both incoming and existing values for diff display.
- */
 export interface ModifiedSetting {
   /** The new configuration setting from the source that will be imported */
   incoming: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>;
