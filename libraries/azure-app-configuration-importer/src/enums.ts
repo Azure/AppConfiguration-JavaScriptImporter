@@ -27,7 +27,7 @@ export enum ImportMode {
 }
 
 /**
- * Enums of change type for configuration settings changes.
+ * Enums of change type for configuration settings changes
  */
 export enum ChangeType {
   Create,
