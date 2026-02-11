@@ -69,15 +69,15 @@ export class AppConfigurationImporter {
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
     
-    const settingsToPut: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = configurationChanges
-      .filter(c => c.changeType !== ChangeType.Delete && c.newValue)
+    const settingsToWrite: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = configurationChanges
+      .filter(c => (c.changeType === ChangeType.Create || c.changeType === ChangeType.Update || c.changeType === ChangeType.None) && c.newValue)
       .map(c => c.newValue!);
 
     const settingsToDelete: ConfigurationSetting[] = configurationChanges
       .filter(c => c.changeType === ChangeType.Delete && c.currentValue)
       .map(c => c.currentValue!);
 
-    return await this.applyUpdatesToServer(settingsToPut, settingsToDelete, options.timeout, customHeadersOption, options.progressCallback);
+    return await this.applyUpdatesToServer(settingsToWrite, settingsToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
   /**
