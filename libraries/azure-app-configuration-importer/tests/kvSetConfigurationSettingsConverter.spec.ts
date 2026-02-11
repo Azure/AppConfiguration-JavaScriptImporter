@@ -6,7 +6,7 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
-import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "../src/enums";
+import { ConfigurationFormat, ConfigurationProfile, ImportMode, ChangeType } from "../src/enums";
 import { ArgumentError } from "../src/errors";
 import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { JsonSecretReferenceValue } from "../src/models";
@@ -203,9 +203,9 @@ describe("Parse kvset format file", () => {
     const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    const DeleteKeys = configurationChanges.ToDelete.map(d => d.key);
-    assert.equal(configurationChanges.ToDelete.length, 3);
-    assert.includeMembers(DeleteKeys, ["app:Settings:FontSize", "app:Settings:BackgroundColor", "app:Settings:FontColor"]);
+    const toDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete).map(d => d.currentValue?.key);
+    assert.equal(toDelete.length, 3);
+    assert.includeMembers(toDelete, ["app:Settings:FontSize", "app:Settings:BackgroundColor", "app:Settings:FontColor"]);
   });
 
   it("Delete key-values present in the store but not available in the config file, with similar key but different label", async()=>{
@@ -222,9 +222,9 @@ describe("Parse kvset format file", () => {
     const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, true, ImportMode.All);
 
     // The keys present in the store and not in the configuration file are deleted if strict is set to true
-    const DeleteKeys = configurationChanges.ToDelete.map(d => `key: ${d.key}, label: ${d.label}`);
-    assert.equal(configurationChanges.ToDelete.length, 5);
-    assert.includeMembers(DeleteKeys, [
+    const toDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete).map(d => `key: ${d.currentValue?.key}, label: ${d.currentValue?.label}`);
+    assert.equal(toDelete.length, 5);
+    assert.includeMembers(toDelete, [
       "key: app:Settings:FontSize, label: Dev",
       "key: app:Settings:BackgroundColor, label: Dev",
       "key: app:Settings:FontColor, label: Dev",

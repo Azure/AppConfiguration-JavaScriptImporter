@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
-import { ConfigurationChanges } from "../models";
+import { ConfigurationSettingChange } from "../models";
 import { ListConfigurationSettingsOptions } from "@azure/app-configuration";
 import { ArgumentError } from "../errors";
 
@@ -22,9 +22,9 @@ import { ArgumentError } from "../errors";
  * ```
  */
 export class ConfigurationChangesSource implements ConfigurationSettingsSource {
-  private readonly configurationChanges: ConfigurationChanges;
+  private readonly configurationChanges: Array<ConfigurationSettingChange>;
 
-  constructor(configurationChanges: ConfigurationChanges, filterOptions?: ListConfigurationSettingsOptions) {
+  constructor(configurationChanges: Array<ConfigurationSettingChange>, filterOptions?: ListConfigurationSettingsOptions) {
     if (filterOptions && Object.keys(filterOptions).length > 0) {
       throw new ArgumentError("FilterOptions are not supported for ConfigurationChangesSource.");
     }
@@ -34,7 +34,7 @@ export class ConfigurationChangesSource implements ConfigurationSettingsSource {
   /**
      * @inheritdoc
      */
-  public async GetConfigurationSettings(): Promise<ConfigurationChanges> {
+  public async GetConfigurationSettings(): Promise<Array<ConfigurationSettingChange>> {
     return this.configurationChanges;
   }
 }

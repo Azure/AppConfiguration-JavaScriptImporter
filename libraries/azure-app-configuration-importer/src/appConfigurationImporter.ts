@@ -9,10 +9,10 @@ import {
   SecretReferenceValue } from "@azure/app-configuration";
 import { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
 import { ConfigurationChangesSource } from "./settingsImport/configurationChangesSource";
-import { ImportMode } from "./enums";
+import { ImportMode, ChangeType } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup, ConfigurationChanges } from "./models";
+import { ImportProgress, KeyLabelLookup, ConfigurationSettingChange } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
@@ -68,8 +68,16 @@ export class AppConfigurationImporter {
     };
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
+    
+    const settingsToWrite: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = configurationChanges
+      .filter(c => (c.changeType === ChangeType.Create || c.changeType === ChangeType.Update || c.changeType === ChangeType.None) && c.newValue)
+      .map(c => c.newValue!);
 
-    return await this.applyUpdatesToServer([...configurationChanges.ToAdd, ...configurationChanges.ToModify, ...configurationChanges.ToRefresh], configurationChanges.ToDelete, options.timeout, customHeadersOption, options.progressCallback);
+    const settingsToDelete: ConfigurationSetting[] = configurationChanges
+      .filter(c => c.changeType === ChangeType.Delete && c.currentValue)
+      .map(c => c.currentValue!);
+
+    return await this.applyUpdatesToServer(settingsToWrite, settingsToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
   /**
@@ -91,14 +99,14 @@ export class AppConfigurationImporter {
    *  'All' will include all key-values. 
    *  'Ignore-Match' will exclude settings that have matching key-values in App Configuration.
    * @param customHeadersOption - Custom headers for the operation.
-   * @returns ConfigurationChanges object containing Added, Modified, and Deleted settings
+   * @returns Array of ConfigurationSettingChange objects representing the changes
    */
   public async GetConfigurationChanges(
     configSettingsSource: ConfigurationSettingsSource,
     strict = false,
     importMode = ImportMode.IgnoreMatch,
     customHeadersOption?: OperationOptions
-  ): Promise<ConfigurationChanges> {
+  ): Promise<Array<ConfigurationSettingChange>> {
     this.validateImportMode(importMode);
 
     // Generate correlationRequestId for operations in the same activity
@@ -118,14 +126,12 @@ export class AppConfigurationImporter {
     // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
     // return them directly without further processing since changes are already calculated
     if (this.isConfigurationChanges(configSettingsResult)) {
-      return configSettingsResult as ConfigurationChanges;
+      return configSettingsResult as Array<ConfigurationSettingChange>;
     }
   
     const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
-    const configurationSettingToDelete: ConfigurationSetting<string>[] = [];
-    const configurationSettingToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
+    const configurationChanges: Array<ConfigurationSettingChange> = [];
     const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
-    const configurationSettingToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
     const srcKeyLabelLookUp: KeyLabelLookup = {};
     
     configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
@@ -139,8 +145,13 @@ export class AppConfigurationImporter {
 
     for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
       const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
+      
       if (strict && !isKeyLabelPresent) {
-        configurationSettingToDelete.push(existing);
+        configurationChanges.push({
+          changeType: ChangeType.Delete,
+          currentValue: existing,
+          newValue: null
+        });
       }
 
       const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
@@ -150,22 +161,31 @@ export class AppConfigurationImporter {
         configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
 
         if (!isConfigSettingEqual(incoming, existing)) {
-          // Key-value has changed, add to ToModify
-          configurationSettingToModify.push(incoming);
+          configurationChanges.push({
+            changeType: ChangeType.Update,
+            currentValue: existing,
+            newValue: incoming
+          });
         } 
         else if (importMode === ImportMode.All) {
-          // Key-value is unchanged and importMode is All, add to ToRefresh
-          configurationSettingToRefresh.push(incoming);
+          configurationChanges.push({
+            changeType: ChangeType.None,
+            currentValue: existing,
+            newValue: incoming
+          });
         }
       }
     }
 
-    return {
-      ToAdd: configurationSettingToAdd,
-      ToModify: configurationSettingToModify,
-      ToDelete: configurationSettingToDelete,
-      ToRefresh: configurationSettingToRefresh
-    };
+    for (const setting of configurationSettingToAdd) {
+      configurationChanges.push({
+        changeType: ChangeType.Create,
+        currentValue: null,
+        newValue: setting
+      });
+    }
+
+    return configurationChanges;
   }
 
   private async applyUpdatesToServer(
@@ -222,14 +242,19 @@ export class AppConfigurationImporter {
    * Type guard to detect a ConfigurationChanges object.
    * @internal
    */
-  private isConfigurationChanges(obj: unknown): obj is ConfigurationChanges {
-    if (obj === null || typeof obj !== "object") {
+  private isConfigurationChanges(obj: unknown): obj is Array<ConfigurationSettingChange> {
+    if (!Array.isArray(obj)) {
       return false;
     }
-    const configChanges = obj as Partial<ConfigurationChanges>;
-    return Array.isArray(configChanges.ToAdd) && 
-           Array.isArray(configChanges.ToModify) && 
-           Array.isArray(configChanges.ToDelete) && 
-           Array.isArray(configChanges.ToRefresh);
+    
+    // Validate it's an array of ConfigurationSettingChange objects
+    return obj.every(item => 
+      item && 
+      typeof item === "object" &&
+      "changeType" in item &&
+      "currentValue" in item &&
+      "newValue" in item &&
+      Object.values(ChangeType).includes(item.changeType)
+    );
   }
 }

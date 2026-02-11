@@ -7,6 +7,7 @@ import {
   SetConfigurationSettingParam,
   FeatureFlagValue
 } from "@azure/app-configuration";
+import { ChangeType } from "./enums";
 
 /**
  * @internal
@@ -51,9 +52,10 @@ export interface KeyLabelLookup {
   }
 }
 
-export interface ConfigurationChanges {
-  ToDelete: ConfigurationSetting<string>[];
-  ToModify: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
-  ToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
-  ToRefresh: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[];
+export interface ConfigurationSettingChange {
+  changeType: ChangeType;
+  /** The current value of the configuration setting */
+  currentValue: ConfigurationSetting<string> | null;
+  /** The new value of the configuration setting */
+  newValue: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue> | null;
 }
