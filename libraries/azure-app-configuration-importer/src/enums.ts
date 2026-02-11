@@ -25,3 +25,13 @@ export enum ImportMode {
   All,
   IgnoreMatch
 }
+
+/**
+ * Enums of change type for configuration settings changes.
+ */
+export enum ChangeType {
+  Create,
+  Delete,
+  Update,
+  None
+}

@@ -10,7 +10,7 @@ export {
 } from "./options";
 export * from "./enums";
 export * from "./errors";
-export { ImportProgress as ImportResult, ConfigurationChanges, ModifiedSetting } from "./models";
+export { ImportProgress as ImportResult, ConfigurationSettingChange } from "./models";
 export { StringConfigurationSettingsSource } from "./settingsImport/stringConfigurationSettingsSource";
 export { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
 export { ConfigurationChangesSource } from "./settingsImport/configurationChangesSource";

@@ -4,7 +4,7 @@
 import { assert, expect } from "chai";
 import * as path from "path";
 import * as fs from "fs";
-import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "../src/enums";
+import { ConfigurationFormat, ConfigurationProfile, ImportMode, ChangeType } from "../src/enums";
 import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
 import { ConfigurationChangesSource } from "../src/settingsImport/configurationChangesSource";
 import { 
@@ -279,11 +279,16 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       ImportMode.All
     );
 
-    assert.equal(configurationChanges.ToAdd.length, 0);
-    assert.equal(configurationChanges.ToModify.length, 1);
-    assert.equal(configurationChanges.ToModify[0].incoming.key, "app:Settings:FontColor");
-    assert.equal(configurationChanges.ToRefresh.length, 2);
-    assert.equal(configurationChanges.ToDelete.length, 0);
+    const configurationChangesToAdd = configurationChanges.filter(c => c.changeType === ChangeType.Create);
+    const configurationChangesToModify = configurationChanges.filter(c => c.changeType === ChangeType.Update);
+    const configurationChangesToRefresh = configurationChanges.filter(c => c.changeType === ChangeType.None);
+    const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
+
+    assert.equal(configurationChangesToAdd.length, 0);
+    assert.equal(configurationChangesToModify.length, 1);
+    assert.equal(configurationChangesToModify[0].newValue?.key, "app:Settings:FontColor");
+    assert.equal(configurationChangesToRefresh.length, 2);
+    assert.equal(configurationChangesToDelete.length, 0);
 
     let finished = 0;
     let total = 0;
@@ -303,12 +308,9 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
-    const configurationChanges = {
-      ToAdd: [{ key: "testKey", value: "testValue" }],
-      ToModify: [],
-      ToDelete: [],
-      ToRefresh: []
-    };
+    const configurationChanges = [
+      { changeType: ChangeType.Create, currentValue: null, newValue: { key: "testKey", value: "testValue" } }
+    ];
     
     const changesSource = new ConfigurationChangesSource(configurationChanges);
 
@@ -340,12 +342,18 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
-      assert.equal(configurationChanges.ToAdd.length, 0);
-      assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].incoming.key, "app:Settings:FontColor");
-      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
-      assert.equal(configurationChanges.ToRefresh.length, 2);
-      assert.equal(configurationChanges.ToDelete.length, 0);
+      
+      const configurationChangesToAdd = configurationChanges.filter(c => c.changeType === ChangeType.Create);
+      const configurationChangesToModify = configurationChanges.filter(c => c.changeType === ChangeType.Update);
+      const configurationChangesToRefresh = configurationChanges.filter(c => c.changeType === ChangeType.None);
+      const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
+      
+      assert.equal(configurationChangesToAdd.length, 0);
+      assert.equal(configurationChangesToModify.length, 1);
+      assert.equal(configurationChangesToModify[0].newValue?.key, "app:Settings:FontColor");
+      assert.ok(configurationChangesToModify[0].currentValue, "existing setting should be present for diff display");
+      assert.equal(configurationChangesToRefresh.length, 2);
+      assert.equal(configurationChangesToDelete.length, 0);
     });
 
     it("Succeed to get configuration changes and return no matching key values updates with importMode as IgnoreMatch and profile as default", async () => {
@@ -359,12 +367,18 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const source = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(source, false, ImportMode.IgnoreMatch);
       // Only keys with no matching key-values in App Configuration will be updated
-      assert.equal(configurationChanges.ToAdd.length, 0);
-      assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].incoming.key, "app:Settings:FontColor");
-      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
-      assert.equal(configurationChanges.ToRefresh.length, 0);
-      assert.equal(configurationChanges.ToDelete.length, 0);
+      
+      const configurationChangesToAdd = configurationChanges.filter(c => c.changeType === ChangeType.Create);
+      const configurationChangesToModify = configurationChanges.filter(c => c.changeType === ChangeType.Update);
+      const configurationChangesToRefresh = configurationChanges.filter(c => c.changeType === ChangeType.None);
+      const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
+      
+      assert.equal(configurationChangesToAdd.length, 0);
+      assert.equal(configurationChangesToModify.length, 1);
+      assert.equal(configurationChangesToModify[0].newValue?.key, "app:Settings:FontColor");
+      assert.ok(configurationChangesToModify[0].currentValue, "existing setting should be present for diff display");
+      assert.equal(configurationChangesToRefresh.length, 0);
+      assert.equal(configurationChangesToDelete.length, 0);
     });
 
     it("Succeed to get configuration changes from key-values file with importMode as All and profile as kvset", async () => {
@@ -375,13 +389,19 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       };
       const stringConfigurationSource = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(stringConfigurationSource, false, ImportMode.All);
-      // Changed key-values go to ToModify, unchanged go to ToRefresh
-      assert.equal(configurationChanges.ToAdd.length, 0);
-      assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].incoming.key, "TestEnv");
-      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
-      assert.equal(configurationChanges.ToRefresh.length, 2);
-      assert.equal(configurationChanges.ToDelete.length, 0);
+      // Changed key-values go to Update, unchanged go to None
+      
+      const configurationChangesToAdd = configurationChanges.filter(c => c.changeType === ChangeType.Create);
+      const configurationChangesToModify = configurationChanges.filter(c => c.changeType === ChangeType.Update);
+      const configurationChangesToRefresh = configurationChanges.filter(c => c.changeType === ChangeType.None);
+      const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
+      
+      assert.equal(configurationChangesToAdd.length, 0);
+      assert.equal(configurationChangesToModify.length, 1);
+      assert.equal(configurationChangesToModify[0].newValue?.key, "TestEnv");
+      assert.ok(configurationChangesToModify[0].currentValue, "existing setting should be present for diff display");
+      assert.equal(configurationChangesToRefresh.length, 2);
+      assert.equal(configurationChangesToDelete.length, 0);
     });
 
     it("Succeed to get configuration changes and return no matching key values with importMode as IgnoreMatch and profile as kvset", async () => {
@@ -392,13 +412,19 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       };
       const source = new StringConfigurationSettingsSource(options);
       const configurationChanges = await appConfigurationImporter.GetConfigurationChanges(source, false, ImportMode.IgnoreMatch);
-      // Only changed key (TestEnv) should be in ToModify
-      assert.equal(configurationChanges.ToAdd.length, 0);
-      assert.equal(configurationChanges.ToModify.length, 1);
-      assert.equal(configurationChanges.ToModify[0].incoming.key, "TestEnv");
-      assert.ok(configurationChanges.ToModify[0].existing, "existing setting should be present for diff display");
-      assert.equal(configurationChanges.ToRefresh.length, 0);
-      assert.equal(configurationChanges.ToDelete.length, 0);
+      // Only changed key (TestEnv) should be in Update changes
+      
+      const configurationChangesToAdd = configurationChanges.filter(c => c.changeType === ChangeType.Create);
+      const configurationChangesToModify = configurationChanges.filter(c => c.changeType === ChangeType.Update);
+      const configurationChangesToRefresh = configurationChanges.filter(c => c.changeType === ChangeType.None);
+      const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
+      
+      assert.equal(configurationChangesToAdd.length, 0);
+      assert.equal(configurationChangesToModify.length, 1);
+      assert.equal(configurationChangesToModify[0].newValue?.key, "TestEnv");
+      assert.ok(configurationChangesToModify[0].currentValue, "existing setting should be present for diff display");
+      assert.equal(configurationChangesToRefresh.length, 0);
+      assert.equal(configurationChangesToDelete.length, 0);
     });
 
     it("Fail when an invalid import mode is provided", async () => {
