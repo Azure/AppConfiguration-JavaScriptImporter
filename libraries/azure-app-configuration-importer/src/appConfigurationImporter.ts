@@ -12,7 +12,7 @@ import { ConfigurationChangesSource } from "./settingsImport/configurationChange
 import { ImportMode, ChangeType } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup, ConfigurationSettingChange } from "./models";
+import { ImportProgress, ConfigurationSettingChange } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
@@ -121,7 +121,22 @@ export class AppConfigurationImporter {
       };
     }
 
-    const configSettingsResult = await configSettingsSource.GetConfigurationSettings();
+    // Fetch source settings and target store settings in parallel.
+    // For ConfigurationChangesSource the target listing is skipped (changes are pre-calculated and
+    // FilterOptions are not supported on that source type).
+    const isChangesSource = configSettingsSource instanceof ConfigurationChangesSource;
+    const sourcePromise = configSettingsSource.GetConfigurationSettings();
+    const targetPromise: Promise<ConfigurationSetting[]> = isChangesSource
+      ? Promise.resolve([])
+      : (async () => {
+        const items: ConfigurationSetting[] = [];
+        for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
+          items.push(existing);
+        }
+        return items;
+      })();
+
+    const configSettingsResult = await sourcePromise;
 
     // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
     // return them directly without further processing since changes are already calculated
@@ -131,21 +146,22 @@ export class AppConfigurationImporter {
   
     const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
     const configurationChanges: Array<ConfigurationSettingChange> = [];
-    const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
-    const srcKeyLabelLookUp: KeyLabelLookup = {};
-    
-    configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
-      if (!srcKeyLabelLookUp[config.key]) {
-        srcKeyLabelLookUp[config.key] = {};
-      }
-      srcKeyLabelLookUp[config.key][config.label || ""] = true;
-    });
 
-    configurationSettingToAdd.push(...configSettings);
+    // Build O(1) lookup structures keyed by "key\0label" composite.
+    const srcMap = new Map<string, SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>();
+    const toAddKeys = new Set<string>();
+    for (const config of configSettings) {
+      const composite = `${config.key}\u0000${config.label ?? ""}`;
+      srcMap.set(composite, config);
+      toAddKeys.add(composite);
+    }
 
-    for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
-      const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
-      
+    const targetSettings = await targetPromise;
+
+    for (const existing of targetSettings) {
+      const composite = `${existing.key}\u0000${existing.label ?? ""}`;
+      const isKeyLabelPresent: boolean = srcMap.has(composite);
+
       if (strict && !isKeyLabelPresent) {
         configurationChanges.push({
           changeType: ChangeType.Delete,
@@ -154,11 +170,11 @@ export class AppConfigurationImporter {
         });
       }
 
-      const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
+      const incoming = srcMap.get(composite);
 
       if (incoming) {
         // Remove from add list since it already exists
-        configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
+        toAddKeys.delete(composite);
 
         if (!isConfigSettingEqual(incoming, existing)) {
           configurationChanges.push({
@@ -177,11 +193,11 @@ export class AppConfigurationImporter {
       }
     }
 
-    for (const setting of configurationSettingToAdd) {
+    for (const composite of toAddKeys) {
       configurationChanges.push({
         changeType: ChangeType.Create,
         currentValue: null,
-        newValue: setting
+        newValue: srcMap.get(composite)!
       });
     }
 
