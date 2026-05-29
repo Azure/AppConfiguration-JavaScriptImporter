@@ -121,26 +121,35 @@ export class AppConfigurationImporter {
       };
     }
 
-    // Fetch source settings and target store settings in parallel.
-    // For ConfigurationChangesSource the target listing is skipped (changes are pre-calculated and
-    // FilterOptions are not supported on that source type).
+    // Start fetching source settings and (in parallel) prime the target listing.
+    // The source must be fully loaded to build the lookup map, but the target side is
+    // consumed as a stream below so we never hold the entire store in memory.
     const isChangesSource = configSettingsSource instanceof ConfigurationChangesSource;
+    const abortController = new AbortController();
     const sourcePromise = configSettingsSource.GetConfigurationSettings();
-    const targetPromise: Promise<ConfigurationSetting[]> = isChangesSource
-      ? Promise.resolve([])
-      : (async () => {
-        const items: ConfigurationSetting[] = [];
-        for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
-          items.push(existing);
-        }
-        return items;
-      })();
+    // Abort the in-flight target pagination if the source fails.
+    sourcePromise.catch(() => abortController.abort());
 
-    const configSettingsResult = await sourcePromise;
+    const targetIterable = isChangesSource
+      ? null
+      : this.configurationClient.listConfigurationSettings({
+        ...configSettingsSource.FilterOptions,
+        ...customHeadersOption,
+        abortSignal: abortController.signal
+      });
+
+    let configSettingsResult;
+    try {
+      configSettingsResult = await sourcePromise;
+    } catch (e) {
+      abortController.abort();
+      throw e;
+    }
 
     // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
     // return them directly without further processing since changes are already calculated
     if (this.isConfigurationChanges(configSettingsResult)) {
+      abortController.abort();
       return configSettingsResult as Array<ConfigurationSettingChange>;
     }
   
@@ -156,39 +165,38 @@ export class AppConfigurationImporter {
       toAddKeys.add(composite);
     }
 
-    const targetSettings = await targetPromise;
+    // Stream target settings so we don't hold the entire remote store in memory.
+    if (targetIterable) {
+      for await (const existing of targetIterable) {
+        const composite = `${existing.key}\u0000${existing.label ?? ""}`;
+        const incoming = srcMap.get(composite);
 
-    for (const existing of targetSettings) {
-      const composite = `${existing.key}\u0000${existing.label ?? ""}`;
-      const isKeyLabelPresent: boolean = srcMap.has(composite);
-
-      if (strict && !isKeyLabelPresent) {
-        configurationChanges.push({
-          changeType: ChangeType.Delete,
-          currentValue: existing,
-          newValue: null
-        });
-      }
-
-      const incoming = srcMap.get(composite);
-
-      if (incoming) {
-        // Remove from add list since it already exists
-        toAddKeys.delete(composite);
-
-        if (!isConfigSettingEqual(incoming, existing)) {
+        if (strict && !incoming) {
           configurationChanges.push({
-            changeType: ChangeType.Update,
+            changeType: ChangeType.Delete,
             currentValue: existing,
-            newValue: incoming
+            newValue: null
           });
-        } 
-        else if (importMode === ImportMode.All) {
-          configurationChanges.push({
-            changeType: ChangeType.None,
-            currentValue: existing,
-            newValue: incoming
-          });
+        }
+
+        if (incoming) {
+          // Remove from add list since it already exists
+          toAddKeys.delete(composite);
+
+          if (!isConfigSettingEqual(incoming, existing)) {
+            configurationChanges.push({
+              changeType: ChangeType.Update,
+              currentValue: existing,
+              newValue: incoming
+            });
+          } 
+          else if (importMode === ImportMode.All) {
+            configurationChanges.push({
+              changeType: ChangeType.None,
+              currentValue: existing,
+              newValue: incoming
+            });
+          }
         }
       }
     }
