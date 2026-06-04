@@ -12,7 +12,7 @@ import { ConfigurationChangesSource } from "./settingsImport/configurationChange
 import { ImportMode, ChangeType } from "./enums";
 import { OperationTimeoutError, ArgumentError } from "./errors";
 import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
-import { ImportProgress, KeyLabelLookup, ConfigurationSettingChange } from "./models";
+import { ImportProgress, ConfigurationSettingChange } from "./models";
 import { isConfigSettingEqual } from "./internal/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from "./internal/constants";
@@ -128,25 +128,28 @@ export class AppConfigurationImporter {
     if (this.isConfigurationChanges(configSettingsResult)) {
       return configSettingsResult as Array<ConfigurationSettingChange>;
     }
-  
+
     const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
     const configurationChanges: Array<ConfigurationSettingChange> = [];
-    const configurationSettingToAdd: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[] = [];
-    const srcKeyLabelLookUp: KeyLabelLookup = {};
-    
-    configSettings.forEach((config: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>) => {
-      if (!srcKeyLabelLookUp[config.key]) {
-        srcKeyLabelLookUp[config.key] = {};
-      }
-      srcKeyLabelLookUp[config.key][config.label || ""] = true;
-    });
 
-    configurationSettingToAdd.push(...configSettings);
+    // Build O(1) lookup structures keyed by "key\0label" composite.
+    const srcMap = new Map<string, SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>();
+    const toAddKeys = new Set<string>();
+    for (const config of configSettings) {
+      const composite = `${config.key}\u0000${config.label ?? ""}`;
+      srcMap.set(composite, config);
+      toAddKeys.add(composite);
+    }
 
-    for await (const existing of this.configurationClient.listConfigurationSettings({...configSettingsSource.FilterOptions, ...customHeadersOption})) {
-      const isKeyLabelPresent: boolean = srcKeyLabelLookUp[existing.key] && srcKeyLabelLookUp[existing.key][existing.label || ""];
-      
-      if (strict && !isKeyLabelPresent) {
+    // Stream target settings so we don't hold the entire remote store in memory.
+    for await (const existing of this.configurationClient.listConfigurationSettings({
+      ...configSettingsSource.FilterOptions,
+      ...customHeadersOption
+    })) {
+      const composite = `${existing.key}\u0000${existing.label ?? ""}`;
+      const incoming = srcMap.get(composite);
+
+      if (strict && !incoming) {
         configurationChanges.push({
           changeType: ChangeType.Delete,
           currentValue: existing,
@@ -154,11 +157,9 @@ export class AppConfigurationImporter {
         });
       }
 
-      const incoming = configSettings.find(configSetting => configSetting.key == existing.key && configSetting.label === existing.label);
-
       if (incoming) {
         // Remove from add list since it already exists
-        configurationSettingToAdd.splice(configurationSettingToAdd.indexOf(incoming), 1);
+        toAddKeys.delete(composite);
 
         if (!isConfigSettingEqual(incoming, existing)) {
           configurationChanges.push({
@@ -166,7 +167,7 @@ export class AppConfigurationImporter {
             currentValue: existing,
             newValue: incoming
           });
-        } 
+        }
         else if (importMode === ImportMode.All) {
           configurationChanges.push({
             changeType: ChangeType.None,
@@ -177,11 +178,11 @@ export class AppConfigurationImporter {
       }
     }
 
-    for (const setting of configurationSettingToAdd) {
+    for (const composite of toAddKeys) {
       configurationChanges.push({
         changeType: ChangeType.Create,
         currentValue: null,
-        newValue: setting
+        newValue: srcMap.get(composite)!
       });
     }
 
