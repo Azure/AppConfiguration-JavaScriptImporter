@@ -76,6 +76,7 @@ export class IterableConfigurationSettingsSource implements ConfigurationSetting
       result.push({
         key: generatedKey,
         label: this.options.label || configuration.label,
+        description: configuration.description,
         value: configuration.value,
         contentType: contentType,
         tags: configuration.tags

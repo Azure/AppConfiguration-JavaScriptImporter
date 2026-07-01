@@ -28,6 +28,7 @@ export type KvSetConfigurationItem = {
   key: string;
   value?: string;
   label?: string;
+  description?: string;
   content_type?: string;
   tags?: { [propertyName: string]: string };
 }

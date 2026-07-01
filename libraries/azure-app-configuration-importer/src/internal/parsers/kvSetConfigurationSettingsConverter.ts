@@ -36,6 +36,7 @@ export class KvSetConfigurationSettingsConverter implements ConfigurationSetting
         key: element.key,
         value: element.value,
         label: element.label,
+        description: element.description,
         contentType: element.content_type,
         tags: element.tags
       });

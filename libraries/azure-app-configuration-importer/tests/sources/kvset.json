@@ -11,6 +11,7 @@
         "key": "Database:ConnectionString",
         "value": "{\"uri\":\"https://keyvault.vault.azure.net/secrets/db-secret\"}",
         "label": "test",
+        "description": "DB connection string",
         "content_type": "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8",
         "tags": {}
       },
@@ -18,6 +19,7 @@
         "key": "TestEnv",
         "value": "Debug",
         "label": "dev",
+        "description": "",
         "content_type": null,
         "tags": {
             "tag1": "value1",
