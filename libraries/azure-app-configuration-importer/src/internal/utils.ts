@@ -53,7 +53,6 @@ export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<stri
 
   return valueIsEqual &&
     settingA.contentType == settingB.contentType &&
-    settingA.description == settingB.description &&
     areTagsEqual(settingA.tags, settingB.tags);
 }
 
