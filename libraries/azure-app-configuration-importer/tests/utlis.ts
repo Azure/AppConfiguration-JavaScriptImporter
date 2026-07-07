@@ -23,7 +23,7 @@ const items: ConfigurationSetting[] = [
     label: "Dev",
     contentType: undefined,
     value: "yellow",
-    description:"This is description",
+    description: "This is description",
     lastModified: undefined,
     tags: {},
     etag: "",

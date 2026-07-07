@@ -61,6 +61,9 @@ export class KvSetConfigurationSettingsConverter implements ConfigurationSetting
     if (element.value && typeof element.value !== "string") {
       throw new ArgumentError(`The 'value' for the key '${element.key}' is not a string.`);
     }
+    if (element.description && typeof element.description !== "string") {
+      throw new ArgumentError(`The 'description' for the key '${element.key}' is not a string.`);
+    }
     if (element.content_type && typeof element.content_type !== "string") {
       throw new ArgumentError(`The 'content_type' for the key '${element.key}' is not a string.`);
     }
