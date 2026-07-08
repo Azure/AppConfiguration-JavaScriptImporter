@@ -26,8 +26,10 @@ describe("Iterator configuration source test", () => {
     assert.equal(configurationSettings[0].key, "testPrefixapp:Settings:FontSize");
     assert.equal(configurationSettings[0].label, "TestLabel");
     assert.equal(configurationSettings[0].contentType, "text");
+    assert.equal(configurationSettings[0].description, "");
     assert.equal(configurationSettings[1].key, "testPrefixapp:Settings:BackgroundColor");
     assert.equal(configurationSettings[1].label, "TestLabel");
+    assert.equal(configurationSettings[1].description, "This is description");
     assert.equal(configurationSettings[1].contentType, "text");
   });
 
