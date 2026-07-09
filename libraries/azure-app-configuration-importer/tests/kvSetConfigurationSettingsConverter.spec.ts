@@ -35,11 +35,13 @@ describe("Parse kvset format file", () => {
     assert.equal(configurationSettings[1].key, "Database:ConnectionString");
     assert.equal(configurationSettings[1].contentType, secretReferenceContentType);
     assert.equal(configurationSettings[1].label, "test");
+    assert.equal(configurationSettings[1].description, "DB connection string");
     const secret = JSON.parse(configurationSettings[1].value as string) as JsonSecretReferenceValue;
     assert.equal(secret.uri, "https://keyvault.vault.azure.net/secrets/db-secret");
 
     assert.equal(configurationSettings[2].key, "TestEnv");
     assert.equal(configurationSettings[2].value, "Debug");
+    assert.equal(configurationSettings[2].description, "");
     assert.equal(configurationSettings[2].contentType, null);
     assert.equal(configurationSettings[2].label, "dev");
     assert.equal(JSON.stringify(configurationSettings[2].tags), "{\"tag1\":\"value1\",\"tag2\":\"value2\"}");

@@ -48,7 +48,7 @@ export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<stri
     settingB.contentType == featureFlagContentType && 
     settingA.value !== undefined && 
     settingB.value !== undefined) {
-    valueIsEqual = isFeatureFlagValueEqual(settingA.value as string | FeatureFlagValue, settingB.value);
+    valueIsEqual = isFeatureFlagValueEqual(settingA.value as string | MsFeatureFlagValue, settingB.value);
   }
 
   return valueIsEqual &&

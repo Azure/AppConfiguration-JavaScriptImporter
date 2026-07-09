@@ -12,6 +12,7 @@ const items: ConfigurationSetting[] = [
     key: "app:Settings:FontSize",
     label: "Dev",
     contentType: undefined,
+    description: "",
     value: "45",
     lastModified: undefined,
     etag: "",
@@ -22,6 +23,7 @@ const items: ConfigurationSetting[] = [
     label: "Dev",
     contentType: undefined,
     value: "yellow",
+    description: "This is description",
     lastModified: undefined,
     tags: {},
     etag: "",
@@ -32,6 +34,7 @@ const items: ConfigurationSetting[] = [
     label: "Dev",
     contentType: undefined,
     value: "yellow",
+    description: "Font color description",
     lastModified: undefined,
     tags: {
       tag1: "value1",
@@ -46,6 +49,7 @@ const items: ConfigurationSetting[] = [
     contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
     value: "{\"id\":\"Test\",\"description\":\"Test feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}",
     lastModified: undefined,
+    description: undefined,
     tags: {},
     etag: "",
     isReadOnly: false
@@ -54,6 +58,7 @@ const items: ConfigurationSetting[] = [
     key: "TestEnv",
     label: "dev",
     contentType: undefined,
+    description: "",
     value: "Debug",
     lastModified: undefined,
     tags: {
@@ -68,6 +73,7 @@ const items: ConfigurationSetting[] = [
     label: "test",
     contentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8",
     value: "{\"uri\":\"https://keyvault.vault.azure.net/secrets/db-secret\"}",
+    description: "DB connection string",
     lastModified: undefined,
     etag: "",
     isReadOnly: false

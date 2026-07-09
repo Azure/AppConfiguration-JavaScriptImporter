@@ -2,7 +2,7 @@
   "name": "@azure/app-configuration-importer",
   "author": "Microsoft Corporation",
   "description": "A client library for importing/exporting key-values between configuration sources and Azure App Configuration service",
-  "version": "3.0.1-preview",
+  "version": "3.0.2-preview",
   "sdk-type": "client",
   "keywords": [
     "node",
@@ -35,7 +35,7 @@
     "clean": "rimraf dist dist-* types *.tgz *.log"
   },
   "dependencies": {
-    "@azure/app-configuration": "^1.9.0",
+    "@azure/app-configuration": "^1.12.1",
     "@azure/core-client": "^1.9.2",
     "@azure/core-paging": "^1.4.0",
     "@azure/core-rest-pipeline": "^1.6.0",
