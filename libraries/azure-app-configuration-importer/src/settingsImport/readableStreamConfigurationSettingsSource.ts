@@ -11,6 +11,7 @@ import { validateOptions} from "../internal/utils";
 
 export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource { 
   public FilterOptions: ListConfigurationSettingsOptions = {};
+  public supportsDescriptionField: boolean = false;
   private options: SourceOptions;
   private data: ReadableStream<Uint8Array> | NodeJS.ReadableStream;
 
@@ -24,12 +25,14 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
         keyFilter: options.prefix ? options.prefix + "*" : undefined,
         labelFilter: options.label ? options.label : "\0"
       };
+      this.supportsDescriptionField = false;
     }
     else if (options.profile == ConfigurationProfile.KvSet) {
       this.FilterOptions = {
         keyFilter: "*",
         labelFilter: "*"
       };
+      this.supportsDescriptionField = true;
     }
   }
 

@@ -24,6 +24,7 @@ import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetCo
  */
 export class StringConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
+  public supportsDescriptionField: boolean = false;
   private options: SourceOptions;
   private data: string;
 
@@ -37,12 +38,15 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
         keyFilter: options.prefix ? options.prefix + "*" : undefined,
         labelFilter: options.label ? options.label : "\0"
       };
+
+      this.supportsDescriptionField = false;
     }
     else if (options.profile == ConfigurationProfile.KvSet) {
       this.FilterOptions = {
         keyFilter: "*",
         labelFilter: "*"
       };
+      this.supportsDescriptionField = true;
     }
   }
 

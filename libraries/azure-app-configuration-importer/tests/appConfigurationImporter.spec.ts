@@ -285,7 +285,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
 
     assert.equal(configurationChangesToAdd.length, 0);
-    assert.equal(configurationChangesToModify.length, 2);
+    assert.equal(configurationChangesToModify.length, 1);
     assert.equal(configurationChangesToModify[0].newValue?.key, "app:Settings:FontColor");
     assert.equal(configurationChangesToRefresh.length, 2);
     assert.equal(configurationChangesToDelete.length, 0);
@@ -298,7 +298,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     };
 
     // Use Import API with pre-calculated changes
-    const changesSourceForTest = new ConfigurationChangesSource(configurationChanges);
+    const changesSourceForTest = new ConfigurationChangesSource(configurationChanges, options.profile !== ConfigurationProfile.Default);
     await appConfigurationImporter.Import(changesSourceForTest, { timeout: 5, progressCallback: reportImportProgress });
     assert.equal(finished, 3);
     assert.equal(total, 3);
@@ -312,7 +312,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       { changeType: ChangeType.Create, currentValue: null, newValue: { key: "testKey", value: "testValue" } }
     ];
     
-    const changesSource = new ConfigurationChangesSource(configurationChanges);
+    const changesSource = new ConfigurationChangesSource(configurationChanges, false);
 
     try {
       await appConfigurationImporter.Import(changesSource, { timeout: 5, strict: true, importMode: ImportMode.All });
@@ -349,7 +349,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
       
       assert.equal(configurationChangesToAdd.length, 0);
-      assert.equal(configurationChangesToModify.length, 2);
+      assert.equal(configurationChangesToModify.length, 1);
       assert.equal(configurationChangesToModify[0].newValue?.key, "app:Settings:FontColor");
       assert.ok(configurationChangesToModify[0].currentValue, "existing setting should be present for diff display");
       assert.equal(configurationChangesToRefresh.length, 2);
@@ -374,7 +374,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       const configurationChangesToDelete = configurationChanges.filter(c => c.changeType === ChangeType.Delete);
       
       assert.equal(configurationChangesToAdd.length, 0);
-      assert.equal(configurationChangesToModify.length, 2);
+      assert.equal(configurationChangesToModify.length, 1);
       assert.equal(configurationChangesToModify[0].newValue?.key, "app:Settings:FontColor");
       assert.ok(configurationChangesToModify[0].currentValue, "existing setting should be present for diff display");
       assert.equal(configurationChangesToRefresh.length, 0);

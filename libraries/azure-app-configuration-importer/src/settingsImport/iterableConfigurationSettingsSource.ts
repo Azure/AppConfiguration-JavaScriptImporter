@@ -18,13 +18,14 @@ import { ArgumentError } from "../errors";
 
 export class IterableConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
-
+  public supportsDescriptionField: boolean;
   private data: PagedAsyncIterableIterator<ConfigurationSetting<string>, ListConfigurationSettingPage, PageSettings>;
   private options: IterableSourceOptions;
 
   constructor(options: IterableSourceOptions) {
     this.data = options.data;
     this.options = options;
+    this.supportsDescriptionField = true;
     
     this.FilterOptions = {
       keyFilter: options.prefix ? options.prefix + "*" : undefined,

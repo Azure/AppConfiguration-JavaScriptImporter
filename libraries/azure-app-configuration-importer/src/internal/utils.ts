@@ -41,7 +41,7 @@ export function isJsonContentType(contentType?: string): boolean {
 }
 
 /** @internal*/
-export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>, settingB: ConfigurationSetting, configProfile: ConfigurationProfile) {
+export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>, settingB: ConfigurationSetting, isDescriptionFieldSupported: boolean) {
   let valueIsEqual: boolean = settingA.value == settingB.value;
   
   if (settingA.contentType == featureFlagContentType &&
@@ -50,10 +50,9 @@ export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<stri
     settingB.value !== undefined) {
     valueIsEqual = isFeatureFlagValueEqual(settingA.value as string | MsFeatureFlagValue, settingB.value);
   }
-
   return valueIsEqual &&
     settingA.contentType == settingB.contentType &&
-    areTagsEqual(settingA.tags, settingB.tags) && (configProfile == ConfigurationProfile.KvSet && settingA.description == settingB.description);
+    areTagsEqual(settingA.tags, settingB.tags) && (!isDescriptionFieldSupported || settingA.description == settingB.description);
 }
 
 /** @internal*/
