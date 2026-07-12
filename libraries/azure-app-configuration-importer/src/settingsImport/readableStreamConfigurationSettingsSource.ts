@@ -11,7 +11,7 @@ import { validateOptions} from "../internal/utils";
 
 export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource { 
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportsDescriptionField: boolean = false;
+  public supportsDescriptionField = false;
   private options: SourceOptions;
   private data: ReadableStream<Uint8Array> | NodeJS.ReadableStream;
 

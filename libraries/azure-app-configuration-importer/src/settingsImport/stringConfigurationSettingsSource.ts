@@ -24,7 +24,7 @@ import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetCo
  */
 export class StringConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportsDescriptionField: boolean = false;
+  public supportsDescriptionField = false;
   private options: SourceOptions;
   private data: string;
 

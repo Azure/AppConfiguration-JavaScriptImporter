@@ -23,7 +23,6 @@ export interface ConfigurationSettingsSource {
   /**
    * Description field supported in the configuration settings source
    *
-   * @returns boolean
    */
   supportsDescriptionField: boolean;
 

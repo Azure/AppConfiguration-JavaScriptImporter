@@ -562,4 +562,27 @@ describe("Test the utility methods", () => {
     assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, true));
     assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, true));
   });
+
+  it("Determine the description field is ignored when supportDescriptionField is false", async()=> {
+    const testKeyValue1: SetConfigurationSettingParam = {
+      key: "key2", 
+      value: "value1", 
+      label: "prod",
+      description: "description",
+      contentType:"application/json",
+      tags:{tag1: "tag1"}
+    };
+
+    const testKeyValue2: ConfigurationSetting = {
+      key: "key2", 
+      value: "value1", 
+      label: "prod",
+      description: "description updated",
+      contentType:"application/json",
+      tags:{tag1: "tag1"},
+      isReadOnly: false
+    };
+
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, false));
+  })
 });
