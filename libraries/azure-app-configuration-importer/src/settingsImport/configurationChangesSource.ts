@@ -25,12 +25,12 @@ export class ConfigurationChangesSource implements ConfigurationSettingsSource {
   public supportsDescriptionField: boolean;
   private readonly configurationChanges: Array<ConfigurationSettingChange>;
   
-  constructor(configurationChanges: Array<ConfigurationSettingChange>, supportDescriptionField: boolean, filterOptions?: ListConfigurationSettingsOptions) {
+  constructor(configurationChanges: Array<ConfigurationSettingChange>, supportDescriptionField?: boolean, filterOptions?: ListConfigurationSettingsOptions) {
     if (filterOptions && Object.keys(filterOptions).length > 0) {
       throw new ArgumentError("FilterOptions are not supported for ConfigurationChangesSource.");
     }
-    this.supportsDescriptionField = supportDescriptionField;
     this.configurationChanges = configurationChanges;
+    this.supportsDescriptionField = supportDescriptionField ?? false;
   }
 
   /**

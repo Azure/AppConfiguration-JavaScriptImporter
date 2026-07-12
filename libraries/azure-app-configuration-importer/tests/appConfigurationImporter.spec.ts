@@ -298,7 +298,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
     };
 
     // Use Import API with pre-calculated changes
-    const changesSourceForTest = new ConfigurationChangesSource(configurationChanges, options.profile !== ConfigurationProfile.Default);
+    const changesSourceForTest = new ConfigurationChangesSource(configurationChanges);
     await appConfigurationImporter.Import(changesSourceForTest, { timeout: 5, progressCallback: reportImportProgress });
     assert.equal(finished, 3);
     assert.equal(total, 3);
@@ -312,7 +312,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       { changeType: ChangeType.Create, currentValue: null, newValue: { key: "testKey", value: "testValue" } }
     ];
     
-    const changesSource = new ConfigurationChangesSource(configurationChanges, false);
+    const changesSource = new ConfigurationChangesSource(configurationChanges);
 
     try {
       await appConfigurationImporter.Import(changesSource, { timeout: 5, strict: true, importMode: ImportMode.All });
