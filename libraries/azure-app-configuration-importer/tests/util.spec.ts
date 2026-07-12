@@ -584,5 +584,5 @@ describe("Test the utility methods", () => {
     };
 
     assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, false));
-  })
+  });
 });
