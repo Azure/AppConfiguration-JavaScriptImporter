@@ -161,7 +161,7 @@ export class AppConfigurationImporter {
         // Remove from add list since it already exists
         toAddKeys.delete(composite);
 
-        if (!isConfigSettingEqual(incoming, existing, configSettingsSource.supportsDescriptionField)) {
+        if (!isConfigSettingEqual(incoming, existing, configSettingsSource.supportedFields)) {
           configurationChanges.push({
             changeType: ChangeType.Update,
             currentValue: existing,

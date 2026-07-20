@@ -15,17 +15,18 @@ import {
   secretReferenceContentType} from "@azure/app-configuration";
 import { IterableSourceOptions } from "../options";
 import { ArgumentError } from "../errors";
+import { ConfigurationSettingsFields } from "../models";
 
 export class IterableConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportsDescriptionField: boolean;
+  public supportedFields: Array<ConfigurationSettingsFields>;
   private data: PagedAsyncIterableIterator<ConfigurationSetting<string>, ListConfigurationSettingPage, PageSettings>;
   private options: IterableSourceOptions;
 
   constructor(options: IterableSourceOptions) {
     this.data = options.data;
     this.options = options;
-    this.supportsDescriptionField = true;
+    this.supportedFields = [ConfigurationSettingsFields.All];
     
     this.FilterOptions = {
       keyFilter: options.prefix ? options.prefix + "*" : undefined,

@@ -60,3 +60,13 @@ export interface ConfigurationSettingChange {
   /** The new value of the configuration setting */
   newValue: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue> | null;
 }
+
+export enum ConfigurationSettingsFields {
+  All,
+  Key,
+  Value,
+  Label,
+  Description,
+  ContentType,
+  Tags
+}

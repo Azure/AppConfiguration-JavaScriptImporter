@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
-import { ConfigurationSettingChange } from "../models";
+import { ConfigurationSettingChange, ConfigurationSettingsFields } from "../models";
 import { ListConfigurationSettingsOptions } from "@azure/app-configuration";
 import { ArgumentError } from "../errors";
 
@@ -22,15 +22,15 @@ import { ArgumentError } from "../errors";
  * ```
  */
 export class ConfigurationChangesSource implements ConfigurationSettingsSource {
-  public supportsDescriptionField: boolean;
+  public supportedFields: Array<ConfigurationSettingsFields>;
   private readonly configurationChanges: Array<ConfigurationSettingChange>;
   
-  constructor(configurationChanges: Array<ConfigurationSettingChange>, supportDescriptionField?: boolean, filterOptions?: ListConfigurationSettingsOptions) {
+  constructor(configurationChanges: Array<ConfigurationSettingChange>, supportedFields?: Array<ConfigurationSettingsFields>, filterOptions?: ListConfigurationSettingsOptions) {
     if (filterOptions && Object.keys(filterOptions).length > 0) {
       throw new ArgumentError("FilterOptions are not supported for ConfigurationChangesSource.");
     }
     this.configurationChanges = configurationChanges;
-    this.supportsDescriptionField = supportDescriptionField ?? false;
+    this.supportedFields = supportedFields ?? [ConfigurationSettingsFields.All];
   }
 
   /**

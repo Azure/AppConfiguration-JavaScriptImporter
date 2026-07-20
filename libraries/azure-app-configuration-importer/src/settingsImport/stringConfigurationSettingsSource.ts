@@ -18,13 +18,14 @@ import { validateOptions } from "../internal/utils";
 import { ConfigurationSettingsConverter } from "../internal/parsers/configurationSettingsConverter";
 import { DefaultConfigurationSettingsConverter } from "../internal/parsers/defaultConfigurationSettingsConverter";
 import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetConfigurationSettingsConverter";
+import { ConfigurationSettingsFields } from "../models";
 
 /**
  * ConfigurationSettingsSource implementation of  string data configuration source
  */
 export class StringConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportsDescriptionField = false;
+  public supportedFields: Array<ConfigurationSettingsFields> = [ConfigurationSettingsFields.All];
   private options: SourceOptions;
   private data: string;
 
@@ -39,14 +40,14 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
         labelFilter: options.label ? options.label : "\0"
       };
 
-      this.supportsDescriptionField = false;
+      this.supportedFields = [ConfigurationSettingsFields.Key, ConfigurationSettingsFields.Label, ConfigurationSettingsFields.Value, ConfigurationSettingsFields.ContentType, ConfigurationSettingsFields.Tags];
     }
     else if (options.profile == ConfigurationProfile.KvSet) {
       this.FilterOptions = {
         keyFilter: "*",
         labelFilter: "*"
       };
-      this.supportsDescriptionField = true;
+      this.supportedFields = [ConfigurationSettingsFields.All];
     }
   }
 
