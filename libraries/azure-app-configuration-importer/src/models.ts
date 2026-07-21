@@ -62,11 +62,13 @@ export interface ConfigurationSettingChange {
 }
 
 export enum ConfigurationSettingsFields {
-  All,
-  Key,
-  Value,
-  Label,
-  Description,
-  ContentType,
-  Tags
+  None = 0,
+  Key = 1 << 0,
+  Value = 1 << 1,
+  Label = 1 << 2,
+  Description = 1 << 3,
+  ContentType = 1 << 4,
+  Tags = 1 << 5,
+
+  All = Key | Value | Label | Description | ContentType | Tags
 }

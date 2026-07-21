@@ -19,14 +19,14 @@ import { ConfigurationSettingsFields } from "../models";
 
 export class IterableConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportedFields: Array<ConfigurationSettingsFields>;
+  public supportedFields: ConfigurationSettingsFields;
   private data: PagedAsyncIterableIterator<ConfigurationSetting<string>, ListConfigurationSettingPage, PageSettings>;
   private options: IterableSourceOptions;
 
   constructor(options: IterableSourceOptions) {
     this.data = options.data;
     this.options = options;
-    this.supportedFields = [ConfigurationSettingsFields.All];
+    this.supportedFields = ConfigurationSettingsFields.All;
     
     this.FilterOptions = {
       keyFilter: options.prefix ? options.prefix + "*" : undefined,

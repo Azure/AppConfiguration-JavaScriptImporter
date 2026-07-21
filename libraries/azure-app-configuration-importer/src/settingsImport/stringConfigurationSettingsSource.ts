@@ -25,7 +25,7 @@ import { ConfigurationSettingsFields } from "../models";
  */
 export class StringConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportedFields: Array<ConfigurationSettingsFields> = [ConfigurationSettingsFields.All];
+  public supportedFields: ConfigurationSettingsFields = ConfigurationSettingsFields.All;
   private options: SourceOptions;
   private data: string;
 
@@ -40,14 +40,14 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
         labelFilter: options.label ? options.label : "\0"
       };
 
-      this.supportedFields = [ConfigurationSettingsFields.Key, ConfigurationSettingsFields.Label, ConfigurationSettingsFields.Value, ConfigurationSettingsFields.ContentType, ConfigurationSettingsFields.Tags];
+      this.supportedFields = ConfigurationSettingsFields.Key | ConfigurationSettingsFields.Label | ConfigurationSettingsFields.Value | ConfigurationSettingsFields.ContentType| ConfigurationSettingsFields.Tags;
     }
     else if (options.profile == ConfigurationProfile.KvSet) {
       this.FilterOptions = {
         keyFilter: "*",
         labelFilter: "*"
       };
-      this.supportedFields = [ConfigurationSettingsFields.All];
+      this.supportedFields = ConfigurationSettingsFields.All;
     }
   }
 

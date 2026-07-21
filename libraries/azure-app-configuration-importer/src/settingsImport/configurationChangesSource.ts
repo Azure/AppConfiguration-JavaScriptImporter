@@ -22,15 +22,15 @@ import { ArgumentError } from "../errors";
  * ```
  */
 export class ConfigurationChangesSource implements ConfigurationSettingsSource {
-  public supportedFields: Array<ConfigurationSettingsFields>;
+  public supportedFields: ConfigurationSettingsFields;
   private readonly configurationChanges: Array<ConfigurationSettingChange>;
   
-  constructor(configurationChanges: Array<ConfigurationSettingChange>, supportedFields?: Array<ConfigurationSettingsFields>, filterOptions?: ListConfigurationSettingsOptions) {
+  constructor(configurationChanges: Array<ConfigurationSettingChange>, supportedFields?: ConfigurationSettingsFields, filterOptions?: ListConfigurationSettingsOptions) {
     if (filterOptions && Object.keys(filterOptions).length > 0) {
       throw new ArgumentError("FilterOptions are not supported for ConfigurationChangesSource.");
     }
     this.configurationChanges = configurationChanges;
-    this.supportedFields = supportedFields ?? [ConfigurationSettingsFields.All];
+    this.supportedFields = supportedFields ?? ConfigurationSettingsFields.All;
   }
 
   /**

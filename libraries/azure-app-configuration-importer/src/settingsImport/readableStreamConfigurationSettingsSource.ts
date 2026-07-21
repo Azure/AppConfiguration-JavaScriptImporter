@@ -12,7 +12,7 @@ import { ConfigurationSettingsFields } from "../models";
 
 export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource { 
   public FilterOptions: ListConfigurationSettingsOptions = {};
-  public supportedFields = [ConfigurationSettingsFields.All];
+  public supportedFields = ConfigurationSettingsFields.All;
   private options: SourceOptions;
   private data: ReadableStream<Uint8Array> | NodeJS.ReadableStream;
 
@@ -26,14 +26,14 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
         keyFilter: options.prefix ? options.prefix + "*" : undefined,
         labelFilter: options.label ? options.label : "\0"
       };
-      this.supportedFields = [ConfigurationSettingsFields.Key, ConfigurationSettingsFields.Label, ConfigurationSettingsFields.Value, ConfigurationSettingsFields.ContentType, ConfigurationSettingsFields.Tags];
+      this.supportedFields = ConfigurationSettingsFields.Key | ConfigurationSettingsFields.Label | ConfigurationSettingsFields.Value | ConfigurationSettingsFields.ContentType | ConfigurationSettingsFields.Tags;
     }
     else if (options.profile == ConfigurationProfile.KvSet) {
       this.FilterOptions = {
         keyFilter: "*",
         labelFilter: "*"
       };
-      this.supportedFields = [ConfigurationSettingsFields.All];
+      this.supportedFields = ConfigurationSettingsFields.All;
     }
   }
 

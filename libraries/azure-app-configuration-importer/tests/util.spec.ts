@@ -151,12 +151,12 @@ describe("Test the utility methods", () => {
       isReadOnly: false
     };
 
-    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue11, testKeyValue12, [ConfigurationSettingsFields.All]));
+    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue11, testKeyValue12, ConfigurationSettingsFields.All));
   });
 
   it("Determine if key-values with similar values are equal", async()=>{
@@ -210,9 +210,9 @@ describe("Test the utility methods", () => {
       isReadOnly: false
     };
 
-    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, [ConfigurationSettingsFields.All]));
-    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4, [ConfigurationSettingsFields.All]));
-    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6, [ConfigurationSettingsFields.All]));
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
   });
 
   it("Determine if feature flag values with same values are equal", async()=> {
@@ -370,10 +370,10 @@ describe("Test the utility methods", () => {
     };
 
 
-    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, [ConfigurationSettingsFields.All]));
-    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4, [ConfigurationSettingsFields.All]));
-    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6, [ConfigurationSettingsFields.All]));
-    assert.isTrue(isConfigSettingEqual(testKeyValue7, testKeyValue8, [ConfigurationSettingsFields.All]));
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue7, testKeyValue8, ConfigurationSettingsFields.All));
   });
 
   it("Determine if feature flag values with different values are not equal", async()=> {
@@ -557,11 +557,11 @@ describe("Test the utility methods", () => {
       isReadOnly: true
     };
 
-    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, [ConfigurationSettingsFields.All]));
-    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, [ConfigurationSettingsFields.All]));
+    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, ConfigurationSettingsFields.All));
   });
 
   it("Determine the description field is ignored when its not included in the supported fields", async()=> {
@@ -584,6 +584,6 @@ describe("Test the utility methods", () => {
       isReadOnly: false
     };
 
-    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, [ConfigurationSettingsFields.Key, ConfigurationSettingsFields.Label, ConfigurationSettingsFields.Value, ConfigurationSettingsFields.ContentType, ConfigurationSettingsFields.Tags]));
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.Key| ConfigurationSettingsFields.Label| ConfigurationSettingsFields.Value| ConfigurationSettingsFields.ContentType| ConfigurationSettingsFields.Tags));
   });
 });

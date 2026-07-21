@@ -24,7 +24,7 @@ export interface ConfigurationSettingsSource {
    * Fields supported in the configuration settings source
    *
    */
-  supportedFields: ConfigurationSettingsFields[];
+  supportedFields: ConfigurationSettingsFields;
 
   /**
    * Get label and prefix filter

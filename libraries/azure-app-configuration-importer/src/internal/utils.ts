@@ -41,12 +41,9 @@ export function isJsonContentType(contentType?: string): boolean {
 }
 
 /** @internal*/
-export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>, settingB: ConfigurationSetting, supportedFields: Array<ConfigurationSettingsFields>): boolean {
-  const compareAll = supportedFields.includes(ConfigurationSettingsFields.All);
-  const shouldCompare = (field: ConfigurationSettingsFields): boolean =>
-    compareAll || supportedFields.includes(field);
-
-  if (shouldCompare(ConfigurationSettingsFields.Value)) {
+export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>, settingB: ConfigurationSetting, supportedFields: ConfigurationSettingsFields): boolean {
+ 
+  if ((supportedFields & ConfigurationSettingsFields.Value) === ConfigurationSettingsFields.Value) {
     let valueIsEqual: boolean = settingA.value == settingB.value;
 
     if (settingA.contentType == featureFlagContentType &&
@@ -61,15 +58,15 @@ export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<stri
     }
   }
 
-  if (shouldCompare(ConfigurationSettingsFields.ContentType) && settingA.contentType != settingB.contentType) {
+  if ((supportedFields & ConfigurationSettingsFields.ContentType) === ConfigurationSettingsFields.ContentType && settingA.contentType != settingB.contentType) {
     return false;
   }
 
-  if (shouldCompare(ConfigurationSettingsFields.Tags) && !areTagsEqual(settingA.tags, settingB.tags)) {
+  if ((supportedFields & ConfigurationSettingsFields.Tags) === ConfigurationSettingsFields.Tags && !areTagsEqual(settingA.tags, settingB.tags)) {
     return false;
   }
 
-  if (shouldCompare(ConfigurationSettingsFields.Description) && settingA.description != settingB.description) {
+  if ((supportedFields & ConfigurationSettingsFields.Description) === ConfigurationSettingsFields.Description  && settingA.description != settingB.description) {
     return false;
   }
 
