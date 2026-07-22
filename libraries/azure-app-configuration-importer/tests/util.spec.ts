@@ -5,6 +5,7 @@ import { assert } from "chai";
 import { areTagsEqual, isJsonContentType, isConfigSettingEqual } from "../src/internal/utils";
 import { ConfigurationSetting, FeatureFlagValue, SetConfigurationSettingParam } from "@azure/app-configuration";
 import { MsFeatureFlagValue } from "../src/featureFlag";
+import { ConfigurationSettingsFields } from "../src/models";
 
 describe("Test the utility methods", () => {
   it("Determine the content type is json contentType", async () => {
@@ -47,14 +48,16 @@ describe("Test the utility methods", () => {
     const testKeyValue1: SetConfigurationSettingParam = {
       key: "key1", 
       value: "value1", 
-      label: "dev", 
+      label: "dev",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag1"}
     };
     const testKeyValue2: ConfigurationSetting = {
       key: "key1", 
       value: "value2", 
-      label: "dev", 
+      label: "dev",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag1"},
       isReadOnly:  false
@@ -62,14 +65,16 @@ describe("Test the utility methods", () => {
     const testKeyValue3: SetConfigurationSettingParam = {
       key: "key2", 
       value: "value1", 
-      label: "prod", 
+      label: "prod",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag1"}
     };
     const testKeyValue4: ConfigurationSetting = {
       key: "key2", 
       value: "value1", 
-      label: "prod", 
+      label: "prod",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag2"},
       isReadOnly: false
@@ -77,14 +82,16 @@ describe("Test the utility methods", () => {
     const testKeyValue5: SetConfigurationSettingParam = {
       key: "key2", 
       value: "value1", 
-      label: "prod", 
+      label: "prod",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag1"}
     };
     const testKeyValue6: ConfigurationSetting = {
       key: "key2", 
       value: "value1", 
-      label: "prod", 
+      label: "prod",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag2"},
       isReadOnly: false
@@ -93,7 +100,8 @@ describe("Test the utility methods", () => {
     const testKeyValue7: SetConfigurationSettingParam = {
       key: "FeatureA", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}", 
-      label: "test", 
+      label: "test",
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
@@ -101,7 +109,8 @@ describe("Test the utility methods", () => {
     const testKeyValue8: ConfigurationSetting = {
       key: "FeatureB", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature updated description\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}", 
-      label: "test", 
+      label: "test",
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: false
@@ -110,38 +119,60 @@ describe("Test the utility methods", () => {
     const testKeyValue9: SetConfigurationSettingParam = {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature updated description\",\"enabled\":true,\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"50\"}}]}}", 
-      label: "test", 
+      label: "test",
+      description: "description",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
     const testKeyValue10: ConfigurationSetting = {
       key: "FeatureY", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature updated description\",\"enabled\":true,\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"60\"}}]}}", 
-      label: "test", 
+      label: "test",
+      description: "description",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: false
     };
+    const testKeyValue11: SetConfigurationSettingParam = {
+      key: "key2", 
+      value: "value1", 
+      label: "prod",
+      description: "description",
+      contentType:"application/json",
+      tags:{tag1: "tag1"}
+    };
+    const testKeyValue12: ConfigurationSetting = {
+      key: "key2", 
+      value: "value1", 
+      label: "prod",
+      description: "description updated",
+      contentType:"application/json",
+      tags:{tag1: "tag1"},
+      isReadOnly: false
+    };
 
-    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2));
-    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4));
-    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6));
-    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8));
-    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10));
+    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue11, testKeyValue12, ConfigurationSettingsFields.All));
   });
 
   it("Determine if key-values with similar values are equal", async()=>{
     const testKeyValue1: SetConfigurationSettingParam = {
       key: "key1", 
       value: "value1", 
-      label: "dev", 
+      label: "dev",
+      description: "description",
       contentType:"application/json"
     };
 
     const testKeyValue2: ConfigurationSetting = {
       key: "key1", 
       value: "value1", 
-      label: "dev", 
+      label: "dev",
+      description: "description",
       contentType:"application/json",
       isReadOnly: false
     };
@@ -149,14 +180,16 @@ describe("Test the utility methods", () => {
     const testKeyValue3: SetConfigurationSettingParam = {
       key: "key2", 
       value: "", 
-      label: "", 
+      label: "",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag1"}
     };
     const testKeyValue4: ConfigurationSetting = {
       key: "key2", 
       value: "", 
-      label: "", 
+      label: "",
+      description: "description",
       contentType:"application/json",
       tags:{tag1: "tag1"},
       isReadOnly: false
@@ -164,27 +197,30 @@ describe("Test the utility methods", () => {
     const testKeyValue5: SetConfigurationSettingParam = {
       key: "key3", 
       value: "value1", 
-      label: "prod", 
+      label: "prod",
+      description: "description",
       tags:{tag1: "tag1"}
     };
     const testKeyValue6: ConfigurationSetting = {
       key: "key3", 
       value: "value1", 
-      label: "prod", 
+      label: "prod",
+      description: "description", 
       tags:{tag1: "tag1"},
       isReadOnly: false
     };
 
-    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2));
-    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4));
-    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6));
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
   });
 
   it("Determine if feature flag values with same values are equal", async()=> {
     const testKeyValue1: SetConfigurationSettingParam = {
       key: "FeatureA", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}", 
-      label: "test", 
+      label: "test",
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
@@ -192,7 +228,8 @@ describe("Test the utility methods", () => {
     const testKeyValue2: ConfigurationSetting = {
       key: "FeatureA", 
       value: "{\"id\":\"Beta\",\"enabled\":true,\"description\":\"Beta feature\",\"conditions\":{}}", 
-      label: "test", 
+      label: "test",
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -201,14 +238,16 @@ describe("Test the utility methods", () => {
     const testKeyValue3: SetConfigurationSettingParam = {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature updated description\",\"enabled\":true,\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"50\"}}]}}", 
-      label: "test", 
+      label: "test",
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
     const testKeyValue4: ConfigurationSetting = {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"enabled\":true,\"description\":\"Beta feature updated description\",\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"50\"}}]}}", 
-      label: "test", 
+      label: "test",
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -216,7 +255,8 @@ describe("Test the utility methods", () => {
 
     const testKeyValue5: SetConfigurationSettingParam<FeatureFlagValue> = {
       key: "FeatureX", 
-      label: "test", 
+      label: "test",
+      description: "",
       value: {
         id: "Beta",
         description: "Beta feature updated description",
@@ -239,7 +279,8 @@ describe("Test the utility methods", () => {
     const testKeyValue6: ConfigurationSetting = {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"enabled\":true,\"description\":\"Beta feature updated description\",\"conditions\":{\"client_filters\":[{\"name\": \"Microsoft.TimeWindow\",\"parameters\": {\"End\": \"Wed, 06 Sep 2023 21:00:00 GMT\"}}]}}", 
-      label: "test", 
+      label: "test",
+      description: "", 
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -248,6 +289,7 @@ describe("Test the utility methods", () => {
     const testKeyValue7: SetConfigurationSettingParam<MsFeatureFlagValue> = {
       key: "FeatureX",
       label: "test",
+      description: "",
       value: {
         id: "time001",
         enabled: true,
@@ -320,6 +362,7 @@ describe("Test the utility methods", () => {
     const testKeyValue8: ConfigurationSetting = {
       key: "FeatureX",
       label: "test",
+      description: "",
       value: "{\"id\":\"time001\",\"enabled\":true,\"description\":\"\",\"conditions\":{\"client_filters\":[]},\"allocation\":{\"percentile\":[{\"variant\":\"Off\",\"from\":0,\"to\":23},{\"variant\":\"On\",\"from\":23,\"to\":100}],\"group\":[{\"variant\":\"On\",\"groups\":[\"m1\"]},{\"variant\":\"Off\",\"groups\":[\"m2\",\"m3\"]}],\"user\":[{\"variant\":\"Off\",\"users\":[\"user1\",\"user3\"]},{\"variant\":\"On\",\"users\":[\"user2\"]}],\"seed\":\"bcngrfgnfgn\",\"default_when_enabled\":\"On\",\"default_when_disabled\":\"On\"},\"variants\":[{\"name\":\"Off\",\"configuration_value\":false},{\"name\":\"On\",\"configuration_value\":true}]}",
       contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags: {tag1: "tag1"},
@@ -327,17 +370,18 @@ describe("Test the utility methods", () => {
     };
 
 
-    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2));
-    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4));
-    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6));
-    assert.isTrue(isConfigSettingEqual(testKeyValue7, testKeyValue8));
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
+    assert.isTrue(isConfigSettingEqual(testKeyValue7, testKeyValue8, ConfigurationSettingsFields.All));
   });
 
   it("Determine if feature flag values with different values are not equal", async()=> {
     const testKeyValue1: SetConfigurationSettingParam = {
       key: "FeatureA", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature\",\"enabled\":true,\"conditions\":{\"client_filters\":[]}}", 
-      label: "test", 
+      label: "test",
+      description: "", 
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
@@ -346,6 +390,7 @@ describe("Test the utility methods", () => {
       key: "FeatureA", 
       value: "{\"id\":\"Beta\",\"enabled\":true,\"description\":\"Beta feature description\",\"conditions\":{}}", 
       label: "test", 
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -355,6 +400,7 @@ describe("Test the utility methods", () => {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"description\":\"Beta feature updated description\",\"enabled\":true,\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"40\"}}]}}", 
       label: "test", 
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
@@ -362,6 +408,7 @@ describe("Test the utility methods", () => {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"enabled\":true,\"description\":\"Beta feature updated description\",\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"50\"}}]}}", 
       label: "test", 
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -379,6 +426,7 @@ describe("Test the utility methods", () => {
           ]
         }
       },
+      description: "",
       label: "test", 
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
@@ -388,6 +436,7 @@ describe("Test the utility methods", () => {
       key: "FeatureX", 
       value: "{\"id\":\"Dev\",\"enabled\":true,\"description\":\"Beta feature updated description\",\"conditions\":{\"client_filters\":[{\"name\": \"Percentage\",\"parameters\": {\"PercentageFilterSetting\": \"50\"}}]}}", 
       label: "test", 
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -410,6 +459,7 @@ describe("Test the utility methods", () => {
           ]
         }
       },
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"}
     };
@@ -418,6 +468,7 @@ describe("Test the utility methods", () => {
       key: "FeatureX", 
       value: "{\"id\":\"Beta\",\"enabled\":true,\"description\":\"Beta feature updated description\",\"conditions\":{\"client_filters\":[{\"name\": \"Microsoft.TimeWindow\",\"parameters\": {\"End\": \"Wed, 06 Sep 2023 21:00:00 GMT\"}}]}}", 
       label: "test", 
+      description: "",
       contentType:"application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags:{tag1: "tag1"},
       isReadOnly: true
@@ -491,6 +542,7 @@ describe("Test the utility methods", () => {
           }
         ]
       },
+      description: "",
       contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags: { tag1: "tag1" }
     };
@@ -498,16 +550,40 @@ describe("Test the utility methods", () => {
     const testKeyValue10: ConfigurationSetting = {
       key: "FeatureX",
       label: "test",
+      description: "",
       value: "{\"id\":\"time001\",\"enabled\":true,\"description\":\"\",\"conditions\":{\"client_filters\":[]},\"allocation\":{\"percentile\":[{\"variant\":\"Off\",\"from\":0,\"to\":23},{\"variant\":\"On\",\"from\":23,\"to\":100}],\"group\":[{\"variant\":\"On\",\"groups\":[\"m1\"]},{\"variant\":\"Off\",\"groups\":[\"m2\",\"m3\"]}],\"user\":[{\"variant\":\"Off\",\"users\":[\"user1\",\"user3\"]},{\"variant\":\"On\",\"users\":[\"user2\"]}],\"seed\":\"bcngrfgnfgn\",\"default_when_enabled\":\"On\",\"default_when_disabled\":\"On\"},\"variants\":[{\"name\":\"Off\",\"configuration_value\":false},{\"name\":\"On\",\"configuration_value\":true,\"status_override\":\"None\"}]}",
       contentType: "application/vnd.microsoft.appconfig.ff+json;charset=utf-8",
       tags: {},
       isReadOnly: true
     };
 
-    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2));
-    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4));
-    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6));
-    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8));
-    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10));
+    assert.isFalse(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue3, testKeyValue4, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue5, testKeyValue6, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue7, testKeyValue8, ConfigurationSettingsFields.All));
+    assert.isFalse(isConfigSettingEqual(testKeyValue9, testKeyValue10, ConfigurationSettingsFields.All));
+  });
+
+  it("Determine the description field is ignored when its not included in the supported fields", async()=> {
+    const testKeyValue1: SetConfigurationSettingParam = {
+      key: "key2", 
+      value: "value1", 
+      label: "prod",
+      description: "description",
+      contentType:"application/json",
+      tags:{tag1: "tag1"}
+    };
+
+    const testKeyValue2: ConfigurationSetting = {
+      key: "key2", 
+      value: "value1", 
+      label: "prod",
+      description: "description updated",
+      contentType:"application/json",
+      tags:{tag1: "tag1"},
+      isReadOnly: false
+    };
+
+    assert.isTrue(isConfigSettingEqual(testKeyValue1, testKeyValue2, ConfigurationSettingsFields.Key| ConfigurationSettingsFields.Label| ConfigurationSettingsFields.Value| ConfigurationSettingsFields.ContentType| ConfigurationSettingsFields.Tags));
   });
 });

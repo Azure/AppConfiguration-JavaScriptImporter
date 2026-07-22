@@ -8,7 +8,7 @@ import {
   featureFlagContentType,
   SecretReferenceValue } from "@azure/app-configuration";
 import { isEmpty, isEqual } from "lodash";
-import { Tags, FeatureFlagClientFilters } from "../models";
+import { Tags, FeatureFlagClientFilters, ConfigurationSettingsFields } from "../models";
 import { SourceOptions } from "../options";
 import { ConfigurationFormat, ConfigurationProfile } from "../enums";
 import { ArgumentError, ArgumentNullError } from "../errors";
@@ -41,19 +41,36 @@ export function isJsonContentType(contentType?: string): boolean {
 }
 
 /** @internal*/
-export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>, settingB: ConfigurationSetting) {
-  let valueIsEqual: boolean = settingA.value == settingB.value;
-  
-  if (settingA.contentType == featureFlagContentType &&
-    settingB.contentType == featureFlagContentType && 
-    settingA.value !== undefined && 
-    settingB.value !== undefined) {
-    valueIsEqual = isFeatureFlagValueEqual(settingA.value as string | MsFeatureFlagValue, settingB.value);
+export function isConfigSettingEqual(settingA: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>, settingB: ConfigurationSetting, supportedFields: ConfigurationSettingsFields): boolean {
+ 
+  if ((supportedFields & ConfigurationSettingsFields.Value) === ConfigurationSettingsFields.Value) {
+    let valueIsEqual: boolean = settingA.value == settingB.value;
+
+    if (settingA.contentType == featureFlagContentType &&
+      settingB.contentType == featureFlagContentType &&
+      settingA.value !== undefined &&
+      settingB.value !== undefined) {
+      valueIsEqual = isFeatureFlagValueEqual(settingA.value as string | MsFeatureFlagValue, settingB.value);
+    }
+
+    if (!valueIsEqual) {
+      return false;
+    }
   }
 
-  return valueIsEqual &&
-    settingA.contentType == settingB.contentType &&
-    areTagsEqual(settingA.tags, settingB.tags);
+  if ((supportedFields & ConfigurationSettingsFields.ContentType) === ConfigurationSettingsFields.ContentType && settingA.contentType != settingB.contentType) {
+    return false;
+  }
+
+  if ((supportedFields & ConfigurationSettingsFields.Tags) === ConfigurationSettingsFields.Tags && !areTagsEqual(settingA.tags, settingB.tags)) {
+    return false;
+  }
+
+  if ((supportedFields & ConfigurationSettingsFields.Description) === ConfigurationSettingsFields.Description  && settingA.description != settingB.description) {
+    return false;
+  }
+
+  return true;
 }
 
 /** @internal*/

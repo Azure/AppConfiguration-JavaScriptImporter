@@ -7,7 +7,7 @@ import {
   SecretReferenceValue,
   SetConfigurationSettingParam
 } from "@azure/app-configuration";
-import { ConfigurationSettingChange } from "../models";
+import { ConfigurationSettingChange, ConfigurationSettingsFields } from "../models";
 
 /**
  * Interface of all ConfigurationSettingsSource
@@ -19,6 +19,12 @@ export interface ConfigurationSettingsSource {
    * @returns Collection of ConfigurationSettings or ConfigurationSettingChanges
    */
   GetConfigurationSettings(): Promise<Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>> | Array<ConfigurationSettingChange>>;
+
+  /**
+   * Fields supported in the configuration settings source
+   *
+   */
+  supportedFields: ConfigurationSettingsFields;
 
   /**
    * Get label and prefix filter
