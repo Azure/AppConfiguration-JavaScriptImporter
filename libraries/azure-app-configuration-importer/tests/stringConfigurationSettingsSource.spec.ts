@@ -165,4 +165,100 @@ describe("String configuration source test", () => {
     assert.equal(configurationSettings[0].key, "testKey1");
     assert.equal(configurationSettings[0].value, "testValue1");
   });
+
+  it("Detects the kvset profile from document metadata", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        profile: "appconfig/kvset",
+        items: [{ key: "testKey", value: "testValue", tags: {} }]
+      }),
+      format: ConfigurationFormat.Json
+    });
+
+    const configurationSettings = await source.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 1);
+    assert.equal(configurationSettings[0].key, "testKey");
+    assert.equal(configurationSettings[0].value, "testValue");
+  });
+
+  it("Rejects an unsupported document profile", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({ profile: "appconfig/unknown", items: [] }),
+      format: ConfigurationFormat.Json
+    });
+
+    await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Rejects ffset on the configuration settings path", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({ profile: "appconfig/ffset", items: [] }),
+      format: ConfigurationFormat.Json
+    });
+
+    await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Rejects a source profile option without matching document metadata", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({ items: [] }),
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.KvSet
+    });
+
+    await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Gets enhanced feature flags from an ffset document", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        profile: "appconfig/ffset",
+        items: [{
+          name: "Checkout",
+          label: "Production",
+          enabled: true,
+          conditions: { filters: [] },
+          tags: { owner: "commerce" }
+        }]
+      }),
+      format: ConfigurationFormat.Json
+    });
+
+    const featureFlags = await source.GetFeatureFlags();
+
+    assert.deepEqual(featureFlags, [{
+      name: "Checkout",
+      label: "Production",
+      enabled: true,
+      conditions: { filters: [] },
+      tags: { owner: "commerce" }
+    }]);
+  });
+
+  it("Gets only enhanced feature flags from marker-free Default content", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        ordinaryKey: "ignored",
+        feature_management: {
+          feature_flags: [{
+            id: "Checkout",
+            enabled: true,
+            conditions: { client_filters: [] },
+            variants: [{ name: "Blue", configuration_value: { color: "blue" } }]
+          }]
+        }
+      }),
+      format: ConfigurationFormat.Json,
+      label: "Production"
+    });
+
+    const featureFlags = await source.GetFeatureFlags();
+
+    assert.equal(featureFlags.length, 1);
+    assert.equal(featureFlags[0].name, "Checkout");
+    assert.equal(featureFlags[0].label, "Production");
+    assert.equal(featureFlags[0].variants?.[0].value, "{\"color\":\"blue\"}");
+    assert.equal(featureFlags[0].variants?.[0].contentType, "application/json");
+  });
 });

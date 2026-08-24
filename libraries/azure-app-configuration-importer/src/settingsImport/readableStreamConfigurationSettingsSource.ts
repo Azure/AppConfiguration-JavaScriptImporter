@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { SetConfigurationSettingParam, FeatureFlagValue, SecretReferenceValue, ListConfigurationSettingsOptions } from "@azure/app-configuration";
+import { SetConfigurationSettingParam, FeatureFlagParam, FeatureFlagValue, SecretReferenceValue, ListConfigurationSettingsOptions, ListFeatureFlagsOptions } from "@azure/app-configuration";
 import { toWebStream } from "../internal/stream";
 import { ReadableStreamSourceOptions, SourceOptions } from "../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
@@ -9,14 +9,18 @@ import { ConfigurationProfile } from "../enums";
 import { StringConfigurationSettingsSource } from "./stringConfigurationSettingsSource";
 import { validateOptions} from "../internal/utils";
 import { ConfigurationSettingsFields } from "../models";
+import { FeatureFlagSource } from "./featureFlagSource";
 
-export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource { 
+export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource, FeatureFlagSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
   public supportedFields = ConfigurationSettingsFields.All;
+  public FeatureFlagFilterOptions: ListFeatureFlagsOptions = {};
   private options: SourceOptions;
   private data: ReadableStream<Uint8Array> | NodeJS.ReadableStream;
+  private depthWasSpecified: boolean;
 
   constructor(options: ReadableStreamSourceOptions) {
+    this.depthWasSpecified = options && options.depth !== undefined;
     validateOptions(options);
     this.options = options;
     this.data = options.data;
@@ -38,6 +42,20 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
   }
 
   public async GetConfigurationSettings(): Promise<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>[]> {
+    const stringSource = this.createStringSource(await this.readAllData());
+    const settings = await stringSource.GetConfigurationSettings();
+    this.FilterOptions = stringSource.FilterOptions;
+    return settings;
+  }
+
+  public async GetFeatureFlags(): Promise<FeatureFlagParam[]> {
+    const stringSource = this.createStringSource(await this.readAllData());
+    const featureFlags = await stringSource.GetFeatureFlags();
+    this.FeatureFlagFilterOptions = stringSource.FeatureFlagFilterOptions;
+    return featureFlags;
+  }
+
+  private async readAllData(): Promise<string> {
     const reader: ReadableStreamDefaultReader = toWebStream(this.data).getReader();
     const textDecoder = new TextDecoder("utf-8");
 
@@ -48,10 +66,7 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          const stringSource = new StringConfigurationSettingsSource({...this.options, data: allData});
-          const settings = await stringSource.GetConfigurationSettings();
-
-          return settings;
+          return allData;
         }
 
         if (value) {
@@ -62,5 +77,13 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
     finally{
       reader.releaseLock();
     }
+  }
+
+  private createStringSource(data: string): StringConfigurationSettingsSource {
+    return new StringConfigurationSettingsSource({
+      ...this.options,
+      depth: this.depthWasSpecified ? this.options.depth : undefined,
+      data
+    });
   }
 }

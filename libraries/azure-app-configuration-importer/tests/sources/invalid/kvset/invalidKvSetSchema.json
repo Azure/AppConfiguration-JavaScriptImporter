@@ -1,4 +1,5 @@
 {
+  "profile": "appconfig/kvset",
     "configurations": [
       {
         "key": "Test",

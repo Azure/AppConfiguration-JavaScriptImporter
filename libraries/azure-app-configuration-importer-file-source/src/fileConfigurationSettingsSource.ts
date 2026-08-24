@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as fs from "fs";
-import { SetConfigurationSettingParam, FeatureFlagValue, SecretReferenceValue } from "@azure/app-configuration";
+import { SetConfigurationSettingParam, FeatureFlagParam, FeatureFlagValue, SecretReferenceValue } from "@azure/app-configuration";
 import { FileSourceOptions, SourceOptions } from "./fileSourceOptions";
 import { StringConfigurationSettingsSource, ArgumentNullError } from "@azure/app-configuration-importer";
 
@@ -39,6 +39,17 @@ export class FileConfigurationSettingsSource extends StringConfigurationSettings
     }
     catch (error: any) {
       error.message = `Error while importing configuration settings from ${this.filePath}: ${error.message}`;
+      throw error;
+    }
+  }
+
+  public override async GetFeatureFlags(): Promise<FeatureFlagParam[]> {
+    try {
+      const data = fs.readFileSync(this.filePath).toString();
+      return super.getFeatureFlagsInternal(data);
+    }
+    catch (error: any) {
+      error.message = `Error while importing enhanced feature flags from ${this.filePath}: ${error.message}`;
       throw error;
     }
   }

@@ -3,6 +3,8 @@
 
 import { 
   ConfigurationSetting, 
+  FeatureFlag,
+  FeatureFlagParam,
   SetConfigurationSettingParam, 
   FeatureFlagValue,
   featureFlagContentType,
@@ -91,6 +93,26 @@ export function areTagsEqual(tagA?: Tags, tagB?: Tags): boolean {
   return true;
 }
 
+/** @internal */
+export function isEnhancedFeatureFlagEqual(incoming: FeatureFlagParam, existing: FeatureFlag): boolean {
+  return incoming.name === existing.name &&
+    (incoming.label ?? "") === (existing.label ?? "") &&
+    incoming.enabled === existing.enabled &&
+    incoming.description === existing.description &&
+    isEqual(normalizeEnhancedConditions(incoming.conditions), normalizeEnhancedConditions(existing.conditions)) &&
+    isEqual(incoming.variants, existing.variants) &&
+    isEqual(incoming.allocation, existing.allocation) &&
+    isEqual(incoming.telemetry, existing.telemetry) &&
+    areTagsEqual(incoming.tags, existing.tags);
+}
+
+function normalizeEnhancedConditions(conditions: FeatureFlagParam["conditions"]): FeatureFlagParam["conditions"] {
+  if (!conditions?.requirementType && (!conditions?.filters || conditions.filters.length === 0)) {
+    return undefined;
+  }
+  return conditions;
+}
+
 /** @internal*/
 /**
  * Validate the ConfigurationSyncOptions argument, throw fatal error if options are not valid.
@@ -102,7 +124,8 @@ export function validateOptions(options: SourceOptions): void {
     throw new ArgumentNullError();
   }
 
-  if (options.profile == ConfigurationProfile.KvSet) {
+  if (options.profile == ConfigurationProfile.KvSet || options.profile == ConfigurationProfile.FfSet) {
+    const profileName = options.profile == ConfigurationProfile.KvSet ? "appconfig/kvset" : "appconfig/ffset";
     if (
       options.prefix ||
       options.separator ||
@@ -112,13 +135,13 @@ export function validateOptions(options: SourceOptions): void {
       options.contentType
     ) {
       throw new ArgumentError(
-        "The option label, prefix, depth, contentType, tags and separator are not supported when importing using 'appconfig/kvset' profile"
+        `The option label, prefix, depth, contentType, tags and separator are not supported when importing using '${profileName}' profile`
       );
     }
 
     if (options.format !== ConfigurationFormat.Json) {
       throw new ArgumentError(
-        "Yaml and Properties formats are not supported for appconfig/kvset profile. Supported value is: Json"
+        `Yaml and Properties formats are not supported for ${profileName} profile. Supported value is: Json`
       );
     }
   }

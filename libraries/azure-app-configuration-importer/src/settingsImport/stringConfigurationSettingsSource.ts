@@ -2,8 +2,12 @@
 // Licensed under the MIT license.
 
 import {
+  FeatureFlagParam,
   FeatureFlagValue,
+  featureFlagContentType,
+  featureFlagPrefix,
   ListConfigurationSettingsOptions,
+  ListFeatureFlagsOptions,
   SecretReferenceValue,
   SetConfigurationSettingParam
 } from "@azure/app-configuration";
@@ -19,17 +23,22 @@ import { ConfigurationSettingsConverter } from "../internal/parsers/configuratio
 import { DefaultConfigurationSettingsConverter } from "../internal/parsers/defaultConfigurationSettingsConverter";
 import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetConfigurationSettingsConverter";
 import { ConfigurationSettingsFields } from "../models";
+import { FfSetConfigurationSettingsConverter } from "../internal/parsers/ffSetConfigurationSettingsConverter";
+import { FeatureFlagSource } from "./featureFlagSource";
 
 /**
  * ConfigurationSettingsSource implementation of  string data configuration source
  */
-export class StringConfigurationSettingsSource implements ConfigurationSettingsSource {
+export class StringConfigurationSettingsSource implements ConfigurationSettingsSource, FeatureFlagSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
   public supportedFields: ConfigurationSettingsFields = ConfigurationSettingsFields.All;
+  public FeatureFlagFilterOptions: ListFeatureFlagsOptions = {};
   private options: SourceOptions;
   private data: string;
+  private depthWasSpecified: boolean;
 
   constructor(options: StringSourceOptions) {
+    this.depthWasSpecified = options && options.depth !== undefined;
     validateOptions(options);
     this.options = options;
     this.data = options.data;
@@ -58,6 +67,34 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
     return this.getConfigurationSettingsInternal(this.data);
   }
 
+  public async GetFeatureFlags(): Promise<FeatureFlagParam[]> {
+    return this.getFeatureFlagsInternal(this.data);
+  }
+
+  protected getFeatureFlagsInternal(data: string): FeatureFlagParam[] {
+    const loadedData = this.parseData(data);
+    const detectedProfile = this.detectProfile(loadedData);
+    if (detectedProfile === ConfigurationProfile.KvSet) {
+      throw new ArgumentError("The appconfig/kvset profile is not supported by FeatureFlagImporter.");
+    }
+
+    validateOptions({
+      ...this.options,
+      depth: this.depthWasSpecified ? this.options.depth : undefined,
+      profile: detectedProfile
+    });
+    this.setFeatureFlagFilterOptions(detectedProfile);
+
+    if (detectedProfile === ConfigurationProfile.FfSet) {
+      return new FfSetConfigurationSettingsConverter().Convert(loadedData);
+    }
+
+    const settings = new DefaultConfigurationSettingsConverter().Convert(loadedData, this.options);
+    return settings
+      .filter(setting => setting.contentType === featureFlagContentType && setting.value !== undefined)
+      .map(setting => this.toFeatureFlag(setting));
+  }
+
   /**
    * Get the ConfigurationSettings from supplied data string source.
    * 
@@ -67,6 +104,31 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
   protected getConfigurationSettingsInternal(data: string): Array<
     SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>
   > {
+    const loadedData = this.parseData(data);
+    const detectedProfile = this.detectProfile(loadedData);
+    if (detectedProfile === ConfigurationProfile.FfSet) {
+      throw new ArgumentError("The appconfig/ffset profile is not supported by AppConfigurationImporter.");
+    }
+
+    validateOptions({
+      ...this.options,
+      depth: this.depthWasSpecified ? this.options.depth : undefined,
+      profile: detectedProfile
+    });
+    this.setFilterOptions(detectedProfile);
+
+    let converter: ConfigurationSettingsConverter;
+    if (detectedProfile === ConfigurationProfile.KvSet) {
+      converter = new KvSetConfigurationSettingsConverter();
+    }
+    else {
+      converter = new DefaultConfigurationSettingsConverter();
+    }
+
+    return converter.Convert(loadedData, this.options);
+  }
+
+  private parseData(data: string): Record<string, any> {
     let loadedData: any = {};
     // Checking string encoding format
     if (/^\uFEFF/.test(data)) {
@@ -112,14 +174,94 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
       );
     }
 
-    let converter: ConfigurationSettingsConverter;
-    if (this.options.profile === ConfigurationProfile.KvSet) {
-      converter = new KvSetConfigurationSettingsConverter();
-    }
-    else {
-      converter = new DefaultConfigurationSettingsConverter();
+    return loadedData;
+  }
+
+  private detectProfile(loadedData: Record<string, unknown>): ConfigurationProfile {
+    let detectedProfile = ConfigurationProfile.Default;
+
+    if (Object.prototype.hasOwnProperty.call(loadedData, "profile")) {
+      const profile = loadedData.profile;
+      if (typeof profile !== "string" || profile.trim().length === 0) {
+        throw new ArgumentError("The document profile must be a non-empty string.");
+      }
+
+      if (profile === "appconfig/kvset") {
+        detectedProfile = ConfigurationProfile.KvSet;
+      }
+      else if (profile === "appconfig/ffset") {
+        detectedProfile = ConfigurationProfile.FfSet;
+      }
+      else {
+        throw new ArgumentError(`The document profile '${profile}' is not supported.`);
+      }
+
+      delete loadedData.profile;
     }
 
-    return converter.Convert(loadedData, this.options);
+    if (this.options.profile !== undefined && this.options.profile !== detectedProfile) {
+      throw new ArgumentError("The source profile option does not match the document profile.");
+    }
+
+    return detectedProfile;
+  }
+
+  private setFilterOptions(profile: ConfigurationProfile): void {
+    if (profile === ConfigurationProfile.KvSet) {
+      this.FilterOptions = {
+        keyFilter: "*",
+        labelFilter: "*"
+      };
+    }
+    else {
+      this.FilterOptions = {
+        keyFilter: this.options.prefix ? this.options.prefix + "*" : undefined,
+        labelFilter: this.options.label ? this.options.label : "\0"
+      };
+    }
+  }
+
+  private setFeatureFlagFilterOptions(profile: ConfigurationProfile): void {
+    this.FeatureFlagFilterOptions = profile === ConfigurationProfile.FfSet
+      ? { nameFilter: "*", labelFilter: "*" }
+      : {
+        nameFilter: this.options.prefix ? this.options.prefix + "*" : undefined,
+        labelFilter: this.options.label ? this.options.label : "\0"
+      };
+  }
+
+  private toFeatureFlag(
+    setting: SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>
+  ): FeatureFlagParam {
+    const value = JSON.parse(setting.value as string) as Record<string, any>;
+    return {
+      name: setting.key.startsWith(featureFlagPrefix) ? setting.key.substring(featureFlagPrefix.length) : setting.key,
+      label: setting.label,
+      enabled: value.enabled,
+      description: value.description,
+      conditions: value.conditions ? {
+        requirementType: value.conditions.requirement_type,
+        filters: value.conditions.client_filters
+      } : undefined,
+      variants: value.variants?.map((variant: Record<string, any>) => {
+        const variantValue = variant.configuration_value;
+        return {
+          name: variant.name,
+          value: typeof variantValue === "string" ? variantValue : JSON.stringify(variantValue),
+          contentType: typeof variantValue === "string" ? undefined : "application/json",
+          statusOverride: variant.status_override
+        };
+      }),
+      allocation: value.allocation ? {
+        user: value.allocation.user,
+        group: value.allocation.group,
+        percentile: value.allocation.percentile,
+        seed: value.allocation.seed,
+        defaultWhenEnabled: value.allocation.default_when_enabled,
+        defaultWhenDisabled: value.allocation.default_when_disabled
+      } : undefined,
+      telemetry: value.telemetry,
+      tags: setting.tags
+    };
   }
 }

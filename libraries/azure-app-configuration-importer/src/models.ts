@@ -5,7 +5,9 @@ import {
   SecretReferenceValue,
   ConfigurationSetting,
   SetConfigurationSettingParam,
-  FeatureFlagValue
+  FeatureFlagValue,
+  FeatureFlag,
+  FeatureFlagParam
 } from "@azure/app-configuration";
 import { ChangeType } from "./enums";
 
@@ -71,4 +73,12 @@ export enum ConfigurationSettingsFields {
   Tags = 1 << 5,
 
   All = Key | Value | Label | Description | ContentType | Tags
+}
+
+export interface FeatureFlagChange {
+  changeType: ChangeType;
+  /** The current enhanced feature flag. */
+  currentValue: FeatureFlag | null;
+  /** The new enhanced feature flag. */
+  newValue: FeatureFlagParam | null;
 }

@@ -4,7 +4,7 @@
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode } from "./enums";
 import { Tags, ImportProgress } from "./models";
-import { ConfigurationSetting, ListConfigurationSettingPage } from "@azure/app-configuration";
+import { ConfigurationSetting, FeatureFlag, ListConfigurationSettingPage, ListFeatureFlagPage } from "@azure/app-configuration";
 
 type Options = {
   label?: string;
@@ -32,6 +32,9 @@ export type SourceOptions = {
  */
 export type StringSourceOptions = SourceOptions & {data: string; };
 export type IterableSourceOptions = Options & { data: PagedAsyncIterableIterator<ConfigurationSetting<string>, ListConfigurationSettingPage, PageSettings>;  trimPrefix?: string; };
+export type IterableFeatureFlagSourceOptions = {
+  data: PagedAsyncIterableIterator<FeatureFlag, ListFeatureFlagPage, PageSettings>;
+};
 export type ReadableStreamSourceOptions = SourceOptions & { data: ReadableStream<Uint8Array> | NodeJS.ReadableStream };
 
 /**
@@ -57,3 +60,6 @@ export interface ImportOptions {
    */
   importMode?: ImportMode;
 }
+
+/** Options for importing enhanced feature flags. */
+export type FeatureFlagImportOptions = ImportOptions;
