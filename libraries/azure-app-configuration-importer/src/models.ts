@@ -7,7 +7,11 @@ import {
   SetConfigurationSettingParam,
   FeatureFlagValue,
   FeatureFlag,
-  FeatureFlagParam
+  FeatureFlagParam,
+  FeatureFlagConditions,
+  FeatureFlagVariantDefinition,
+  FeatureFlagAllocation,
+  FeatureFlagTelemetryConfiguration
 } from "@azure/app-configuration";
 import { ChangeType } from "./enums";
 
@@ -32,6 +36,21 @@ export type KvSetConfigurationItem = {
   label?: string;
   description?: string;
   content_type?: string;
+  tags?: { [propertyName: string]: string };
+}
+
+/**
+ * @internal
+ */
+export type FfSetItem = {
+  name: string;
+  label?: string;
+  enabled: boolean;
+  description?: string;
+  conditions?: FeatureFlagConditions;
+  variants?: FeatureFlagVariantDefinition[];
+  allocation?: FeatureFlagAllocation;
+  telemetry?: FeatureFlagTelemetryConfiguration;
   tags?: { [propertyName: string]: string };
 }
 

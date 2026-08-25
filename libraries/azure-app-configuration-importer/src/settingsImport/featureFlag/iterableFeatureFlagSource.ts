@@ -3,8 +3,8 @@
 
 import { FeatureFlag, FeatureFlagParam, ListFeatureFlagPage, ListFeatureFlagsOptions } from "@azure/app-configuration";
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
-import { ArgumentError } from "../errors";
-import { IterableFeatureFlagSourceOptions } from "../options";
+import { ArgumentError } from "../../errors";
+import { IterableFeatureFlagSourceOptions } from "../../options";
 import { FeatureFlagSource } from "./featureFlagSource";
 
 /**

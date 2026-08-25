@@ -1,21 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { SetConfigurationSettingParam, FeatureFlagParam, FeatureFlagValue, SecretReferenceValue, ListConfigurationSettingsOptions, ListFeatureFlagsOptions } from "@azure/app-configuration";
-import { toWebStream } from "../internal/stream";
-import { ReadableStreamSourceOptions, SourceOptions } from "../options";
+import { SetConfigurationSettingParam, FeatureFlagValue, SecretReferenceValue, ListConfigurationSettingsOptions } from "@azure/app-configuration";
+import { toWebStream } from "../../internal/stream";
+import { ReadableStreamSourceOptions, SourceOptions } from "../../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
-import { ConfigurationProfile } from "../enums";
+import { ConfigurationProfile } from "../../enums";
 import { StringConfigurationSettingsSource } from "./stringConfigurationSettingsSource";
-import { StringFeatureFlagSource } from "./stringFeatureFlagSource";
-import { validateOptions} from "../internal/utils";
-import { ConfigurationSettingsFields } from "../models";
-import { FeatureFlagSource } from "./featureFlagSource";
+import { validateOptions} from "../../internal/utils";
+import { ConfigurationSettingsFields } from "../../models";
 
-export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource, FeatureFlagSource {
+export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};
   public supportedFields = ConfigurationSettingsFields.All;
-  public FeatureFlagFilterOptions: ListFeatureFlagsOptions = {};
   private options: SourceOptions;
   private data: ReadableStream<Uint8Array> | NodeJS.ReadableStream;
   private depthWasSpecified: boolean;
@@ -47,17 +44,6 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
     const settings = await stringSource.GetConfigurationSettings();
     this.FilterOptions = stringSource.FilterOptions;
     return settings;
-  }
-
-  public async GetFeatureFlags(): Promise<FeatureFlagParam[]> {
-    const stringSource = new StringFeatureFlagSource({
-      ...this.options,
-      depth: this.depthWasSpecified ? this.options.depth : undefined,
-      data: await this.readAllData()
-    });
-    const featureFlags = await stringSource.GetFeatureFlags();
-    this.FeatureFlagFilterOptions = stringSource.FeatureFlagFilterOptions;
-    return featureFlags;
   }
 
   private async readAllData(): Promise<string> {

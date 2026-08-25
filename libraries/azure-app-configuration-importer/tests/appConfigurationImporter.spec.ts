@@ -5,8 +5,8 @@ import { assert, expect } from "chai";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode, ChangeType } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
-import { ConfigurationChangesSource } from "../src/settingsImport/configurationChangesSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
+import { ConfigurationChangesSource } from "../src/settingsImport/configurationSettings/configurationChangesSource";
 import { 
   AppConfigurationClient, 
   ConfigurationSetting, 

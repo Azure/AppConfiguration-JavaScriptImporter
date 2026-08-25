@@ -8,9 +8,9 @@ import { ChangeType, ConfigurationFormat, ImportMode } from "../src/enums";
 import { ArgumentError, OperationTimeoutError } from "../src/errors";
 import { FeatureFlagImporter } from "../src/featureFlagImporter";
 import { FeatureFlagChange, ImportProgress } from "../src/models";
-import { FeatureFlagChangesSource } from "../src/settingsImport/featureFlagChangesSource";
-import { IterableFeatureFlagSource } from "../src/settingsImport/iterableFeatureFlagSource";
-import { StringFeatureFlagSource } from "../src/settingsImport/stringFeatureFlagSource";
+import { FeatureFlagChangesSource } from "../src/settingsImport/featureFlag/featureFlagChangesSource";
+import { IterableFeatureFlagSource } from "../src/settingsImport/featureFlag/iterableFeatureFlagSource";
+import { StringFeatureFlagSource } from "../src/settingsImport/featureFlag/stringFeatureFlagSource";
 import { IterableFeatureFlagSourceOptions } from "../src/options";
 
 describe("FeatureFlagImporter", () => {

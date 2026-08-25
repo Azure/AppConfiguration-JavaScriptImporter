@@ -6,8 +6,8 @@ import * as path from "path";
 import * as fs from "fs";
 import { ArgumentError, ParseError } from "../src/errors";
 import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
-import { StringFeatureFlagSource } from "../src/settingsImport/stringFeatureFlagSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
+import { StringFeatureFlagSource } from "../src/settingsImport/featureFlag/stringFeatureFlagSource";
 import { assertThrowAsync } from "./utlis";
 
 describe("String configuration source test", () => {

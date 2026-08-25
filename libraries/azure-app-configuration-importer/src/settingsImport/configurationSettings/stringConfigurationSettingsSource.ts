@@ -7,16 +7,16 @@ import {
   SecretReferenceValue,
   SetConfigurationSettingParam
 } from "@azure/app-configuration";
-import { SourceOptions, StringSourceOptions } from "../options";
+import { SourceOptions, StringSourceOptions } from "../../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
-import { ConfigurationProfile } from "../enums";
-import { ArgumentError } from "../errors";
-import { validateOptions } from "../internal/utils";
-import { detectConfigurationProfile, parseStringData } from "../internal/stringSourceUtils";
-import { ConfigurationSettingsConverter } from "../internal/parsers/configurationSettingsConverter";
-import { DefaultConfigurationSettingsConverter } from "../internal/parsers/defaultConfigurationSettingsConverter";
-import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetConfigurationSettingsConverter";
-import { ConfigurationSettingsFields } from "../models";
+import { ConfigurationProfile } from "../../enums";
+import { ArgumentError } from "../../errors";
+import { validateOptions } from "../../internal/utils";
+import { detectConfigurationProfile, parseStringData } from "../../internal/stringSourceUtils";
+import { ConfigurationSettingsConverter } from "../../internal/parsers/configurationSettingsConverter";
+import { DefaultConfigurationSettingsConverter } from "../../internal/parsers/defaultConfigurationSettingsConverter";
+import { KvSetConfigurationSettingsConverter } from "../../internal/parsers/kvSetConfigurationSettingsConverter";
+import { ConfigurationSettingsFields } from "../../models";
 
 /**
  * ConfigurationSettingsSource implementation of  string data configuration source

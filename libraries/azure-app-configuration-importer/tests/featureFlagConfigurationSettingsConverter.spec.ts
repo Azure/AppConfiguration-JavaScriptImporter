@@ -10,7 +10,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat } from "../src/enums";
 import { ArgumentError } from "../src/errors";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
 import { StringSourceOptions } from "../src/options";
 import { assertThrowAsync } from "./utlis";
 import { MsFeatureFlagValue } from "../src/featureFlag";

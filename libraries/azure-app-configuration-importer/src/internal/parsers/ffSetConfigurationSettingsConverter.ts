@@ -3,54 +3,64 @@
 
 import { FeatureFlagParam } from "@azure/app-configuration";
 import { ArgumentError } from "../../errors";
+import { FfSetItem } from "../../models";
 
 const allowedProperties = new Set([
   "name", "label", "enabled", "description", "conditions", "variants",
   "allocation", "telemetry", "tags"
 ]);
 
-/** Converts an appconfig/ffset document to enhanced feature flags. */
+/**
+ * Format Parser for ffset profile.
+ *
+ * @internal
+ * */
 export class FfSetConfigurationSettingsConverter {
-  public Convert(config: Record<string, unknown>): FeatureFlagParam[] {
-    if (!Array.isArray(config.items)) {
-      throw new ArgumentError("The input data doesn't follow the FFSet v1 schema. The 'items' property must be an array.");
+  /**
+   * @inheritdoc
+   * */
+  public Convert(config: object): FeatureFlagParam[] {
+    const featureFlags = new Array<FeatureFlagParam>();
+    const itemsKeyword = "items";
+
+    if (!(itemsKeyword in config) || !Array.isArray(config[itemsKeyword as keyof object])) {
+      throw new ArgumentError("The input data doesn't follow the FFSet file schema. See https://azconfig.io/schemas/FFSet/v1.0.0/FFSet.json");
+    }
+    const items: Array<FfSetItem> = config[itemsKeyword as keyof object];
+    for (let index = 0; index < items.length; index++) {
+      const element = items[index];
+      this.validateFfSetElement(element, index);
+      featureFlags.push(element);
     }
 
-    return config.items.map((item, index) => this.convertItem(item, index));
+    return featureFlags;
   }
 
-  private convertItem(item: unknown, index: number): FeatureFlagParam {
-    if (!item || typeof item !== "object" || Array.isArray(item)) {
-      throw new ArgumentError(`Feature flag at index ${index} must be an object.`);
-    }
-
-    const value = item as Record<string, unknown>;
-    const unknownProperty = Object.keys(value).find(property => !allowedProperties.has(property));
+  private validateFfSetElement(element: FfSetItem, index: number) {
+    const unknownProperty = Object.keys(element).find(property => !allowedProperties.has(property));
     if (unknownProperty) {
-      throw new ArgumentError(`Feature flag '${String(value.name ?? index)}' contains unsupported property '${unknownProperty}'.`);
+      throw new ArgumentError(`Feature flag '${String(element.name ?? index)}' contains unsupported property '${unknownProperty}'.`);
     }
-    if (typeof value.name !== "string" || value.name.length === 0) {
+    if (typeof element.name !== "string" || element.name.length === 0) {
       throw new ArgumentError(`Feature flag at index ${index} must contain a non-empty string 'name'.`);
     }
-    if (typeof value.enabled !== "boolean") {
-      throw new ArgumentError(`Feature flag '${value.name}' must contain a boolean 'enabled'.`);
+    if (typeof element.enabled !== "boolean") {
+      throw new ArgumentError(`Feature flag '${element.name}' must contain a boolean 'enabled'.`);
     }
-    if (value.label !== undefined && typeof value.label !== "string") {
-      throw new ArgumentError(`Feature flag '${value.name}' has an invalid label.`);
+    if (element.label !== undefined && typeof element.label !== "string") {
+      throw new ArgumentError(`Feature flag '${element.name}' has an invalid label.`);
     }
-    if (value.description !== undefined && typeof value.description !== "string") {
-      throw new ArgumentError(`Feature flag '${value.name}' has an invalid description.`);
+    if (element.description !== undefined && typeof element.description !== "string") {
+      throw new ArgumentError(`Feature flag '${element.name}' has an invalid description.`);
     }
-    if (value.tags !== undefined && (!value.tags || typeof value.tags !== "object" || Array.isArray(value.tags) ||
-      Object.values(value.tags).some(tag => typeof tag !== "string"))) {
-      throw new ArgumentError(`Feature flag '${value.name}' has invalid tags.`);
+    if (element.tags !== undefined && (!element.tags || typeof element.tags !== "object" || Array.isArray(element.tags) ||
+      Object.values(element.tags).some(tag => typeof tag !== "string"))) {
+      throw new ArgumentError(`Feature flag '${element.name}' has invalid tags.`);
     }
-    this.validateConditions(value.name, value.conditions);
-    this.validateVariants(value.name, value.variants);
-    this.validateAllocation(value.name, value.allocation);
-    this.validateTelemetry(value.name, value.telemetry);
-
-    return value as unknown as FeatureFlagParam;
+    this.validateConditions(element.name, element.conditions);
+    this.validateVariants(element.name, element.variants);
+    this.validateAllocation(element.name, element.allocation);
+    this.validateTelemetry(element.name, element.telemetry);
   }
 
   private validateConditions(name: string, conditions: unknown): void {

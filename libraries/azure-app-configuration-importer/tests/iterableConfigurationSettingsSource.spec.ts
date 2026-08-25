@@ -8,7 +8,7 @@ import { AppConfigurationImporter } from "../src/appConfigurationImporter";
 import { ImportProgress } from "../src/models";
 import { MockUpHttpHeaderLike, MockupResourceLike } from "./appConfigurationImporter.spec";
 import { listConfigurationSettings, assertThrowAsync } from "./utlis";
-import { IterableConfigurationSettingsSource } from "../src/settingsImport/iterableConfigurationSettingsSource";
+import { IterableConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/iterableConfigurationSettingsSource";
 import { ArgumentError, ImportMode } from "../src";
 
 describe("Iterator configuration source test", () => {

@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { ListFeatureFlagsOptions } from "@azure/app-configuration";
-import { ArgumentError } from "../errors";
-import { FeatureFlagChange } from "../models";
+import { ArgumentError } from "../../errors";
+import { FeatureFlagChange } from "../../models";
 import { FeatureFlagSource } from "./featureFlagSource";
 
 /**

@@ -16,8 +16,8 @@ import {
 } from "./internal/utils";
 import { FeatureFlagChange, ImportProgress } from "./models";
 import { FeatureFlagImportOptions } from "./options";
-import { FeatureFlagSource } from "./settingsImport/featureFlagSource";
-import { FeatureFlagChangesSource } from "./settingsImport/featureFlagChangesSource";
+import { FeatureFlagSource } from "./settingsImport/featureFlag/featureFlagSource";
+import { FeatureFlagChangesSource } from "./settingsImport/featureFlag/featureFlagChangesSource";
 
 /**
  * Entrypoint class for importing enhanced feature flags through the dedicated feature flag endpoint.

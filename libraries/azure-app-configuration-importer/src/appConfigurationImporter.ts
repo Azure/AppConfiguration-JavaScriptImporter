@@ -7,8 +7,8 @@ import {
   SetConfigurationSettingParam, 
   FeatureFlagValue, 
   SecretReferenceValue } from "@azure/app-configuration";
-import { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
-import { ConfigurationChangesSource } from "./settingsImport/configurationChangesSource";
+import { ConfigurationSettingsSource } from "./settingsImport/configurationSettings/configurationSettingsSource";
+import { ConfigurationChangesSource } from "./settingsImport/configurationSettings/configurationChangesSource";
 import { ImportMode, ChangeType } from "./enums";
 import { ArgumentError } from "./errors";
 import { ImportProgress, ConfigurationSettingChange } from "./models";

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { FeatureFlagParam, ListFeatureFlagsOptions } from "@azure/app-configuration";
-import { FeatureFlagChange } from "../models";
+import { FeatureFlagChange } from "../../models";
 
 /**
  * Interface of all FeatureFlagSource implementations.
