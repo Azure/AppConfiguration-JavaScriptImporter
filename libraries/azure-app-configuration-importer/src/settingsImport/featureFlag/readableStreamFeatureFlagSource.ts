@@ -6,6 +6,9 @@ import { toWebStream } from "../../internal/stream";
 import { ReadableStreamSourceOptions, SourceOptions } from "../../options";
 import { StringFeatureFlagSource } from "./stringFeatureFlagSource";
 import { FeatureFlagSource } from "./featureFlagSource";
+import { ConfigurationProfile } from "../../enums";
+import { ArgumentError } from "../../errors";
+import { validateOptions } from "../../internal/utils";
 
 /**
  * A FeatureFlagSource that reads enhanced feature flags from a readable stream.
@@ -22,24 +25,34 @@ export class ReadableStreamFeatureFlagSource implements FeatureFlagSource {
    * @param options - Stream data, format, profile, and transformation options.
    */
   constructor(options: ReadableStreamSourceOptions) {
+    if (options.profile === ConfigurationProfile.KvSet) {
+      throw new ArgumentError("The appconfig/kvset profile is not supported by ReadableStreamFeatureFlagSource.");
+    }
     this.depthWasSpecified = options && options.depth !== undefined;
+    validateOptions(options);
     this.options = options;
     this.data = options.data;
 
-    // Validate the options eagerly and seed the initial filter options.
-    const validationSource = new StringFeatureFlagSource({ ...this.options, data: "" });
-    this.FeatureFlagFilterOptions = validationSource.FeatureFlagFilterOptions;
+    if (options.profile == ConfigurationProfile.FfSet) {
+      this.FeatureFlagFilterOptions = {
+        nameFilter: "*",
+        labelFilter: "*"
+      };
+    }
+    else {
+      this.FeatureFlagFilterOptions = {
+        nameFilter: options.prefix ? options.prefix + "*" : undefined,
+        labelFilter: options.label ? options.label : "\0"
+      };
+    }
   }
+
 
   /**
    * @inheritdoc
    */
   public async GetFeatureFlags(): Promise<FeatureFlagParam[]> {
-    const stringSource = new StringFeatureFlagSource({
-      ...this.options,
-      depth: this.depthWasSpecified ? this.options.depth : undefined,
-      data: await this.readAllData()
-    });
+    const stringSource = this.createStringSource(await this.readAllData());
     const featureFlags = await stringSource.GetFeatureFlags();
     this.FeatureFlagFilterOptions = stringSource.FeatureFlagFilterOptions;
     return featureFlags;
@@ -68,4 +81,12 @@ export class ReadableStreamFeatureFlagSource implements FeatureFlagSource {
       reader.releaseLock();
     }
   }
+
+    private createStringSource(data: string): StringFeatureFlagSource {
+      return new StringFeatureFlagSource({
+        ...this.options,
+        depth: this.depthWasSpecified ? this.options.depth : undefined,
+        data
+      });
+    }
 }

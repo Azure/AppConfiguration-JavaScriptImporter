@@ -53,17 +53,27 @@ export class StringFeatureFlagSource implements FeatureFlagSource {
       depth: this.depthWasSpecified ? this.options.depth : undefined,
       profile: detectedProfile
     });
-    this.FeatureFlagFilterOptions = detectedProfile === ConfigurationProfile.FfSet
-      ? { nameFilter: "*", labelFilter: "*" }
-      : {
-        nameFilter: this.options.prefix ? this.options.prefix + "*" : undefined,
-        labelFilter: this.options.label ? this.options.label : "\0"
-      };
+    this.setFilterOptions(detectedProfile);
 
     if (detectedProfile === ConfigurationProfile.FfSet) {
       return new FfSetConfigurationSettingsConverter().Convert(loadedData);
     }
 
     return new DefaultFeatureFlagsConverter().Convert(loadedData, this.options);
+  }
+
+    private setFilterOptions(profile: ConfigurationProfile): void {
+    if (profile === ConfigurationProfile.FfSet) {
+      this.FeatureFlagFilterOptions = {
+        nameFilter: "*",
+        labelFilter: "*"
+      };
+    }
+    else {
+      this.FeatureFlagFilterOptions = {
+        nameFilter: this.options.prefix ? this.options.prefix + "*" : undefined,
+        labelFilter: this.options.label ? this.options.label : "\0"
+      };
+    }
   }
 }

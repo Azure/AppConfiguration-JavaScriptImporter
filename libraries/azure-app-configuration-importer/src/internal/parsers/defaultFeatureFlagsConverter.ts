@@ -134,12 +134,24 @@ export class DefaultFeatureFlagsConverter {
   private readAllocation(allocation: Record<string, any>): FeatureFlagAllocation {
     const enhancedAllocation: FeatureFlagAllocation = {};
 
-    if (allocation.user !== undefined) enhancedAllocation.user = allocation.user;
-    if (allocation.group !== undefined) enhancedAllocation.group = allocation.group;
-    if (allocation.percentile !== undefined) enhancedAllocation.percentile = allocation.percentile;
-    if (allocation.seed !== undefined) enhancedAllocation.seed = allocation.seed;
-    if (allocation.default_when_enabled !== undefined) enhancedAllocation.defaultWhenEnabled = allocation.default_when_enabled;
-    if (allocation.default_when_disabled !== undefined) enhancedAllocation.defaultWhenDisabled = allocation.default_when_disabled;
+    if (allocation.user !== undefined) {
+      enhancedAllocation.user = allocation.user;
+    }
+    if (allocation.group !== undefined) {
+      enhancedAllocation.group = allocation.group;
+    }
+    if (allocation.percentile !== undefined) {
+      enhancedAllocation.percentile = allocation.percentile;
+    }
+    if (allocation.seed !== undefined) {
+      enhancedAllocation.seed = allocation.seed;
+    }
+    if (allocation.default_when_enabled !== undefined) {
+      enhancedAllocation.defaultWhenEnabled = allocation.default_when_enabled;
+    }
+    if (allocation.default_when_disabled !== undefined) {
+      enhancedAllocation.defaultWhenDisabled = allocation.default_when_disabled;
+    }
 
     return enhancedAllocation;
   }
