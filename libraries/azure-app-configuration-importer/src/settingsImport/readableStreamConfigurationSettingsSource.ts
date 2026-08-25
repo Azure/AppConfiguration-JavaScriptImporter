@@ -7,6 +7,7 @@ import { ReadableStreamSourceOptions, SourceOptions } from "../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { ConfigurationProfile } from "../enums";
 import { StringConfigurationSettingsSource } from "./stringConfigurationSettingsSource";
+import { StringFeatureFlagSource } from "./stringFeatureFlagSource";
 import { validateOptions} from "../internal/utils";
 import { ConfigurationSettingsFields } from "../models";
 import { FeatureFlagSource } from "./featureFlagSource";
@@ -49,7 +50,11 @@ export class ReadableStreamConfigurationSettingsSource implements ConfigurationS
   }
 
   public async GetFeatureFlags(): Promise<FeatureFlagParam[]> {
-    const stringSource = this.createStringSource(await this.readAllData());
+    const stringSource = new StringFeatureFlagSource({
+      ...this.options,
+      depth: this.depthWasSpecified ? this.options.depth : undefined,
+      data: await this.readAllData()
+    });
     const featureFlags = await stringSource.GetFeatureFlags();
     this.FeatureFlagFilterOptions = stringSource.FeatureFlagFilterOptions;
     return featureFlags;

@@ -20,5 +20,6 @@ export { ConfigurationChangesSource } from "./settingsImport/configurationChange
 export { IterableConfigurationSettingsSource } from "./settingsImport/iterableConfigurationSettingsSource";
 export { ReadableStreamConfigurationSettingsSource } from "./settingsImport/readableStreamConfigurationSettingsSource";
 export { FeatureFlagSource } from "./settingsImport/featureFlagSource";
+export { StringFeatureFlagSource } from "./settingsImport/stringFeatureFlagSource";
 export { IterableFeatureFlagSource } from "./settingsImport/iterableFeatureFlagSource";
 export { FeatureFlagChangesSource } from "./settingsImport/featureFlagChangesSource";

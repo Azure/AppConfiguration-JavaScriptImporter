@@ -34,6 +34,9 @@ export type StringSourceOptions = SourceOptions & {data: string; };
 export type IterableSourceOptions = Options & { data: PagedAsyncIterableIterator<ConfigurationSetting<string>, ListConfigurationSettingPage, PageSettings>;  trimPrefix?: string; };
 export type IterableFeatureFlagSourceOptions = {
   data: PagedAsyncIterableIterator<FeatureFlag, ListFeatureFlagPage, PageSettings>;
+  prefix?: string;
+  trimPrefix?: string;
+  label?: string;
 };
 export type ReadableStreamSourceOptions = SourceOptions & { data: ReadableStream<Uint8Array> | NodeJS.ReadableStream };
 

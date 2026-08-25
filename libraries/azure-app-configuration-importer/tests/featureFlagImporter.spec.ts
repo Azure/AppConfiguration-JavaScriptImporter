@@ -9,7 +9,9 @@ import { ArgumentError, OperationTimeoutError } from "../src/errors";
 import { FeatureFlagImporter } from "../src/featureFlagImporter";
 import { FeatureFlagChange, ImportProgress } from "../src/models";
 import { FeatureFlagChangesSource } from "../src/settingsImport/featureFlagChangesSource";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { IterableFeatureFlagSource } from "../src/settingsImport/iterableFeatureFlagSource";
+import { StringFeatureFlagSource } from "../src/settingsImport/stringFeatureFlagSource";
+import { IterableFeatureFlagSourceOptions } from "../src/options";
 
 describe("FeatureFlagImporter", () => {
   it("succeeds importing a simple FFSet file", async () => {
@@ -25,14 +27,14 @@ describe("FeatureFlagImporter", () => {
       progressCallback: value => progress = value
     });
 
-    assert.equal(client.addFeatureFlag.callCount, 2);
-    assert.equal(client.setFeatureFlag.callCount, 0);
+    assert.equal(client.addFeatureFlag.callCount, 0);
+    assert.equal(client.setFeatureFlag.callCount, 2);
     assert.deepEqual(progress, { successCount: 2, importCount: 2 });
   });
 
   it("fails import when the server returns an error", async () => {
     const client = createClient();
-    client.addFeatureFlag.rejects(new Error("server error"));
+    client.setFeatureFlag.rejects(new Error("server error"));
     const importer = new FeatureFlagImporter(client.client);
 
     const error = await captureError(() => importer.Import(
@@ -45,7 +47,7 @@ describe("FeatureFlagImporter", () => {
 
   it("fails import when the timeout is exceeded", async () => {
     const client = createClient();
-    client.addFeatureFlag.callsFake(async () => {
+    client.setFeatureFlag.callsFake(async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       return { name: "Checkout", enabled: true };
     });
@@ -62,13 +64,13 @@ describe("FeatureFlagImporter", () => {
   it("succeeds after surviving client throttling", async () => {
     const client = createClient();
     const throttledError = Object.assign(new Error("client throttled"), { statusCode: 429 });
-    client.addFeatureFlag.onFirstCall().rejects(throttledError);
-    client.addFeatureFlag.resolves({ name: "Checkout", enabled: true });
+    client.setFeatureFlag.onFirstCall().rejects(throttledError);
+    client.setFeatureFlag.resolves({ name: "Checkout", enabled: true });
     const importer = new FeatureFlagImporter(client.client);
 
     await importer.Import(createFfSetSource([{ name: "Checkout", enabled: true }]), { timeout: 3 });
 
-    assert.equal(client.addFeatureFlag.callCount, 2);
+    assert.equal(client.setFeatureFlag.callCount, 2);
   });
 
   it("imports an empty FFSet file without error", async () => {
@@ -80,6 +82,27 @@ describe("FeatureFlagImporter", () => {
     assert.equal(client.addFeatureFlag.callCount, 0);
     assert.equal(client.setFeatureFlag.callCount, 0);
     assert.equal(client.deleteFeatureFlag.callCount, 0);
+  });
+
+  it("transforms feature flags from an iterator and exposes its filters", async () => {
+    const source = new IterableFeatureFlagSource({
+      data: featureFlagIterator([
+        { name: "app:Checkout", label: "Development", enabled: true }
+      ]) as unknown as IterableFeatureFlagSourceOptions["data"],
+      prefix: "Test:",
+      trimPrefix: "app:",
+      label: "Production"
+    });
+
+    const featureFlags = await source.GetFeatureFlags();
+
+    assert.deepEqual(featureFlags, [
+      { name: "Test:Checkout", label: "Production", enabled: true }
+    ]);
+    assert.deepEqual(source.FeatureFlagFilterOptions, {
+      nameFilter: "Test:*",
+      labelFilter: "Production"
+    });
   });
 
   it("deletes unmatched feature flags in strict mode", async () => {
@@ -114,11 +137,16 @@ describe("FeatureFlagImporter", () => {
       progressCallback: value => progress = value
     });
 
-    assert.equal(client.addFeatureFlag.callCount, 1);
-    assert.equal(client.setFeatureFlag.callCount, 2);
+    assert.equal(client.addFeatureFlag.callCount, 0);
+    assert.equal(client.setFeatureFlag.callCount, 3);
     assert.equal(client.deleteFeatureFlag.callCount, 1);
     assert.deepEqual(progress, { successCount: 3, importCount: 3 });
     assert.equal(client.listFeatureFlags.callCount, 0);
+  });
+
+  it("rejects filter options for pre-calculated feature flag changes", () => {
+    expect(() => new FeatureFlagChangesSource([], { nameFilter: "*" }))
+      .to.throw(ArgumentError, "FeatureFlagFilterOptions are not supported for FeatureFlagChangesSource.");
   });
 
   it("rejects strict and importMode for pre-calculated changes", async () => {
@@ -240,21 +268,21 @@ describe("FeatureFlagImporter", () => {
       await importer.Import(createFfSetSource([{ name: "Checkout", enabled: true }]), { timeout: 3 });
 
       const listHeaders = client.listFeatureFlags.firstCall.args[0].requestOptions.customHeaders;
-      const addHeaders = client.addFeatureFlag.firstCall.args[1].requestOptions.customHeaders;
-      assert.equal(addHeaders["x-ms-correlation-request-id"], listHeaders["x-ms-correlation-request-id"]);
+      const setHeaders = client.setFeatureFlag.firstCall.args[1].requestOptions.customHeaders;
+      assert.equal(setHeaders["x-ms-correlation-request-id"], listHeaders["x-ms-correlation-request-id"]);
     });
   });
 });
 
-function createFfSetSource(items: Array<Record<string, unknown>>): StringConfigurationSettingsSource {
-  return new StringConfigurationSettingsSource({
+function createFfSetSource(items: Array<Record<string, unknown>>): StringFeatureFlagSource {
+  return new StringFeatureFlagSource({
     data: JSON.stringify({ profile: "appconfig/ffset", items }),
     format: ConfigurationFormat.Json
   });
 }
 
-function createDefaultSource(featureFlags: Array<Record<string, unknown>>): StringConfigurationSettingsSource {
-  return new StringConfigurationSettingsSource({
+function createDefaultSource(featureFlags: Array<Record<string, unknown>>): StringFeatureFlagSource {
+  return new StringFeatureFlagSource({
     data: JSON.stringify({ feature_management: { feature_flags: featureFlags } }),
     format: ConfigurationFormat.Json
   });
