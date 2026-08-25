@@ -62,7 +62,7 @@ export class StringFeatureFlagSource implements FeatureFlagSource {
     return new DefaultFeatureFlagsConverter().Convert(loadedData, this.options);
   }
 
-    private setFilterOptions(profile: ConfigurationProfile): void {
+  private setFilterOptions(profile: ConfigurationProfile): void {
     if (profile === ConfigurationProfile.FfSet) {
       this.FeatureFlagFilterOptions = {
         nameFilter: "*",

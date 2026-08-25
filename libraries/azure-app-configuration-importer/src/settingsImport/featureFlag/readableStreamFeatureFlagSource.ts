@@ -82,11 +82,11 @@ export class ReadableStreamFeatureFlagSource implements FeatureFlagSource {
     }
   }
 
-    private createStringSource(data: string): StringFeatureFlagSource {
-      return new StringFeatureFlagSource({
-        ...this.options,
-        depth: this.depthWasSpecified ? this.options.depth : undefined,
-        data
-      });
-    }
+  private createStringSource(data: string): StringFeatureFlagSource {
+    return new StringFeatureFlagSource({
+      ...this.options,
+      depth: this.depthWasSpecified ? this.options.depth : undefined,
+      data
+    });
+  }
 }
