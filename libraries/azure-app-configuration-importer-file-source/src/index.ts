@@ -3,3 +3,4 @@
 
 export { FileSourceOptions as FileConfigurationSyncOptions } from "./fileSourceOptions";
 export { FileConfigurationSettingsSource } from "./fileConfigurationSettingsSource";
+export { FileFeatureFlagSource } from "./fileFeatureFlagSource";

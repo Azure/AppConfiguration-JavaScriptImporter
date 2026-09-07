@@ -1,0 +1,29 @@
+{
+  "profile": "appconfig/ffset",
+  "items": [
+    {
+      "name": "Beta",
+      "label": "Production",
+      "enabled": true,
+      "description": "Enables the beta checkout experience.",
+      "conditions": {
+        "requirementType": "Any",
+        "filters": [
+          {
+            "name": "Microsoft.Percentage",
+            "parameters": {
+              "Value": "50"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "owner": "commerce"
+      }
+    },
+    {
+      "name": "DarkMode",
+      "enabled": false
+    }
+  ]
+}

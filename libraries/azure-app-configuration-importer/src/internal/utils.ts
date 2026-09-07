@@ -3,17 +3,85 @@
 
 import { 
   ConfigurationSetting, 
+  FeatureFlag,
+  FeatureFlagParam,
   SetConfigurationSettingParam, 
   FeatureFlagValue,
   featureFlagContentType,
   SecretReferenceValue } from "@azure/app-configuration";
+import { OperationOptions } from "@azure/core-client";
 import { isEmpty, isEqual } from "lodash";
-import { Tags, FeatureFlagClientFilters, ConfigurationSettingsFields } from "../models";
+import { v4 as uuidv4 } from "uuid";
+import { Tags, FeatureFlagClientFilters, ConfigurationSettingsFields, ImportProgress } from "../models";
 import { SourceOptions } from "../options";
-import { ConfigurationFormat, ConfigurationProfile } from "../enums";
-import { ArgumentError, ArgumentNullError } from "../errors";
+import { ChangeType, ConfigurationFormat, ConfigurationProfile, ImportMode } from "../enums";
+import { ArgumentError, ArgumentNullError, OperationTimeoutError } from "../errors";
 import { Constants } from "../internal/constants";
 import { MsFeatureFlagValue, Variant } from "../featureFlag";
+import { AdaptiveTaskManager } from "./adaptiveTaskManager";
+
+/** @internal */
+export function createCorrelationOptions(): OperationOptions {
+  return {
+    requestOptions: {
+      customHeaders: { [Constants.CorrelationRequestIdHeader]: uuidv4() }
+    }
+  };
+}
+
+/** @internal */
+export function getSettingIdentity(nameOrKey: string, label?: string): string {
+  return `${nameOrKey}\u0000${label ?? ""}`;
+}
+
+/** @internal */
+export function validateImportMode(importMode: ImportMode): void {
+  if (importMode !== ImportMode.IgnoreMatch && importMode !== ImportMode.All) {
+    throw new ArgumentError("Only options supported for Import Mode are 'All' and 'Ignore-Match'.");
+  }
+}
+
+/** @internal */
+export function createAdaptiveTaskManager<TValue, TResult>(
+  task: (value: TValue) => Promise<TResult>,
+  values: TValue[]
+): AdaptiveTaskManager<TResult> {
+  let index = 0;
+  return new AdaptiveTaskManager(() => {
+    if (index === values.length) {
+      return undefined;
+    }
+    const value = values[index++];
+    return () => task(value);
+  }, values.length);
+}
+
+/** @internal */
+export async function executeTasksWithTimeout<T>(
+  taskManager: AdaptiveTaskManager<T>,
+  timeInSeconds: number,
+  callback?: (progress: ImportProgress) => unknown
+): Promise<void> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new OperationTimeoutError()), timeInSeconds * 1000);
+  });
+  await Promise.race([taskManager.Start(callback), timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
+/** @internal */
+export function isChangeArray<TChange>(value: unknown): value is TChange[] {
+  return Array.isArray(value) && value.every(item => {
+    if (!item || typeof item !== "object") {
+      return false;
+    }
+    const change = item as Record<string, unknown>;
+    return "changeType" in change &&
+      "currentValue" in change &&
+      "newValue" in change &&
+      Object.values(ChangeType).includes(change.changeType as ChangeType);
+  });
+}
 
 /** @internal*/
 export function isJsonContentType(contentType?: string): boolean {
@@ -91,6 +159,26 @@ export function areTagsEqual(tagA?: Tags, tagB?: Tags): boolean {
   return true;
 }
 
+/** @internal */
+export function isEnhancedFeatureFlagEqual(incoming: FeatureFlagParam, existing: FeatureFlag): boolean {
+  return incoming.name === existing.name &&
+    (incoming.label ?? "") === (existing.label ?? "") &&
+    incoming.enabled === existing.enabled &&
+    incoming.description === existing.description &&
+    isEqual(normalizeEnhancedConditions(incoming.conditions), normalizeEnhancedConditions(existing.conditions)) &&
+    isEqual(incoming.variants, existing.variants) &&
+    isEqual(incoming.allocation, existing.allocation) &&
+    isEqual(incoming.telemetry, existing.telemetry) &&
+    areTagsEqual(incoming.tags, existing.tags);
+}
+
+function normalizeEnhancedConditions(conditions: FeatureFlagParam["conditions"]): FeatureFlagParam["conditions"] {
+  if (!conditions?.requirementType && (!conditions?.filters || conditions.filters.length === 0)) {
+    return undefined;
+  }
+  return conditions;
+}
+
 /** @internal*/
 /**
  * Validate the ConfigurationSyncOptions argument, throw fatal error if options are not valid.
@@ -102,7 +190,8 @@ export function validateOptions(options: SourceOptions): void {
     throw new ArgumentNullError();
   }
 
-  if (options.profile == ConfigurationProfile.KvSet) {
+  if (options.profile == ConfigurationProfile.KvSet || options.profile == ConfigurationProfile.FfSet) {
+    const profileName = options.profile == ConfigurationProfile.KvSet ? "appconfig/kvset" : "appconfig/ffset";
     if (
       options.prefix ||
       options.separator ||
@@ -112,13 +201,13 @@ export function validateOptions(options: SourceOptions): void {
       options.contentType
     ) {
       throw new ArgumentError(
-        "The option label, prefix, depth, contentType, tags and separator are not supported when importing using 'appconfig/kvset' profile"
+        `The option label, prefix, depth, contentType, tags and separator are not supported when importing using '${profileName}' profile`
       );
     }
 
     if (options.format !== ConfigurationFormat.Json) {
       throw new ArgumentError(
-        "Yaml and Properties formats are not supported for appconfig/kvset profile. Supported value is: Json"
+        `Yaml and Properties formats are not supported for ${profileName} profile. Supported value is: Json`
       );
     }
   }

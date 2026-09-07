@@ -7,18 +7,16 @@ import {
   SecretReferenceValue,
   SetConfigurationSettingParam
 } from "@azure/app-configuration";
-import * as jsyaml from "js-yaml";
-import stripJSONComments from "strip-json-comments";
-import { getProperties  } from "properties-file";
-import { SourceOptions, StringSourceOptions } from "../options";
+import { SourceOptions, StringSourceOptions } from "../../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
-import { ConfigurationFormat, ConfigurationProfile } from "../enums";
-import { ArgumentError, ParseError } from "../errors";
-import { validateOptions } from "../internal/utils";
-import { ConfigurationSettingsConverter } from "../internal/parsers/configurationSettingsConverter";
-import { DefaultConfigurationSettingsConverter } from "../internal/parsers/defaultConfigurationSettingsConverter";
-import { KvSetConfigurationSettingsConverter } from "../internal/parsers/kvSetConfigurationSettingsConverter";
-import { ConfigurationSettingsFields } from "../models";
+import { ConfigurationProfile } from "../../enums";
+import { ArgumentError } from "../../errors";
+import { validateOptions } from "../../internal/utils";
+import { detectConfigurationProfile, parseStringData } from "../../internal/stringSourceUtils";
+import { ConfigurationSettingsConverter } from "../../internal/parsers/configurationSettingsConverter";
+import { DefaultConfigurationSettingsConverter } from "../../internal/parsers/defaultConfigurationSettingsConverter";
+import { KvSetConfigurationSettingsConverter } from "../../internal/parsers/kvSetConfigurationSettingsConverter";
+import { ConfigurationSettingsFields } from "../../models";
 
 /**
  * ConfigurationSettingsSource implementation of  string data configuration source
@@ -28,8 +26,13 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
   public supportedFields: ConfigurationSettingsFields = ConfigurationSettingsFields.All;
   private options: SourceOptions;
   private data: string;
+  private depthWasSpecified: boolean;
 
   constructor(options: StringSourceOptions) {
+    if (options.profile === ConfigurationProfile.FfSet) {
+      throw new ArgumentError("The appconfig/ffset profile is not supported by StringConfigurationSettingsSource.");
+    }
+    this.depthWasSpecified = options && options.depth !== undefined;
     validateOptions(options);
     this.options = options;
     this.data = options.data;
@@ -67,53 +70,21 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
   protected getConfigurationSettingsInternal(data: string): Array<
     SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>
   > {
-    let loadedData: any = {};
-    // Checking string encoding format
-    if (/^\uFEFF/.test(data)) {
-      throw new ParseError(
-        "Failed to parse data: An invalid encoding, UTF-8 with BOM, was detected. Please update encoding to UTF-8 without BOM."
-      );
+    const loadedData = parseStringData(data, this.options.format);
+    const detectedProfile = detectConfigurationProfile(loadedData, this.options.profile);
+    if (detectedProfile === ConfigurationProfile.FfSet) {
+      throw new ArgumentError("The appconfig/ffset profile is not supported by AppConfigurationImporter.");
     }
 
-    try {
-      switch (this.options.format) {
-        case ConfigurationFormat.Json: {
-          loadedData = JSON.parse(stripJSONComments(data));
-          break;
-        }
-        case ConfigurationFormat.Yaml: {
-          const temp = jsyaml.load(data, { schema: jsyaml.JSON_SCHEMA });
-          if (temp === undefined) {
-            throw new ParseError(
-              "Failed to parse data: Not a valid yaml format."
-            );
-          }
-          else {
-            loadedData = temp;
-          }
-          break;
-        }
-        case ConfigurationFormat.Properties: {
-          loadedData = getProperties(data);
-          break;
-        }
-        default: {
-          throw new ArgumentError("Data Format provided is not supported. Supported values are: Json, Yaml and Properties.");
-        }
-      }
-    }
-    catch (e: any) {
-      throw new ParseError(`Failed to parse data: ${e.message}`);
-    }
-
-    if (typeof loadedData !== "object") {
-      throw new ParseError(
-        `Type of data be parsed is ${typeof loadedData}, not a valid object type`
-      );
-    }
+    validateOptions({
+      ...this.options,
+      depth: this.depthWasSpecified ? this.options.depth : undefined,
+      profile: detectedProfile
+    });
+    this.setFilterOptions(detectedProfile);
 
     let converter: ConfigurationSettingsConverter;
-    if (this.options.profile === ConfigurationProfile.KvSet) {
+    if (detectedProfile === ConfigurationProfile.KvSet) {
       converter = new KvSetConfigurationSettingsConverter();
     }
     else {
@@ -122,4 +93,20 @@ export class StringConfigurationSettingsSource implements ConfigurationSettingsS
 
     return converter.Convert(loadedData, this.options);
   }
+
+  private setFilterOptions(profile: ConfigurationProfile): void {
+    if (profile === ConfigurationProfile.KvSet) {
+      this.FilterOptions = {
+        keyFilter: "*",
+        labelFilter: "*"
+      };
+    }
+    else {
+      this.FilterOptions = {
+        keyFilter: this.options.prefix ? this.options.prefix + "*" : undefined,
+        labelFilter: this.options.label ? this.options.label : "\0"
+      };
+    }
+  }
+
 }

@@ -8,7 +8,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode, ChangeType } from "../src/enums";
 import { ArgumentError } from "../src/errors";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
 import { JsonSecretReferenceValue } from "../src/models";
 import { AppConfigurationImporter } from "../src/appConfigurationImporter";
 import { listConfigurationSettings, assertThrowAsync } from "./utlis";

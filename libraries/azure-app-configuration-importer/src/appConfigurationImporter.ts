@@ -7,15 +7,20 @@ import {
   SetConfigurationSettingParam, 
   FeatureFlagValue, 
   SecretReferenceValue } from "@azure/app-configuration";
-import { ConfigurationSettingsSource } from "./settingsImport/configurationSettingsSource";
-import { ConfigurationChangesSource } from "./settingsImport/configurationChangesSource";
+import { ConfigurationSettingsSource } from "./settingsImport/configurationSettings/configurationSettingsSource";
+import { ConfigurationChangesSource } from "./settingsImport/configurationSettings/configurationChangesSource";
 import { ImportMode, ChangeType } from "./enums";
-import { OperationTimeoutError, ArgumentError } from "./errors";
-import { AdaptiveTaskManager } from "./internal/adaptiveTaskManager";
+import { ArgumentError } from "./errors";
 import { ImportProgress, ConfigurationSettingChange } from "./models";
-import { isConfigSettingEqual } from "./internal/utils";
-import { v4 as uuidv4 } from "uuid";
-import { Constants } from "./internal/constants";
+import {
+  createAdaptiveTaskManager,
+  createCorrelationOptions,
+  executeTasksWithTimeout,
+  getSettingIdentity,
+  isChangeArray,
+  isConfigSettingEqual,
+  validateImportMode
+} from "./internal/utils";
 import { OperationOptions } from "@azure/core-client";
 import { ImportOptions } from "./options";
 
@@ -57,15 +62,7 @@ export class AppConfigurationImporter {
       }
     }
 
-    // Generate correlationRequestId for operations in the same activity
-    const customCorrelationRequestId: string = uuidv4();
-    const customHeadersOption: OperationOptions = {
-      requestOptions: {
-        customHeaders: {
-          [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
-        }
-      }
-    };
+    const customHeadersOption = createCorrelationOptions();
 
     const configurationChanges = await this.GetConfigurationChanges(configurationSettingsSource, options?.strict, options?.importMode, customHeadersOption);
     
@@ -107,26 +104,15 @@ export class AppConfigurationImporter {
     importMode = ImportMode.IgnoreMatch,
     customHeadersOption?: OperationOptions
   ): Promise<Array<ConfigurationSettingChange>> {
-    this.validateImportMode(importMode);
-
-    // Generate correlationRequestId for operations in the same activity
-    if (!customHeadersOption) {
-      const customCorrelationRequestId: string = uuidv4();
-      customHeadersOption = {
-        requestOptions: {
-          customHeaders: {
-            [Constants.CorrelationRequestIdHeader]: customCorrelationRequestId
-          }
-        }
-      };
-    }
+    validateImportMode(importMode);
+    const options = customHeadersOption ?? createCorrelationOptions();
 
     const configSettingsResult = await configSettingsSource.GetConfigurationSettings();
 
     // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
     // return them directly without further processing since changes are already calculated
-    if (this.isConfigurationChanges(configSettingsResult)) {
-      return configSettingsResult as Array<ConfigurationSettingChange>;
+    if (isChangeArray<ConfigurationSettingChange>(configSettingsResult)) {
+      return configSettingsResult;
     }
 
     const configSettings = configSettingsResult as Array<SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>;
@@ -136,7 +122,7 @@ export class AppConfigurationImporter {
     const srcMap = new Map<string, SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>();
     const toAddKeys = new Set<string>();
     for (const config of configSettings) {
-      const composite = `${config.key}\u0000${config.label ?? ""}`;
+      const composite = getSettingIdentity(config.key, config.label);
       srcMap.set(composite, config);
       toAddKeys.add(composite);
     }
@@ -144,9 +130,9 @@ export class AppConfigurationImporter {
     // Stream target settings so we don't hold the entire remote store in memory.
     for await (const existing of this.configurationClient.listConfigurationSettings({
       ...configSettingsSource.FilterOptions,
-      ...customHeadersOption
+      ...options
     })) {
-      const composite = `${existing.key}\u0000${existing.label ?? ""}`;
+      const composite = getSettingIdentity(existing.key, existing.label);
       const incoming = srcMap.get(composite);
 
       if (strict && !incoming) {
@@ -196,66 +182,14 @@ export class AppConfigurationImporter {
     options: OperationOptions,
     progressCallback?: (progress: ImportProgress) => unknown | undefined
   ): Promise<void> {
-    const deleteTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting, options), settingsToDelete);
+    const deleteTaskManager = createAdaptiveTaskManager((setting) => this.configurationClient.deleteConfigurationSetting(setting, options), settingsToDelete);
     const startTime = Date.now();
-    await this.executeTasksWithTimeout(deleteTaskManager, timeout);
+    await executeTasksWithTimeout(deleteTaskManager, timeout);
     const endTime = Date.now();
     const deleteTimeConsumed = (endTime - startTime) / 1000;
     timeout -= deleteTimeConsumed;
 
-    const importTaskManager = this.newAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToPut);
-    await this.executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
-  }
-
-  private newAdaptiveTaskManager<T>(task: (setting: T) => Promise<any>, configurationSettings: Array<T>) {
-    let index = 0;
-    return new AdaptiveTaskManager(() => {
-      if (index == configurationSettings.length) {
-        return undefined;
-      }
-      const configSet = configurationSettings[index++];
-
-      return async () => {
-        return task(configSet);
-      };
-    }, configurationSettings.length);
-  }
-
-  private async executeTasksWithTimeout<T>(taskManager: AdaptiveTaskManager<T>, timeInSeconds: number, callback?: (progress: ImportProgress) => unknown) {
-    let timer: NodeJS.Timeout;
-    const taskPromise = taskManager.Start(callback);
-    const timeoutPromise = new Promise((_, reject) => {
-      timer = setTimeout(() => reject(new OperationTimeoutError()), timeInSeconds * 1000);
-    });
-    await Promise.race([taskPromise, timeoutPromise]).finally(() => {
-      clearTimeout(timer); // clear timeout when importPromise successfully resolve or faultily reject.
-    });
-  }
-
-  private validateImportMode(importMode: ImportMode): void {
-    if (importMode && !(importMode == ImportMode.IgnoreMatch || 
-      importMode == ImportMode.All)) {
-      throw new ArgumentError("Only options supported for Import Mode are 'All' and 'Ignore-Match'.");
-    }
-  }
-
-  /**
-   * Type guard to detect a ConfigurationChanges object.
-   * @internal
-   */
-  private isConfigurationChanges(obj: unknown): obj is Array<ConfigurationSettingChange> {
-    if (!Array.isArray(obj)) {
-      return false;
-    }
-    
-    // Validate it's an array of ConfigurationSettingChange objects
-    return obj.every(item => 
-      item && 
-      typeof item === "object" &&
-      "changeType" in item &&
-      "currentValue" in item &&
-      "newValue" in item &&
-      Object.values(ChangeType).includes(item.changeType)
-    );
+    const importTaskManager = createAdaptiveTaskManager((setting) => this.configurationClient.setConfigurationSetting(setting, options), settingsToPut);
+    await executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
   }
 }

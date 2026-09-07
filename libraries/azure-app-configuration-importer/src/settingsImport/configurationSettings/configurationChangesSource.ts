@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
-import { ConfigurationSettingChange, ConfigurationSettingsFields } from "../models";
+import { ConfigurationSettingChange, ConfigurationSettingsFields } from "../../models";
 import { ListConfigurationSettingsOptions } from "@azure/app-configuration";
-import { ArgumentError } from "../errors";
+import { ArgumentError } from "../../errors";
 
 /**
  * A ConfigurationSettingsSource that wraps pre-calculated configuration changes.
