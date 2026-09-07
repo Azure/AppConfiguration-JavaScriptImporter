@@ -43,32 +43,26 @@ export class FeatureFlagImporter {
    * @returns Promise<void>
    */
   public async Import(featureFlagSource: FeatureFlagSource, options: FeatureFlagImportOptions): Promise<void> {
-    if (featureFlagSource instanceof FeatureFlagChangesSource && (options?.strict || options?.importMode)) {
-      throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
+    if (featureFlagSource instanceof FeatureFlagChangesSource) {
+      // When using FeatureFlagChanges, strict and importMode parameters are not applicable
+      if (options?.strict || options?.importMode) {
+        throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
+      }
     }
+
     const customHeadersOption = createCorrelationOptions();
-    const changes = await this.GetFeatureFlagChanges(
-      featureFlagSource,
-      options?.strict,
-      options?.importMode,
-      customHeadersOption
-    );
 
-    const flagsToWrite = changes
-      .filter(change => (change.changeType === ChangeType.Create || change.changeType === ChangeType.Update || change.changeType === ChangeType.None) && change.newValue)
-      .map(change => change.newValue!);
+    const featureFlagChanges = await this.GetFeatureFlagChanges(featureFlagSource, options?.strict, options?.importMode, customHeadersOption);
 
-    const flagsToDelete = changes
-      .filter(change => change.changeType === ChangeType.Delete && change.currentValue)
-      .map(change => change.currentValue!);
+    const flagsToWrite: FeatureFlagParam[] = featureFlagChanges
+      .filter(c => (c.changeType === ChangeType.Create || c.changeType === ChangeType.Update || c.changeType === ChangeType.None) && c.newValue)
+      .map(c => c.newValue!);
 
-    await this.applyUpdatesToServer(
-      flagsToWrite,
-      flagsToDelete,
-      options.timeout,
-      customHeadersOption,
-      options.progressCallback
-    );
+    const flagsToDelete: FeatureFlag[] = featureFlagChanges
+      .filter(c => c.changeType === ChangeType.Delete && c.currentValue)
+      .map(c => c.currentValue!);
+
+    return await this.applyUpdatesToServer(flagsToWrite, flagsToDelete, options.timeout, customHeadersOption, options.progressCallback);
   }
 
   /**
@@ -100,32 +94,35 @@ export class FeatureFlagImporter {
   ): Promise<FeatureFlagChange[]> {
     validateImportMode(importMode);
     const options = customHeadersOption ?? createCorrelationOptions();
-    const featureFlagSourceResult = await featureFlagSource.GetFeatureFlags();
-    if (featureFlagSource instanceof FeatureFlagChangesSource) {
-      return featureFlagSourceResult as FeatureFlagChange[];
-    }
 
-    // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
+    const featureFlagSourceResult = await featureFlagSource.GetFeatureFlags();
+
+    // If the source returns FeatureFlagChanges (e.g., FeatureFlagChangesSource), 
     // return them directly without further processing since changes are already calculated
     if (isChangeArray<FeatureFlagChange>(featureFlagSourceResult)) {
       return featureFlagSourceResult;
     }
 
-    const sourceMap = new Map<string, FeatureFlagParam>();
-    const toAdd = new Set<string>();
-    for (const featureFlag of featureFlagSourceResult) {
-      const identity = getSettingIdentity(featureFlag.name, featureFlag.label);
-      sourceMap.set(identity, featureFlag);
-      toAdd.add(identity);
+    const featureFlags = featureFlagSourceResult as Array<FeatureFlagParam>;
+    const featureFlagChanges: Array<FeatureFlagChange> = [];
+
+    // Build O(1) lookup structures keyed by "name\0label" composite.
+    const srcMap = new Map<string, FeatureFlagParam>();
+    const toAddKeys = new Set<string>();
+    for (const featureFlag of featureFlags) {
+      const composite = getSettingIdentity(featureFlag.name, featureFlag.label);
+      srcMap.set(composite, featureFlag);
+      toAddKeys.add(composite);
     }
 
-    const featureFlagChanges: FeatureFlagChange[] = [];
+    // Stream target feature flags so we don't hold the entire remote store in memory.
     for await (const existing of this.featureFlagClient.listFeatureFlags({
       ...featureFlagSource.FeatureFlagFilterOptions,
       ...options
     })) {
-      const identity = getSettingIdentity(existing.name, existing.label);
-      const incoming = sourceMap.get(identity);
+      const composite = getSettingIdentity(existing.name, existing.label);
+      const incoming = srcMap.get(composite);
+
       if (strict && !incoming) {
         featureFlagChanges.push({
           changeType: ChangeType.Delete,
@@ -133,8 +130,11 @@ export class FeatureFlagImporter {
           newValue: null
         });
       }
+
       if (incoming) {
-        toAdd.delete(identity);
+        // Remove from add list since it already exists
+        toAddKeys.delete(composite);
+
         if (!isEnhancedFeatureFlagEqual(incoming, existing)) {
           featureFlagChanges.push({
             changeType: ChangeType.Update,
@@ -152,13 +152,14 @@ export class FeatureFlagImporter {
       }
     }
 
-    for (const identity of toAdd) {
+    for (const composite of toAddKeys) {
       featureFlagChanges.push({
         changeType: ChangeType.Create,
         currentValue: null,
-        newValue: sourceMap.get(identity)!
+        newValue: srcMap.get(composite)!
       });
     }
+
     return featureFlagChanges;
   }
 
@@ -167,20 +168,16 @@ export class FeatureFlagImporter {
     flagsToDelete: FeatureFlag[],
     timeout: number,
     options: OperationOptions,
-    progressCallback?: (progress: ImportProgress) => unknown
+    progressCallback?: (progress: ImportProgress) => unknown | undefined
   ): Promise<void> {
-    const deleteManager = createAdaptiveTaskManager(
-      featureFlag => this.featureFlagClient.deleteFeatureFlag(featureFlag, options),
-      flagsToDelete
-    );
+    const deleteTaskManager = createAdaptiveTaskManager((featureFlag) => this.featureFlagClient.deleteFeatureFlag(featureFlag, options), flagsToDelete);
     const startTime = Date.now();
-    await executeTasksWithTimeout(deleteManager, timeout);
-    timeout -= (Date.now() - startTime) / 1000;
+    await executeTasksWithTimeout(deleteTaskManager, timeout);
+    const endTime = Date.now();
+    const deleteTimeConsumed = (endTime - startTime) / 1000;
+    timeout -= deleteTimeConsumed;
 
-    const writeManager = createAdaptiveTaskManager(
-      featureFlag => this.featureFlagClient.setFeatureFlag(featureFlag, options),
-      flagsToWrite
-    );
-    await executeTasksWithTimeout(writeManager, timeout, progressCallback);
+    const importTaskManager = createAdaptiveTaskManager((featureFlag) => this.featureFlagClient.setFeatureFlag(featureFlag, options), flagsToWrite);
+    await executeTasksWithTimeout(importTaskManager, timeout, progressCallback);
   }
 }
