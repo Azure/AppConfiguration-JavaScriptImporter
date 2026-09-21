@@ -8,7 +8,7 @@ import { StringFeatureFlagSource } from "./stringFeatureFlagSource";
 import { FeatureFlagSource } from "./featureFlagSource";
 import { ConfigurationProfile } from "../../enums";
 import { ArgumentError } from "../../errors";
-import { validateOptions } from "../../internal/utils";
+import { validateOptions } from "../../internal/validation";
 
 /**
  * A FeatureFlagSource that reads enhanced feature flags from a readable stream.

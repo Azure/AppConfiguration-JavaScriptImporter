@@ -2,11 +2,15 @@
 
 These examples show how to use the App Configuration Importer in some common scenarios
 
-| File Name                                                                          | Description                                                                  |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [iterableSourceExample.ts](./src/iterableSourceExample.ts)                         |  Demonstrates importing configuration settings from an Iterable source       |
-| [stringSourceExample.ts](./src/stringSourceExample.ts)                             |  Demonstrates importing configuration settings from a String source          |
-| [readableStreamSourceExample](./src/readableStreamSourceExample.ts)                |  Demonstrates importing configuration settings from a ReadableStream source  |
+| File Name                                                                                              | Description                                                                        |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [iterableSourceExample.ts](./src/iterableSourceExample.ts)                                             |  Demonstrates importing configuration settings from an Iterable source             |
+| [stringSourceExample.ts](./src/stringSourceExample.ts)                                                 |  Demonstrates importing configuration settings from a String source                |
+| [readableStreamSourceExample](./src/readableStreamSourceExample.ts)                                    |  Demonstrates importing configuration settings from a ReadableStream source        |
+| [stringFeatureFlagSourceExample.ts](./src/stringFeatureFlagSourceExample.ts)                           |  Demonstrates importing enhanced feature flags from a String source                |
+| [iterableFeatureFlagSourceExample.ts](./src/iterableFeatureFlagSourceExample.ts)                       |  Demonstrates importing enhanced feature flags from an Iterable source             |
+| [readableStreamFeatureFlagSourceExample.ts](./src/readableStreamFeatureFlagSourceExample.ts)           |  Demonstrates importing enhanced feature flags from a ReadableStream source        |
+| [featureFlagChangesSourceExample.ts](./src/featureFlagChangesSourceExample.ts)                         |  Demonstrates previewing and importing pre-calculated enhanced feature flag changes |
 
 ## Prerequisites
 

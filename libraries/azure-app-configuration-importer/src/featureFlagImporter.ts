@@ -6,14 +6,12 @@ import { OperationOptions } from "@azure/core-client";
 import { ChangeType, ImportMode } from "./enums";
 import { ArgumentError } from "./errors";
 import {
-  createAdaptiveTaskManager,
   createCorrelationOptions,
-  executeTasksWithTimeout,
-  getSettingIdentity,
   isChangeArray,
-  isEnhancedFeatureFlagEqual,
-  validateImportMode
+  isEnhancedFeatureFlagEqual
 } from "./internal/utils";
+import { createAdaptiveTaskManager, executeTasksWithTimeout } from "./internal/taskManagement";
+import { validateImportMode } from "./internal/validation";
 import { FeatureFlagChange, ImportProgress } from "./models";
 import { FeatureFlagImportOptions } from "./options";
 import { FeatureFlagSource } from "./settingsImport/featureFlag/featureFlagSource";
@@ -38,12 +36,12 @@ export class FeatureFlagImporter {
    * await importer.Import(source, { timeout: 60 });
    * ```
    *
-   * @param FeatureFlagSource - A FeatureFlagSource instance.
+   * @param featureFlagsSource - A FeatureFlagSource instance.
    * @param options - Import options including timeout, progress callback, strict mode, and import mode.
    * @returns Promise<void>
    */
-  public async Import(featureFlagSource: FeatureFlagSource, options: FeatureFlagImportOptions): Promise<void> {
-    if (featureFlagSource instanceof FeatureFlagChangesSource) {
+  public async Import(featureFlagsSource: FeatureFlagSource, options: FeatureFlagImportOptions): Promise<void> {
+    if (featureFlagsSource instanceof FeatureFlagChangesSource) {
       // When using FeatureFlagChanges, strict and importMode parameters are not applicable
       if (options?.strict || options?.importMode) {
         throw new ArgumentError("Parameters 'strict' and 'importMode' are not applicable when importing pre-calculated changes.");
@@ -52,7 +50,7 @@ export class FeatureFlagImporter {
 
     const customHeadersOption = createCorrelationOptions();
 
-    const featureFlagChanges = await this.GetFeatureFlagChanges(featureFlagSource, options?.strict, options?.importMode, customHeadersOption);
+    const featureFlagChanges = await this.GetFeatureFlagChanges(featureFlagsSource, options?.strict, options?.importMode, customHeadersOption);
 
     const flagsToWrite: FeatureFlagParam[] = featureFlagChanges
       .filter(c => (c.changeType === ChangeType.Create || c.changeType === ChangeType.Update || c.changeType === ChangeType.None) && c.newValue)
@@ -78,7 +76,7 @@ export class FeatureFlagImporter {
    * );
    * ```
    *
-   * @param featureFlagSource - A FeatureFlagSource instance.
+   * @param featureFlagsSource - A FeatureFlagSource instance.
    * @param strict - Use strict mode to delete feature flags not in the source.
    * @param importMode - Determines the behavior when analyzing feature flags.
    *   'All' includes all feature flags.
@@ -87,7 +85,7 @@ export class FeatureFlagImporter {
    * @returns FeatureFlagChange objects representing the changes.
    */
   public async GetFeatureFlagChanges(
-    featureFlagSource: FeatureFlagSource,
+    featureFlagsSource: FeatureFlagSource,
     strict = false,
     importMode = ImportMode.IgnoreMatch,
     customHeadersOption?: OperationOptions
@@ -95,11 +93,11 @@ export class FeatureFlagImporter {
     validateImportMode(importMode);
     const options = customHeadersOption ?? createCorrelationOptions();
 
-    const featureFlagSourceResult = await featureFlagSource.GetFeatureFlags();
+    const featureFlagSourceResult = await featureFlagsSource.GetFeatureFlags();
 
     // If the source returns FeatureFlagChanges (e.g., FeatureFlagChangesSource), 
     // return them directly without further processing since changes are already calculated
-    if (isChangeArray<FeatureFlagChange>(featureFlagSourceResult)) {
+    if (isChangeArray(featureFlagSourceResult)) {
       return featureFlagSourceResult;
     }
 
@@ -110,17 +108,17 @@ export class FeatureFlagImporter {
     const srcMap = new Map<string, FeatureFlagParam>();
     const toAddKeys = new Set<string>();
     for (const featureFlag of featureFlags) {
-      const composite = getSettingIdentity(featureFlag.name, featureFlag.label);
+      const composite = this.getSettingIdentity(featureFlag.name, featureFlag.label);
       srcMap.set(composite, featureFlag);
       toAddKeys.add(composite);
     }
 
     // Stream target feature flags so we don't hold the entire remote store in memory.
     for await (const existing of this.featureFlagClient.listFeatureFlags({
-      ...featureFlagSource.FeatureFlagFilterOptions,
+      ...featureFlagsSource.FeatureFlagFilterOptions,
       ...options
     })) {
-      const composite = getSettingIdentity(existing.name, existing.label);
+      const composite = this.getSettingIdentity(existing.name, existing.label);
       const incoming = srcMap.get(composite);
 
       if (strict && !incoming) {
@@ -161,6 +159,10 @@ export class FeatureFlagImporter {
     }
 
     return featureFlagChanges;
+  }
+
+  private getSettingIdentity(name: string, label?: string): string {
+    return `${name}\u0000${label ?? ""}`;
   }
 
   private async applyUpdatesToServer(

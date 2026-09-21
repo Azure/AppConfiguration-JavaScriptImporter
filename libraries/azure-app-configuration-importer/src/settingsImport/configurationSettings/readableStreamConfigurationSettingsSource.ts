@@ -7,7 +7,7 @@ import { ReadableStreamSourceOptions, SourceOptions } from "../../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { ConfigurationProfile } from "../../enums";
 import { StringConfigurationSettingsSource } from "./stringConfigurationSettingsSource";
-import { validateOptions} from "../../internal/utils";
+import { validateOptions} from "../../internal/validation";
 import { ConfigurationSettingsFields } from "../../models";
 
 export class ReadableStreamConfigurationSettingsSource implements ConfigurationSettingsSource {

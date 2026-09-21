@@ -10,7 +10,7 @@ import { ArgumentError } from "../../errors";
 import { FfSetConfigurationSettingsConverter } from "../../internal/parsers/ffSetConfigurationSettingsConverter";
 import { DefaultFeatureFlagsConverter } from "../../internal/parsers/defaultFeatureFlagsConverter";
 import { detectConfigurationProfile, parseStringData } from "../../internal/stringSourceUtils";
-import { validateOptions } from "../../internal/utils";
+import { validateOptions } from "../../internal/validation";
 import { SourceOptions, StringSourceOptions } from "../../options";
 import { FeatureFlagSource } from "./featureFlagSource";
 

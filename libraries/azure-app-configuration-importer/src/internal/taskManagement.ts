@@ -4,6 +4,7 @@
 import { BehaviorSubject } from "rxjs";
 import { ImportProgress } from "../models";
 import { RestError } from "@azure/core-rest-pipeline";
+import { OperationTimeoutError } from "../errors";
 
 /** @internal */
 export class AdaptiveTaskManager<T> {
@@ -80,4 +81,32 @@ export class AdaptiveTaskManager<T> {
 /** @internal */
 export interface IFunction<T> {
   (): T;
+}
+
+/** @internal */
+export function createAdaptiveTaskManager<TValue, TResult>(
+  task: (value: TValue) => Promise<TResult>,
+  values: TValue[]
+): AdaptiveTaskManager<TResult> {
+  let index = 0;
+  return new AdaptiveTaskManager(() => {
+    if (index === values.length) {
+      return undefined;
+    }
+    const value = values[index++];
+    return () => task(value);
+  }, values.length);
+}
+
+/** @internal */
+export async function executeTasksWithTimeout<T>(
+  taskManager: AdaptiveTaskManager<T>,
+  timeInSeconds: number,
+  callback?: (progress: ImportProgress) => unknown
+): Promise<void> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new OperationTimeoutError()), timeInSeconds * 1000);
+  });
+  await Promise.race([taskManager.Start(callback), timeoutPromise]).finally(() => clearTimeout(timer));
 }

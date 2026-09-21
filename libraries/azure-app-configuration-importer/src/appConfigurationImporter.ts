@@ -13,14 +13,12 @@ import { ImportMode, ChangeType } from "./enums";
 import { ArgumentError } from "./errors";
 import { ImportProgress, ConfigurationSettingChange } from "./models";
 import {
-  createAdaptiveTaskManager,
   createCorrelationOptions,
-  executeTasksWithTimeout,
-  getSettingIdentity,
   isChangeArray,
-  isConfigSettingEqual,
-  validateImportMode
+  isConfigSettingEqual
 } from "./internal/utils";
+import { createAdaptiveTaskManager, executeTasksWithTimeout } from "./internal/taskManagement";
+import { validateImportMode } from "./internal/validation";
 import { OperationOptions } from "@azure/core-client";
 import { ImportOptions } from "./options";
 
@@ -111,7 +109,7 @@ export class AppConfigurationImporter {
 
     // If the source returns ConfigurationChanges (e.g., ConfigurationChangesSource), 
     // return them directly without further processing since changes are already calculated
-    if (isChangeArray<ConfigurationSettingChange>(configSettingsResult)) {
+    if (isChangeArray(configSettingsResult)) {
       return configSettingsResult;
     }
 
@@ -122,7 +120,7 @@ export class AppConfigurationImporter {
     const srcMap = new Map<string, SetConfigurationSettingParam<string | FeatureFlagValue | SecretReferenceValue>>();
     const toAddKeys = new Set<string>();
     for (const config of configSettings) {
-      const composite = getSettingIdentity(config.key, config.label);
+      const composite = this.getSettingIdentity(config.key, config.label);
       srcMap.set(composite, config);
       toAddKeys.add(composite);
     }
@@ -132,7 +130,7 @@ export class AppConfigurationImporter {
       ...configSettingsSource.FilterOptions,
       ...options
     })) {
-      const composite = getSettingIdentity(existing.key, existing.label);
+      const composite = this.getSettingIdentity(existing.key, existing.label);
       const incoming = srcMap.get(composite);
 
       if (strict && !incoming) {
@@ -173,6 +171,10 @@ export class AppConfigurationImporter {
     }
 
     return configurationChanges;
+  }
+
+  private getSettingIdentity(key: string, label?: string): string {
+    return `${key}\u0000${label ?? ""}`;
   }
 
   private async applyUpdatesToServer(

@@ -11,7 +11,7 @@ import { SourceOptions, StringSourceOptions } from "../../options";
 import { ConfigurationSettingsSource } from "./configurationSettingsSource";
 import { ConfigurationProfile } from "../../enums";
 import { ArgumentError } from "../../errors";
-import { validateOptions } from "../../internal/utils";
+import { validateOptions } from "../../internal/validation";
 import { detectConfigurationProfile, parseStringData } from "../../internal/stringSourceUtils";
 import { ConfigurationSettingsConverter } from "../../internal/parsers/configurationSettingsConverter";
 import { DefaultConfigurationSettingsConverter } from "../../internal/parsers/defaultConfigurationSettingsConverter";

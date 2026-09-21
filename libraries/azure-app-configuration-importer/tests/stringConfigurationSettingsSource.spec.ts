@@ -209,11 +209,30 @@ describe("String configuration source test", () => {
     }), ArgumentError);
   });
 
-  it("Rejects a source profile option without matching document metadata", async () => {
+  it("Falls back to the source profile option when the document has no profile metadata", async () => {
     const source = new StringConfigurationSettingsSource({
-      data: JSON.stringify({ items: [] }),
+      data: JSON.stringify({
+        items: [{ key: "testKey", value: "testValue", tags: {} }]
+      }),
       format: ConfigurationFormat.Json,
       profile: ConfigurationProfile.KvSet
+    });
+
+    const configurationSettings = await source.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 1);
+    assert.equal(configurationSettings[0].key, "testKey");
+    assert.equal(configurationSettings[0].value, "testValue");
+  });
+
+  it("Rejects a source profile option that conflicts with the document profile", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        profile: "appconfig/kvset",
+        items: [{ key: "testKey", value: "testValue", tags: {} }]
+      }),
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.Default
     });
 
     await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);

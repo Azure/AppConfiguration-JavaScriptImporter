@@ -52,23 +52,27 @@ export function detectConfigurationProfile(
   loadedData: Record<string, unknown>,
   expectedProfile?: ConfigurationProfile
 ): ConfigurationProfile {
-  let detectedProfile = ConfigurationProfile.Default;
-  if (Object.prototype.hasOwnProperty.call(loadedData, "profile")) {
-    const profile = loadedData.profile;
-    if (typeof profile !== "string" || profile.trim().length === 0) {
-      throw new ArgumentError("The document profile must be a non-empty string.");
-    }
-    if (profile === "appconfig/kvset") {
-      detectedProfile = ConfigurationProfile.KvSet;
-    }
-    else if (profile === "appconfig/ffset") {
-      detectedProfile = ConfigurationProfile.FfSet;
-    }
-    else {
-      throw new ArgumentError(`The document profile '${profile}' is not supported.`);
-    }
-    delete loadedData.profile;
+  if (!Object.prototype.hasOwnProperty.call(loadedData, "profile")) {
+    // No profile declared in the document; fall back to the caller-provided profile.
+    return expectedProfile ?? ConfigurationProfile.Default;
   }
+
+  const profile = loadedData.profile;
+  if (typeof profile !== "string" || profile.trim().length === 0) {
+    throw new ArgumentError("The document profile must be a non-empty string.");
+  }
+
+  let detectedProfile: ConfigurationProfile;
+  if (profile === "appconfig/kvset") {
+    detectedProfile = ConfigurationProfile.KvSet;
+  }
+  else if (profile === "appconfig/ffset") {
+    detectedProfile = ConfigurationProfile.FfSet;
+  }
+  else {
+    throw new ArgumentError(`The document profile '${profile}' is not supported.`);
+  }
+  delete loadedData.profile;
 
   if (expectedProfile !== undefined && expectedProfile !== detectedProfile) {
     throw new ArgumentError("The source profile option does not match the document profile.");
