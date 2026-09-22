@@ -6,7 +6,7 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationFormat } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
 
 describe("Parse sercret reference file", () => {
   it("Parse secret reference file, get correct configurationSettings", async () => {

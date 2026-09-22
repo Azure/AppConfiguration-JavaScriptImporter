@@ -5,8 +5,8 @@ import { assert, expect } from "chai";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat, ConfigurationProfile, ImportMode, ChangeType } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
-import { ConfigurationChangesSource } from "../src/settingsImport/configurationChangesSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
+import { ConfigurationChangesSource } from "../src/settingsImport/configurationSettings/configurationChangesSource";
 import { 
   AppConfigurationClient, 
   ConfigurationSetting, 
@@ -58,7 +58,7 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
 
   it("Fail to import because of server error", async () => {
     const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
-    AppConfigurationClientStub.setConfigurationSetting.throws(new RestError("server error", "server error", 500));
+    AppConfigurationClientStub.setConfigurationSetting.rejects(new RestError("server error", "server error", 500));
     AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);
 
@@ -67,10 +67,14 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
-    const importPromise = appConfigurationImporter.Import(stringConfigurationSource, { timeout: 1, strict: false });
-    importPromise.catch((e) => {
-      expect(e.message).to.eq("server error"); 
-    });
+    let error: any;
+    try {
+      await appConfigurationImporter.Import(stringConfigurationSource, { timeout: 1, strict: false });
+    }
+    catch (e) {
+      error = e;
+    }
+    expect(error?.message).to.eq("server error");
   });
 
   it("Fail to import because of timeout", async () => {
@@ -127,9 +131,9 @@ describe("Call Import API to import configuration file to AppConfiguration", () 
 
     const AppConfigurationClientStub = sinon.createStubInstance(AppConfigurationClient);
     const fakeThrottledError = new RestError("client throttled", "429", 429);
-    AppConfigurationClientStub.setConfigurationSetting.onCall(0).throws(fakeThrottledError);
-    AppConfigurationClientStub.setConfigurationSetting.onCall(1).throws(fakeThrottledError);
-    AppConfigurationClientStub.setConfigurationSetting.onCall(2).throws(fakeThrottledError);
+    AppConfigurationClientStub.setConfigurationSetting.onCall(0).rejects(fakeThrottledError);
+    AppConfigurationClientStub.setConfigurationSetting.onCall(1).rejects(fakeThrottledError);
+    AppConfigurationClientStub.setConfigurationSetting.onCall(2).rejects(fakeThrottledError);
     AppConfigurationClientStub.setConfigurationSetting.resolves(mockedResponse);
     AppConfigurationClientStub.listConfigurationSettings.returns(listConfigurationSettings());
     const appConfigurationImporter = new AppConfigurationImporter(AppConfigurationClientStub);

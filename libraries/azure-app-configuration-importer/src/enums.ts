@@ -16,6 +16,7 @@ export enum ConfigurationFormat {
 export enum ConfigurationProfile {
   Default,
   KvSet,
+  FfSet,
 }
 
 /**

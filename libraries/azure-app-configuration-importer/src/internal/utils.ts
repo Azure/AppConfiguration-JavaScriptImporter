@@ -3,17 +3,42 @@
 
 import { 
   ConfigurationSetting, 
+  FeatureFlag,
+  FeatureFlagParam,
   SetConfigurationSettingParam, 
   FeatureFlagValue,
   featureFlagContentType,
   SecretReferenceValue } from "@azure/app-configuration";
+import { OperationOptions } from "@azure/core-client";
 import { isEmpty, isEqual } from "lodash";
-import { Tags, FeatureFlagClientFilters, ConfigurationSettingsFields } from "../models";
-import { SourceOptions } from "../options";
-import { ConfigurationFormat, ConfigurationProfile } from "../enums";
-import { ArgumentError, ArgumentNullError } from "../errors";
+import { v4 as uuidv4 } from "uuid";
+import { Tags, FeatureFlagClientFilters, ConfigurationSettingsFields, ConfigurationSettingChange, FeatureFlagChange } from "../models";
+import { ChangeType } from "../enums";
 import { Constants } from "../internal/constants";
 import { MsFeatureFlagValue, Variant } from "../featureFlag";
+
+/** @internal */
+export function createCorrelationOptions(): OperationOptions {
+  return {
+    requestOptions: {
+      customHeaders: { [Constants.CorrelationRequestIdHeader]: uuidv4() }
+    }
+  };
+}
+
+/** @internal */
+export function isChangeArray(value: unknown): value is (ConfigurationSettingChange | FeatureFlagChange)[] {
+  return Array.isArray(value) && value.every(item => {
+    if (!item || typeof item !== "object") {
+      return false;
+    }
+    const change = item as Record<string, unknown>;
+    return "changeType" in change &&
+      "currentValue" in change &&
+      "newValue" in change &&
+      Object.values(ChangeType).includes(change.changeType as ChangeType);
+  });
+}
 
 /** @internal*/
 export function isJsonContentType(contentType?: string): boolean {
@@ -91,55 +116,24 @@ export function areTagsEqual(tagA?: Tags, tagB?: Tags): boolean {
   return true;
 }
 
-/** @internal*/
-/**
- * Validate the ConfigurationSyncOptions argument, throw fatal error if options are not valid.
- *
- * @param options - ConfigurationSyncOptions to be validated.
- */
-export function validateOptions(options: SourceOptions): void {
-  if (!options) {
-    throw new ArgumentNullError();
-  }
+/** @internal */
+export function isEnhancedFeatureFlagEqual(incoming: FeatureFlagParam, existing: FeatureFlag): boolean {
+  return incoming.name === existing.name &&
+    (incoming.label ?? "") === (existing.label ?? "") &&
+    incoming.enabled === existing.enabled &&
+    incoming.description === existing.description &&
+    isEqual(normalizeEnhancedConditions(incoming.conditions), normalizeEnhancedConditions(existing.conditions)) &&
+    isEqual(incoming.variants, existing.variants) &&
+    isEqual(incoming.allocation, existing.allocation) &&
+    isEqual(incoming.telemetry, existing.telemetry) &&
+    areTagsEqual(incoming.tags, existing.tags);
+}
 
-  if (options.profile == ConfigurationProfile.KvSet) {
-    if (
-      options.prefix ||
-      options.separator ||
-      options.label ||
-      options.depth ||
-      options.tags ||
-      options.contentType
-    ) {
-      throw new ArgumentError(
-        "The option label, prefix, depth, contentType, tags and separator are not supported when importing using 'appconfig/kvset' profile"
-      );
-    }
-
-    if (options.format !== ConfigurationFormat.Json) {
-      throw new ArgumentError(
-        "Yaml and Properties formats are not supported for appconfig/kvset profile. Supported value is: Json"
-      );
-    }
+function normalizeEnhancedConditions(conditions: FeatureFlagParam["conditions"]): FeatureFlagParam["conditions"] {
+  if (!conditions?.requirementType && (!conditions?.filters || conditions.filters.length === 0)) {
+    return undefined;
   }
-
-  if (options.depth && options.depth > 1 && !options.separator) {
-    throw new ArgumentError(
-      "Separator must be specified if Depth is default value or set a value lager than 1"
-    );
-  }
-
-  if (options.separator && !Constants.Separators.includes(options.separator)) {
-    throw new ArgumentError(`${options.separator} is not a supported separator.`);
-  }
-
-  if (!options.separator && !options.depth) {
-    options.depth = 1;
-  }
-
-  if (options.format !== ConfigurationFormat.Json && isJsonContentType(options.contentType)) {
-    throw new ArgumentError(`Failed to import '${ConfigurationFormat[options.format]}' data format with '${options.contentType}' content type. Please provide data in JSON format to match your content type.`);
-  }
+  return conditions;
 }
 
 function isFeatureFlagValueEqual(valueA: string | MsFeatureFlagValue, valueB: string): boolean {

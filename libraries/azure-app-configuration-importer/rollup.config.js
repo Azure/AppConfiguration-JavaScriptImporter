@@ -11,11 +11,14 @@ export default {
       file: "./dist/index.js",
       name: "azure-app-configuration-importer",
       format: "umd",
+      globals: {
+        "@azure/app-configuration": "AzureAppConfiguration"
+      },
       sourcemap: true
     }
   ],
   // Indicate here external modules you don't wanna include in your bundle
-  external: [],
+  external: ["@azure/app-configuration"],
   watch: {
     include: "src/**"
   },
