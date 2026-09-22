@@ -188,7 +188,7 @@ export function validateMsFmFeatureFlagSchema(rawFeatureFlag: Record<string, any
  *
  * @internal
  * */
-export function validateEnhancedFeatureFlagSchema(rawFeatureFlag: Record<string, unknown>, index?: number): void {
+export function validateMsFmEnhancedFeatureFlagSchema(rawFeatureFlag: Record<string, unknown>, index?: number): void {
   if (!msFmEnhancedFeatureFlagValidator(rawFeatureFlag)) {
     const validationError = new AjvValidationError(msFmEnhancedFeatureFlagValidator.errors as ErrorObject[]);
     const descriptor = typeof rawFeatureFlag?.name === "string" && rawFeatureFlag.name.length > 0

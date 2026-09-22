@@ -12,7 +12,7 @@ import {
   getMsFmSchemaFeatureFlags,
   isValidFeatureName,
   lowerCaseKeys,
-  validateEnhancedFeatureFlagSchema,
+  validateMsFmEnhancedFeatureFlagSchema,
   validateMsFmFeatureFlagSchema,
   validateRequirementType
 } from "./featureManagementParser";
@@ -90,7 +90,7 @@ export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
     }
     else {
       this.validateFeatureName(String(rawFeatureFlag.name));
-      validateEnhancedFeatureFlagSchema(rawFeatureFlag);
+      validateMsFmEnhancedFeatureFlagSchema(rawFeatureFlag);
     }
 
     const featureFlag = convertToFeatureFlagParam(rawFeatureFlag);

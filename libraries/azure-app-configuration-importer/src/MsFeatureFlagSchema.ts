@@ -119,7 +119,7 @@ export const MsFeatureFlagValueSchema = {
   required: ["id"]
 };
 
-// Enhanced feature flag shape (service/FeatureFlagParam form): camelCase `name`/`filters`, shared by the FFSet and default-profile converters.
+// Enhanced Microsoft Feature Management flag shape (snake_case name/filters, plus variants/allocation/telemetry), shared by the FFSet and default-profile converters.
 export const MsFeatureFlagEnhancedValueSchema = {
   type: "object",
   additionalProperties: false,

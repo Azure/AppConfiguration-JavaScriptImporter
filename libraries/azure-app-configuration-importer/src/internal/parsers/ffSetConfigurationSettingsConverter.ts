@@ -3,7 +3,7 @@
 
 import { FeatureFlagParam } from "@azure/app-configuration";
 import { ArgumentError } from "../../errors";
-import { convertToFeatureFlagParam, validateEnhancedFeatureFlagSchema } from "./featureManagementParser";
+import { convertToFeatureFlagParam, validateMsFmEnhancedFeatureFlagSchema } from "./featureManagementParser";
 import { FeatureFlagParamConverter } from "./featureFlagParamConverter";
 
 /**
@@ -25,7 +25,7 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
     const items: Array<Record<string, unknown>> = config[itemsKeyword as keyof object];
     for (let index = 0; index < items.length; index++) {
       const element = items[index];
-      validateEnhancedFeatureFlagSchema(element, index);
+      validateMsFmEnhancedFeatureFlagSchema(element, index);
       featureFlags.push(convertToFeatureFlagParam(element));
     }
 
