@@ -118,3 +118,109 @@ export const MsFeatureFlagValueSchema = {
   },
   required: ["id"]
 };
+
+// Enhanced feature flag shape (service/FeatureFlagParam form): camelCase `name`/`filters`, shared by the FFSet and default-profile converters.
+export const MsFeatureFlagEnhancedValueSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    name: { type: "string", minLength: 1 },
+    label: { type: "string" },
+    enabled: { type: "boolean" },
+    description: { type: "string" },
+    conditions: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        requirement_type: { type: "string" },
+        filters: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              parameters: { type: "object" }
+            },
+            required: ["name"]
+          }
+        }
+      }
+    },
+    variants: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          configuration_value: { type: ["string", "number", "object", "boolean", "array", "null"] },
+          status_override: { type: "string" }
+        },
+        required: ["name"]
+      }
+    },
+    allocation: {
+      type: "object",
+      properties: {
+        user: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              variant: { type: "string" },
+              users: {
+                type: "array",
+                items: { type: "string" }
+              }
+            },
+            required: ["variant", "users"]
+          }
+        },
+        group: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              variant: { type: "string" },
+              groups: {
+                type: "array",
+                items: { type: "string" }
+              }
+            },
+            required: ["variant", "groups"]
+          }
+        },
+        percentile: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              variant: { type: "string" },
+              from: { type: "number", minimum: 0, maximum: 100 },
+              to: { type: "number", minimum: 0, maximum: 100 }
+            },
+            required: ["variant", "from", "to"]
+          }
+        },
+        default_when_enabled: { type: "string" },
+        default_when_disabled: { type: "string" },
+        seed: { type: "string" }
+      }
+    },
+    telemetry: {
+      type: "object",
+      properties: {
+        enabled: { type: "boolean" },
+        metadata: {
+          type: "object",
+          additionalProperties: { type: "string" }
+        }
+      },
+      required: ["enabled"]
+    },
+    tags: {
+      type: "object",
+      additionalProperties: { type: "string" }
+    }
+  },
+  required: ["name", "enabled"]
+};

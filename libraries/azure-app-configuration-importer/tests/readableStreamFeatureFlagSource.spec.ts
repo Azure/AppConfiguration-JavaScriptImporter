@@ -65,6 +65,32 @@ describe("Readable stream feature flag source tests", () => {
     assert.deepEqual(source.FeatureFlagFilterOptions, { nameFilter: "app:*", labelFilter: "Production" });
   });
 
+  it("reads an enhanced feature flag from a Default MS FM stream with prefix and label", async () => {
+    const data = JSON.stringify({
+      feature_management: {
+        feature_flags: [
+          { name: "Checkout", enabled: true, conditions: { filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }] } }
+        ]
+      }
+    });
+    const source = new ReadableStreamFeatureFlagSource({
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.Default,
+      prefix: "app:",
+      label: "Production",
+      data: streamFrom(data)
+    });
+
+    const featureFlags = await source.GetFeatureFlags();
+
+    assert.equal(featureFlags.length, 1);
+    assert.equal(featureFlags[0].name, "app:Checkout");
+    assert.equal(featureFlags[0].label, "Production");
+    assert.equal(featureFlags[0].enabled, true);
+    assert.equal(featureFlags[0].conditions?.filters?.[0].name, "Microsoft.TimeWindow");
+    assert.deepEqual(source.FeatureFlagFilterOptions, { nameFilter: "app:*", labelFilter: "Production" });
+  });
+
   it("skips configuration settings and returns only feature flags for Default content", async () => {
     const data = JSON.stringify({
       ordinaryKey: "ignored",

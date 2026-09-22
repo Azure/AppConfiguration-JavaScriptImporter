@@ -49,6 +49,21 @@ describe("Parse FeatureFlag Json format file", () => {
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 
+  it("Rejects an enhanced feature flag schema in the App Configuration importer", async () => {
+    const options: StringSourceOptions = {
+      data: JSON.stringify({
+        feature_management: {
+          feature_flags: [{ name: "Checkout", enabled: true, conditions: { filters: [] } }]
+        }
+      }),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+
+    await assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
+  });
+
   it("Parse key value config and feature managment config correctly, skip feature flag keep default", async () => {
     const options: StringSourceOptions = {
       data: fs.readFileSync(path.join("__dirname", "../tests/sources/configFileFeatureFlag.json")).toString(),

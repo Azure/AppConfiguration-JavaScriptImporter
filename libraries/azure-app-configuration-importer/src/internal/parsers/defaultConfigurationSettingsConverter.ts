@@ -189,6 +189,11 @@ export class FeatureFlagConfigurationSettingsConverter implements ConfigurationS
 
       for (const featureFlag of msFmSectionFeatureFlags) {
         if (!featureFlag.id) {
+          if (featureFlag.name !== undefined) {
+            throw new ArgumentError(
+              "Enhanced feature flags are not supported by the App Configuration importer. Use the Feature Flag importer."
+            );
+          }
           throw new ArgumentError(
             "Feature flag without id is found, id is a required property."
           );

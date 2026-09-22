@@ -6,18 +6,19 @@ import { ArgumentError } from "../../errors";
 import { SourceOptions } from "../../options";
 import { Constants } from "../constants";
 import {
+  convertToFeatureFlagParam,
   detectFeatureManagement,
   getDotnetSchemaFeatureFlags,
   getMsFmSchemaFeatureFlags,
   isValidFeatureName,
   lowerCaseKeys,
+  validateEnhancedFeatureFlagSchema,
   validateMsFmFeatureFlagSchema,
   validateRequirementType
 } from "./featureManagementParser";
+import { FeatureFlagParamConverter } from "./featureFlagParamConverter";
 
 type FeatureFlagConditions = NonNullable<FeatureFlagParam["conditions"]>;
-type FeatureFlagVariant = NonNullable<FeatureFlagParam["variants"]>[number];
-type FeatureFlagAllocation = NonNullable<FeatureFlagParam["allocation"]>;
 
 /**
  * Reads the feature management sections of a default profile document as enhanced feature flags.
@@ -26,7 +27,7 @@ type FeatureFlagAllocation = NonNullable<FeatureFlagParam["allocation"]>;
  *
  * @internal
  * */
-export class DefaultFeatureFlagsConverter {
+export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
   public Convert(config: object, options: SourceOptions): FeatureFlagParam[] {
     const { featureFlagsDict, dotnetFmSchemaKeyWord, foundMsFmSchema, foundFeatureManagement } =
       detectFeatureManagement(config, options);
@@ -54,12 +55,7 @@ export class DefaultFeatureFlagsConverter {
 
     if (foundMsFmSchema) {
       for (const rawFeatureFlag of getMsFmSchemaFeatureFlags(featureFlagsDict)) {
-        if (!rawFeatureFlag.id) {
-          throw new ArgumentError("Feature flag without id is found, id is a required property.");
-        }
-        this.validateFeatureName(rawFeatureFlag.id);
-
-        const featureFlag = this.readMsFmFeatureFlag(rawFeatureFlag, options);
+        const featureFlag = this.readFeatureFlag(rawFeatureFlag, options);
         // The later flag with the same name always wins.
         const existingIndex = featureFlags.findIndex(existing => existing.name === featureFlag.name);
         if (existingIndex !== -1) {
@@ -74,86 +70,39 @@ export class DefaultFeatureFlagsConverter {
     return featureFlags;
   }
 
-  private readMsFmFeatureFlag(rawFeatureFlag: Record<string, any>, options: SourceOptions): FeatureFlagParam {
-    validateMsFmFeatureFlagSchema(rawFeatureFlag);
+  private readFeatureFlag(rawFeatureFlag: Record<string, unknown>, options: SourceOptions): FeatureFlagParam {
+    const hasId = rawFeatureFlag.id !== undefined;
+    const hasName = rawFeatureFlag.name !== undefined;
 
-    const featureFlag: FeatureFlagParam = {
-      name: (options.prefix ?? "") + rawFeatureFlag.id,
-      enabled: rawFeatureFlag.enabled ?? false
-    };
+    // A single entry must use either the Microsoft Feature Management shape (id) or the enhanced shape (name), never both.
+    if (hasId && hasName) {
+      throw new ArgumentError(
+        "Feature flag contains both 'id' and 'name'. Use 'id' for the Microsoft Feature Management schema or 'name' for the enhanced schema, not both."
+      );
+    }
+    if (!hasId && !hasName) {
+      throw new ArgumentError("Feature flag without id is found, id is a required property.");
+    }
 
+    if (hasId) {
+      this.validateFeatureName(String(rawFeatureFlag.id));
+      validateMsFmFeatureFlagSchema(rawFeatureFlag);
+    }
+    else {
+      this.validateFeatureName(String(rawFeatureFlag.name));
+      validateEnhancedFeatureFlagSchema(rawFeatureFlag);
+    }
+
+    const featureFlag = convertToFeatureFlagParam(rawFeatureFlag);
+    featureFlag.name = (options.prefix ?? "") + featureFlag.name;
     if (options.label !== undefined) {
       featureFlag.label = options.label;
-    }
-    if (rawFeatureFlag.description !== undefined) {
-      featureFlag.description = rawFeatureFlag.description;
-    }
-    if (rawFeatureFlag.conditions) {
-      const conditions: FeatureFlagConditions = {};
-      if (rawFeatureFlag.conditions.client_filters !== undefined) {
-        conditions.filters = rawFeatureFlag.conditions.client_filters;
-      }
-      if (rawFeatureFlag.conditions.requirement_type !== undefined) {
-        conditions.requirementType = rawFeatureFlag.conditions.requirement_type;
-      }
-      featureFlag.conditions = conditions;
-    }
-    if (rawFeatureFlag.variants) {
-      featureFlag.variants = rawFeatureFlag.variants.map((variant: Record<string, any>) => this.readVariant(variant));
-    }
-    if (rawFeatureFlag.allocation) {
-      featureFlag.allocation = this.readAllocation(rawFeatureFlag.allocation);
-    }
-    if (rawFeatureFlag.telemetry !== undefined) {
-      featureFlag.telemetry = rawFeatureFlag.telemetry;
     }
     if (options.tags !== undefined) {
       featureFlag.tags = options.tags;
     }
 
     return featureFlag;
-  }
-
-  private readVariant(variant: Record<string, any>): FeatureFlagVariant {
-    const enhancedVariant: FeatureFlagVariant = { name: variant.name };
-    const variantValue = variant.configuration_value;
-
-    if (variantValue !== undefined) {
-      enhancedVariant.value = typeof variantValue === "string" ? variantValue : JSON.stringify(variantValue);
-      if (typeof variantValue !== "string") {
-        enhancedVariant.contentType = "application/json";
-      }
-    }
-    if (variant.status_override !== undefined) {
-      enhancedVariant.statusOverride = variant.status_override;
-    }
-
-    return enhancedVariant;
-  }
-
-  private readAllocation(allocation: Record<string, any>): FeatureFlagAllocation {
-    const enhancedAllocation: FeatureFlagAllocation = {};
-
-    if (allocation.user !== undefined) {
-      enhancedAllocation.user = allocation.user;
-    }
-    if (allocation.group !== undefined) {
-      enhancedAllocation.group = allocation.group;
-    }
-    if (allocation.percentile !== undefined) {
-      enhancedAllocation.percentile = allocation.percentile;
-    }
-    if (allocation.seed !== undefined) {
-      enhancedAllocation.seed = allocation.seed;
-    }
-    if (allocation.default_when_enabled !== undefined) {
-      enhancedAllocation.defaultWhenEnabled = allocation.default_when_enabled;
-    }
-    if (allocation.default_when_disabled !== undefined) {
-      enhancedAllocation.defaultWhenDisabled = allocation.default_when_disabled;
-    }
-
-    return enhancedAllocation;
   }
 
   private readDotnetFeatureFlag(

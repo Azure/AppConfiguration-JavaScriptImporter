@@ -18,13 +18,13 @@ describe("Parse ffset format", () => {
           enabled: true,
           description: "Enables the new checkout flow",
           conditions: {
-            requirementType: "All",
+            requirement_type: "All",
             filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }]
           },
-          variants: [{ name: "Blue", value: "blue", contentType: "text/plain", statusOverride: "Enabled" }],
+          variants: [{ name: "Blue", configuration_value: "blue", status_override: "Enabled" }],
           allocation: {
-            defaultWhenEnabled: "Blue",
-            defaultWhenDisabled: "Control",
+            default_when_enabled: "Blue",
+            default_when_disabled: "Control",
             percentile: [{ variant: "Blue", from: 0, to: 50 }],
             user: [{ variant: "Blue", users: ["alice"] }],
             group: [{ variant: "Blue", groups: ["commerce"] }],
@@ -101,7 +101,7 @@ describe("Parse ffset format", () => {
       items: [{ name: "Checkout", enabled: true, conditions: { filters: [{ parameters: {} }] } }]
     }), ArgumentError);
     assert.throws(() => converter.Convert({
-      items: [{ name: "Checkout", enabled: true, variants: [{ name: "Blue", value: 1 }] }]
+      items: [{ name: "Checkout", enabled: true, variants: [{ name: "Blue", status_override: 1 }] }]
     }), ArgumentError);
     assert.throws(() => converter.Convert({
       items: [{ name: "Checkout", enabled: true, allocation: { percentile: [{ variant: "Blue", from: "0", to: 50 }] } }]

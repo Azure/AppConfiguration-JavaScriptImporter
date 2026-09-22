@@ -7,7 +7,7 @@
       "enabled": true,
       "description": "Enables the beta checkout experience.",
       "conditions": {
-        "requirementType": "Any",
+        "requirement_type": "Any",
         "filters": [
           {
             "name": "Microsoft.Percentage",
