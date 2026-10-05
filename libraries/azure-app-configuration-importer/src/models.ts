@@ -7,11 +7,7 @@ import {
   SetConfigurationSettingParam,
   FeatureFlagValue,
   FeatureFlag,
-  FeatureFlagParam,
-  FeatureFlagConditions,
-  FeatureFlagVariantDefinition,
-  FeatureFlagAllocation,
-  FeatureFlagTelemetryConfiguration
+  FeatureFlagParam
 } from "@azure/app-configuration";
 import { ChangeType } from "./enums";
 
@@ -40,6 +36,8 @@ export type KvSetConfigurationItem = {
 }
 
 /**
+ * Raw ffset feature flag item as authored in an appconfig/ffset file
+ *
  * @internal
  */
 export type FfSetItem = {
@@ -47,10 +45,20 @@ export type FfSetItem = {
   label?: string;
   enabled: boolean;
   description?: string;
-  conditions?: FeatureFlagConditions;
-  variants?: FeatureFlagVariantDefinition[];
-  allocation?: FeatureFlagAllocation;
-  telemetry?: FeatureFlagTelemetryConfiguration;
+  conditions?: {
+    requirement_type?: string;
+    filters?: Array<{ name: string; parameters?: Record<string, unknown> }>;
+  };
+  variants?: Array<{ name: string; value?: unknown; status_override?: string }>;
+  allocation?: {
+    user?: Array<{ variant: string; users: string[] }>;
+    group?: Array<{ variant: string; groups: string[] }>;
+    percentile?: Array<{ variant: string; from: number; to: number }>;
+    seed?: string;
+    default_when_enabled?: string;
+    default_when_disabled?: string;
+  };
+  telemetry?: { enabled: boolean; metadata?: { [propertyName: string]: string } };
   tags?: { [propertyName: string]: string };
 }
 

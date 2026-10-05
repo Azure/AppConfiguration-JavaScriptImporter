@@ -7,7 +7,7 @@ import { ConfigurationFormat } from "../src/enums";
 import { SourceOptions } from "../src/options";
 import { DefaultFeatureFlagsConverter } from "../src/internal/parsers/defaultFeatureFlagsConverter";
 
-describe("DefaultFeatureFlagsConverter enhanced feature flags", () => {
+describe("DefaultFeatureFlagsConverter MS FM feature flags", () => {
   const converter = new DefaultFeatureFlagsConverter();
 
   function convert(featureFlags: Array<Record<string, unknown>>, options?: Partial<SourceOptions>) {
@@ -17,21 +17,20 @@ describe("DefaultFeatureFlagsConverter enhanced feature flags", () => {
     );
   }
 
-  it("converts a minimal enhanced feature flag", () => {
-    assert.deepEqual(convert([{ name: "Checkout", enabled: true }]), [{ name: "Checkout", enabled: true }]);
+  it("converts a minimal MS FM feature flag", () => {
+    assert.deepEqual(convert([{ id: "Checkout", enabled: true }]), [{ name: "Checkout", enabled: true }]);
   });
 
-  it("normalizes the snake_case fields of a full enhanced feature flag", () => {
-    const enhanced = {
-      name: "Checkout",
-      label: "Production",
+  it("transforms the snake_case fields of a full MS FM feature flag into FeatureFlagParam", () => {
+    const msFm = {
+      id: "Checkout",
       enabled: true,
       description: "Enables the new checkout flow",
       conditions: {
         requirement_type: "All",
-        filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }]
+        client_filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }]
       },
-      variants: [{ name: "Blue", value: "blue", status_override: "Enabled" }],
+      variants: [{ name: "Blue", configuration_value: "blue", status_override: "Enabled" }],
       allocation: {
         default_when_enabled: "Blue",
         percentile: [{ variant: "Blue", from: 0, to: 50 }],
@@ -39,11 +38,10 @@ describe("DefaultFeatureFlagsConverter enhanced feature flags", () => {
         group: [{ variant: "Blue", groups: ["commerce"] }],
         seed: "checkout"
       },
-      telemetry: { enabled: true, metadata: { owner: "commerce" } },
-      tags: { owner: "commerce" }
+      telemetry: { enabled: true, metadata: { owner: "commerce" } }
     };
 
-    assert.deepEqual(convert([enhanced]), [{
+    assert.deepEqual(convert([msFm], { label: "Production", tags: { owner: "commerce" } }), [{
       name: "Checkout",
       enabled: true,
       description: "Enables the new checkout flow",
@@ -65,48 +63,52 @@ describe("DefaultFeatureFlagsConverter enhanced feature flags", () => {
     }]);
   });
 
+  it("serializes a non-string variant configuration_value as JSON", () => {
+    const result = convert([{
+      id: "Checkout",
+      enabled: true,
+      variants: [{ name: "Blue", configuration_value: { color: "blue" } }]
+    }]);
+
+    assert.equal(result[0].variants?.[0].value, "{\"color\":\"blue\"}");
+    assert.equal(result[0].variants?.[0].contentType, "application/json");
+  });
+
   it("accepts object-valued filter parameters such as Microsoft.Targeting", () => {
     const result = convert([{
-      name: "Beta",
+      id: "Beta",
       enabled: true,
-      conditions: { filters: [{ name: "Microsoft.Targeting", parameters: { Audience: { DefaultRolloutPercentage: 50 } } }] }
+      conditions: { client_filters: [{ name: "Microsoft.Targeting", parameters: { Audience: { DefaultRolloutPercentage: 50 } } }] }
     }]);
 
     assert.equal(result[0].conditions?.filters?.[0].name, "Microsoft.Targeting");
   });
 
-  it("converts legacy and enhanced entries in the same array", () => {
+  it("converts multiple MS FM entries in the same array", () => {
     const result = convert([
-      { id: "Legacy", enabled: true, conditions: { client_filters: [] } },
-      { name: "Enhanced", enabled: true, conditions: { filters: [] } }
+      { id: "First", enabled: true, conditions: { client_filters: [] } },
+      { id: "Second", enabled: true, conditions: { client_filters: [] } }
     ]);
 
     assert.equal(result.length, 2);
-    assert.equal(result[0].name, "Legacy");
-    assert.equal(result[1].name, "Enhanced");
+    assert.equal(result[0].name, "First");
+    assert.equal(result[1].name, "Second");
   });
 
-  it("applies the prefix to the enhanced name", () => {
-    assert.equal(convert([{ name: "Checkout", enabled: true }], { prefix: "app:" })[0].name, "app:Checkout");
+  it("applies the prefix to the resolved name", () => {
+    assert.equal(convert([{ id: "Checkout", enabled: true }], { prefix: "app:" })[0].name, "app:Checkout");
   });
 
-  it("prefers embedded label and tags but lets source options override them", () => {
-    const embedded = convert([{ name: "Checkout", enabled: true, label: "Embedded", tags: { owner: "team" } }]);
-    assert.equal(embedded[0].label, "Embedded");
-    assert.deepEqual(embedded[0].tags, { owner: "team" });
-
-    const overridden = convert(
-      [{ name: "Checkout", enabled: true, label: "Embedded", tags: { owner: "team" } }],
-      { label: "Production", tags: { owner: "platform" } }
-    );
-    assert.equal(overridden[0].label, "Production");
-    assert.deepEqual(overridden[0].tags, { owner: "platform" });
+  it("applies label and tags from source options", () => {
+    const result = convert([{ id: "Checkout", enabled: true }], { label: "Production", tags: { owner: "platform" } });
+    assert.equal(result[0].label, "Production");
+    assert.deepEqual(result[0].tags, { owner: "platform" });
   });
 
   it("keeps the last feature flag when resolved names collide", () => {
     const result = convert([
-      { name: "Checkout", enabled: true, description: "first" },
-      { name: "Checkout", enabled: false, description: "second" }
+      { id: "Checkout", enabled: true, description: "first" },
+      { id: "Checkout", enabled: false, description: "second" }
     ]);
 
     assert.equal(result.length, 1);
@@ -114,31 +116,30 @@ describe("DefaultFeatureFlagsConverter enhanced feature flags", () => {
     assert.equal(result[0].description, "second");
   });
 
-  it("rejects an entry that contains both id and name", () => {
-    assert.throws(() => convert([{ id: "Legacy", name: "Enhanced", enabled: true }]), ArgumentError);
+  it("uses the id and ignores a stray name when both are present", () => {
+    const result = convert([{ id: "Legacy", name: "Ignored", enabled: true }]);
+
+    assert.equal(result.length, 1);
+    assert.equal(result[0].name, "Legacy");
   });
 
-  it("rejects an entry without id or name", () => {
+  it("rejects a name-based (enhanced) entry in the default profile", () => {
+    assert.throws(() => convert([{ name: "Checkout", enabled: true, conditions: { filters: [] } }]), ArgumentError);
+  });
+
+  it("rejects an entry without an id", () => {
     assert.throws(() => convert([{ enabled: true }]), ArgumentError);
   });
 
-  it("rejects an enhanced flag with a non-boolean enabled", () => {
-    assert.throws(() => convert([{ name: "Checkout", enabled: "true" }]), ArgumentError);
+  it("rejects a flag with a non-boolean enabled", () => {
+    assert.throws(() => convert([{ id: "Checkout", enabled: "true" }]), ArgumentError);
   });
 
-  it("rejects an enhanced flag missing enabled", () => {
-    assert.throws(() => convert([{ name: "Checkout" }]), ArgumentError);
+  it("rejects a flag with an invalid id", () => {
+    assert.throws(() => convert([{ id: "Check:out", enabled: true }]), ArgumentError);
   });
 
-  it("rejects an enhanced flag that uses conditions.client_filters", () => {
-    assert.throws(() => convert([{ name: "Checkout", enabled: true, conditions: { client_filters: [] } }]), ArgumentError);
-  });
-
-  it("rejects an enhanced flag with an invalid name", () => {
-    assert.throws(() => convert([{ name: "Check:out", enabled: true }]), ArgumentError);
-  });
-
-  it("still converts a legacy Microsoft Feature Management feature flag", () => {
+  it("converts a Microsoft Feature Management feature flag with client filters", () => {
     const result = convert([{
       id: "Legacy",
       enabled: true,

@@ -65,11 +65,11 @@ describe("Readable stream feature flag source tests", () => {
     assert.deepEqual(source.FeatureFlagFilterOptions, { nameFilter: "app:*", labelFilter: "Production" });
   });
 
-  it("reads an enhanced feature flag from a Default MS FM stream with prefix and label", async () => {
+  it("reads an MS FM feature flag from a Default stream with prefix and label", async () => {
     const data = JSON.stringify({
       feature_management: {
         feature_flags: [
-          { name: "Checkout", enabled: true, conditions: { filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }] } }
+          { id: "Checkout", enabled: true, conditions: { client_filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }] } }
         ]
       }
     });
