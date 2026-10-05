@@ -152,7 +152,15 @@ export const MsFeatureFlagEnhancedValueSchema = {
         type: "object",
         properties: {
           name: { type: "string" },
-          value: { type: ["string", "number", "object", "boolean", "array", "null"] },
+          value: {
+            oneOf: [
+              { type: "string" },
+              { type: "number" },
+              { type: "object", additionalProperties: true },
+              { type: "boolean" },
+              { type: "array" },
+              { type: "null" }
+            ]} as any,
           status_override: { type: "string" }
         },
         required: ["name"]
