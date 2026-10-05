@@ -254,7 +254,8 @@ export function convertToFeatureFlagParam(rawFeatureFlag: Record<string, any>): 
 
 function normalizeVariant(variant: Record<string, any>): FeatureFlagVariant {
   const enhancedVariant: FeatureFlagVariant = { name: variant.name };
-  const variantValue = variant.configuration_value;
+  // Enhanced shape uses `value`; Microsoft Feature Management shape uses `configuration_value`.
+  const variantValue = variant.value ?? variant.configuration_value;
 
   if (variantValue !== undefined) {
     enhancedVariant.value = typeof variantValue === "string" ? variantValue : JSON.stringify(variantValue);

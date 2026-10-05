@@ -21,7 +21,7 @@ describe("Parse ffset format", () => {
             requirement_type: "All",
             filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }]
           },
-          variants: [{ name: "Blue", configuration_value: "blue", status_override: "Enabled" }],
+          variants: [{ name: "Blue", value: "blue", status_override: "Enabled" }],
           allocation: {
             default_when_enabled: "Blue",
             default_when_disabled: "Control",

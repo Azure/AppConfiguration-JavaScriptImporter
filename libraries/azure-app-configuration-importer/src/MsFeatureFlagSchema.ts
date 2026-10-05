@@ -152,7 +152,7 @@ export const MsFeatureFlagEnhancedValueSchema = {
         type: "object",
         properties: {
           name: { type: "string" },
-          configuration_value: { type: ["string", "number", "object", "boolean", "array", "null"] },
+          value: { type: ["string", "number", "object", "boolean", "array", "null"] },
           status_override: { type: "string" }
         },
         required: ["name"]

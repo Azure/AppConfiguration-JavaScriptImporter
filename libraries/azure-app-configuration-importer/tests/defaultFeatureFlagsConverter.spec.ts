@@ -31,7 +31,7 @@ describe("DefaultFeatureFlagsConverter enhanced feature flags", () => {
         requirement_type: "All",
         filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }]
       },
-      variants: [{ name: "Blue", configuration_value: "blue", status_override: "Enabled" }],
+      variants: [{ name: "Blue", value: "blue", status_override: "Enabled" }],
       allocation: {
         default_when_enabled: "Blue",
         percentile: [{ variant: "Blue", from: 0, to: 50 }],
