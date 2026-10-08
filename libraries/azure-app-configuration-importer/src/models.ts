@@ -47,9 +47,9 @@ export type FfSetItem = {
   description?: string;
   conditions?: {
     requirement_type?: string;
-    filters?: Array<{ name: string; parameters?: Record<string, unknown> }>;
+    filters?: Array<{ name: string; parameters?: Record<string, string> }>;
   };
-  variants?: Array<{ name: string; value?: unknown; status_override?: string }>;
+  variants?: Array<{ name: string; value?: string; content_type?: string; status_override?: string }>;
   allocation?: {
     user?: Array<{ variant: string; users: string[] }>;
     group?: Array<{ variant: string; groups: string[] }>;

@@ -24,6 +24,64 @@
     {
       "name": "DarkMode",
       "enabled": false
+    },
+    {
+      "name": "CheckoutButtonColor",
+      "label": "Production",
+      "enabled": true,
+      "description": "Experiments with the checkout button color and emits telemetry for each evaluation.",
+      "variants": [
+        {
+          "name": "Blue",
+          "value": "{\"color\":\"#0078D4\",\"text\":\"Buy now\"}",
+          "content_type": "application/json"
+        },
+        {
+          "name": "Green",
+          "value": "{\"color\":\"#107C10\",\"text\":\"Complete purchase\"}",
+          "content_type": "application/json"
+        }
+      ],
+      "allocation": {
+        "percentile": [
+          {
+            "variant": "Blue",
+            "from": 0,
+            "to": 50
+          },
+          {
+            "variant": "Green",
+            "from": 50,
+            "to": 100
+          }
+        ],
+        "seed": "checkout-button-color",
+        "default_when_enabled": "Blue",
+        "default_when_disabled": "Blue"
+      },
+      "telemetry": {
+        "enabled": true,
+        "metadata": {
+          "owner": "commerce",
+          "experiment": "checkout-button-color"
+        }
+      }
+    },
+    {
+      "name": "PremiumSupport",
+      "label": "Production",
+      "enabled": true,
+      "description": "Targets premium support to specific users and groups. Complex filter parameter values are authored as JSON strings.",
+      "conditions": {
+        "filters": [
+          {
+            "name": "Microsoft.Targeting",
+            "parameters": {
+              "Audience": "{\"Users\":[\"alice@contoso.com\"],\"Groups\":[{\"Name\":\"Premium\",\"RolloutPercentage\":100}],\"DefaultRolloutPercentage\":10}"
+            }
+          }
+        ]
+      }
     }
   ]
 }

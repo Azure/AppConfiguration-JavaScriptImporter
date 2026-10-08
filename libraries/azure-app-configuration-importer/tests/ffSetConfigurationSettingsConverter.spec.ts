@@ -110,4 +110,46 @@ describe("Parse ffset format", () => {
       items: [{ name: "Checkout", enabled: true, telemetry: { enabled: "true" } }]
     }), ArgumentError);
   });
+
+  it("rejects filter parameters whose values are not strings", () => {
+    assert.throws(() => converter.Convert({
+      items: [{ name: "Checkout", enabled: true, conditions: { filters: [{ name: "Microsoft.Percentage", parameters: { Value: 50 } }] } }]
+    }), ArgumentError, "Feature flag 'Checkout' has invalid 'parameters'.");
+    assert.throws(() => converter.Convert({
+      items: [{ name: "Checkout", enabled: true, conditions: { filters: [{ name: "Microsoft.Targeting", parameters: { Audience: { DefaultRolloutPercentage: "50" } } }] } }]
+    }), ArgumentError, "Feature flag 'Checkout' has invalid 'parameters'.");
+    assert.throws(() => converter.Convert({
+      items: [{ name: "Checkout", enabled: true, conditions: { filters: [{ name: "Microsoft.Percentage", parameters: ["50"] }] } }]
+    }), ArgumentError, "Feature flag 'Checkout' has invalid 'parameters'.");
+  });
+
+  it("rejects variant values and content types that are not strings", () => {
+    assert.throws(() => converter.Convert({
+      items: [{ name: "Checkout", enabled: true, variants: [{ name: "Blue", value: { color: "blue" } }] }]
+    }), ArgumentError, "Feature flag 'Checkout' has an invalid 'value'.");
+    assert.throws(() => converter.Convert({
+      items: [{ name: "Checkout", enabled: true, variants: [{ name: "Blue", value: 1 }] }]
+    }), ArgumentError, "Feature flag 'Checkout' has an invalid 'value'.");
+    assert.throws(() => converter.Convert({
+      items: [{ name: "Checkout", enabled: true, variants: [{ name: "Blue", value: "blue", content_type: 1 }] }]
+    }), ArgumentError, "Feature flag 'Checkout' has an invalid 'content_type'.");
+  });
+
+  it("passes through variant string values and content types without transformation", () => {
+    const featureFlags = converter.Convert({
+      items: [{
+        name: "Checkout",
+        enabled: true,
+        variants: [
+          { name: "Json", value: "{\"color\":\"blue\"}", content_type: "application/json" },
+          { name: "Plain", value: "blue" }
+        ]
+      }]
+    });
+
+    assert.deepEqual(featureFlags[0].variants, [
+      { name: "Json", value: "{\"color\":\"blue\"}", contentType: "application/json" },
+      { name: "Plain", value: "blue" }
+    ]);
+  });
 });

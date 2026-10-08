@@ -95,14 +95,13 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
         throw new ArgumentError(`Feature flag '${name}' has invalid 'filters'.`);
       }
       result.filters = conditions.filters.map((filter: unknown) => {
-        if (!this.isObject(filter) || typeof filter.name !== "string" ||
-          (filter.parameters !== undefined && !this.isObject(filter.parameters))) {
+        if (!this.isObject(filter) || typeof filter.name !== "string") {
           throw new ArgumentError(`Feature flag '${name}' has an invalid filter.`);
         }
         return filter.parameters !== undefined
-          ? { name: filter.name, parameters: filter.parameters }
+          ? { name: filter.name, parameters: this.readStringMap(name, "parameters", filter.parameters) }
           : { name: filter.name };
-      }) as NonNullable<FeatureFlagConditions["filters"]>;
+      });
     }
     return result;
   }
@@ -112,19 +111,18 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
       throw new ArgumentError(`Feature flag '${name}' has invalid 'variants'.`);
     }
     return variants.map((variant: unknown) => {
-      if (!this.isObject(variant) || typeof variant.name !== "string" ||
-        (variant.status_override !== undefined && typeof variant.status_override !== "string")) {
+      if (!this.isObject(variant) || typeof variant.name !== "string") {
         throw new ArgumentError(`Feature flag '${name}' has an invalid variant.`);
       }
       const result: FeatureFlagVariantDefinition = { name: variant.name };
       if (variant.value !== undefined) {
-        result.value = typeof variant.value === "string" ? variant.value : JSON.stringify(variant.value);
-        if (typeof variant.value !== "string") {
-          result.contentType = "application/json";
-        }
+        result.value = this.readString(name, "value", variant.value);
+      }
+      if (variant.content_type !== undefined) {
+        result.contentType = this.readString(name, "content_type", variant.content_type);
       }
       if (variant.status_override !== undefined) {
-        result.statusOverride = variant.status_override as string;
+        result.statusOverride = this.readString(name, "status_override", variant.status_override);
       }
       return result;
     });
