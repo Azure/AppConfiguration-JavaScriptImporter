@@ -10,7 +10,7 @@ import { ImportProgress } from "../src/models";
 import { AppConfigurationImporter } from "../src/appConfigurationImporter";
 import { MockUpHttpHeaderLike, MockupResourceLike } from "./appConfigurationImporter.spec";
 import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
-import { ReadableStreamConfigurationSettingsSource } from "../src/settingsImport/readableStreamConfigurationSettingsSource";
+import { ReadableStreamConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/readableStreamConfigurationSettingsSource";
 import  { ReadableStreamSourceOptions } from "../src/options";
 import { assertThrowAsync, listConfigurationSettings } from "./utlis";
 import { ParseError } from "../src/errors";

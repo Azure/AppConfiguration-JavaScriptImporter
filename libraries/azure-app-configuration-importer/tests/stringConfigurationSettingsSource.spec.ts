@@ -6,7 +6,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { ArgumentError, ParseError } from "../src/errors";
 import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
 import { assertThrowAsync } from "./utlis";
 
 describe("String configuration source test", () => {
@@ -164,5 +164,76 @@ describe("String configuration source test", () => {
     assert.equal(configurationSettings.length, 1);
     assert.equal(configurationSettings[0].key, "testKey1");
     assert.equal(configurationSettings[0].value, "testValue1");
+  });
+
+  it("Detects the kvset profile from document metadata", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        profile: "appconfig/kvset",
+        items: [{ key: "testKey", value: "testValue", tags: {} }]
+      }),
+      format: ConfigurationFormat.Json
+    });
+
+    const configurationSettings = await source.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 1);
+    assert.equal(configurationSettings[0].key, "testKey");
+    assert.equal(configurationSettings[0].value, "testValue");
+  });
+
+  it("Rejects an unsupported document profile", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({ profile: "appconfig/unknown", items: [] }),
+      format: ConfigurationFormat.Json
+    });
+
+    await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Rejects ffset on the configuration settings path", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({ profile: "appconfig/ffset", items: [] }),
+      format: ConfigurationFormat.Json
+    });
+
+    await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Rejects an ffset source profile option", () => {
+    assert.throw(() => new StringConfigurationSettingsSource({
+      data: JSON.stringify({ profile: "appconfig/ffset", items: [] }),
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.FfSet
+    }), ArgumentError);
+  });
+
+  it("Falls back to the source profile option when the document has no profile metadata", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        items: [{ key: "testKey", value: "testValue", tags: {} }]
+      }),
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.KvSet
+    });
+
+    const configurationSettings = await source.GetConfigurationSettings();
+
+    assert.equal(configurationSettings.length, 1);
+    assert.equal(configurationSettings[0].key, "testKey");
+    assert.equal(configurationSettings[0].value, "testValue");
+  });
+
+  it("Rejects a source profile option that conflicts with the document profile", async () => {
+    const source = new StringConfigurationSettingsSource({
+      data: JSON.stringify({
+        profile: "appconfig/kvset",
+        items: [{ key: "testKey", value: "testValue", tags: {} }]
+      }),
+      format: ConfigurationFormat.Json,
+      profile: ConfigurationProfile.Default
+    });
+
+    await assertThrowAsync(() => source.GetConfigurationSettings(), ArgumentError);
   });
 });

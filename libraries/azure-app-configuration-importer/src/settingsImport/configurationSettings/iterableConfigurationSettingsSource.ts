@@ -13,9 +13,9 @@ import {
   featureFlagContentType,
   featureFlagPrefix,
   secretReferenceContentType} from "@azure/app-configuration";
-import { IterableSourceOptions } from "../options";
-import { ArgumentError } from "../errors";
-import { ConfigurationSettingsFields } from "../models";
+import { IterableSourceOptions } from "../../options";
+import { ArgumentError } from "../../errors";
+import { ConfigurationSettingsFields } from "../../models";
 
 export class IterableConfigurationSettingsSource implements ConfigurationSettingsSource {
   public FilterOptions: ListConfigurationSettingsOptions = {};

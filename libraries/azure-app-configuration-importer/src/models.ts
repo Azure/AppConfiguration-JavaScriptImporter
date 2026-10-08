@@ -5,7 +5,9 @@ import {
   SecretReferenceValue,
   ConfigurationSetting,
   SetConfigurationSettingParam,
-  FeatureFlagValue
+  FeatureFlagValue,
+  FeatureFlag,
+  FeatureFlagParam
 } from "@azure/app-configuration";
 import { ChangeType } from "./enums";
 
@@ -30,6 +32,33 @@ export type KvSetConfigurationItem = {
   label?: string;
   description?: string;
   content_type?: string;
+  tags?: { [propertyName: string]: string };
+}
+
+/**
+ * Raw ffset feature flag item as authored in an appconfig/ffset file
+ *
+ * @internal
+ */
+export type FfSetItem = {
+  name: string;
+  label?: string;
+  enabled: boolean;
+  description?: string;
+  conditions?: {
+    requirement_type?: string;
+    filters?: Array<{ name: string; parameters?: Record<string, string> }>;
+  };
+  variants?: Array<{ name: string; value?: string; content_type?: string; status_override?: string }>;
+  allocation?: {
+    user?: Array<{ variant: string; users: string[] }>;
+    group?: Array<{ variant: string; groups: string[] }>;
+    percentile?: Array<{ variant: string; from: number; to: number }>;
+    seed?: string;
+    default_when_enabled?: string;
+    default_when_disabled?: string;
+  };
+  telemetry?: { enabled: boolean; metadata?: { [propertyName: string]: string } };
   tags?: { [propertyName: string]: string };
 }
 
@@ -71,4 +100,12 @@ export enum ConfigurationSettingsFields {
   Tags = 1 << 5,
 
   All = Key | Value | Label | Description | ContentType | Tags
+}
+
+export interface FeatureFlagChange {
+  changeType: ChangeType;
+  /** The current enhanced feature flag. */
+  currentValue: FeatureFlag | null;
+  /** The new enhanced feature flag. */
+  newValue: FeatureFlagParam | null;
 }

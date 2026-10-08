@@ -6,6 +6,7 @@ These examples show how to use the App Configuration Importer File Source in som
 | -----------------------------------------------------------------------------| ---------------------------------------------------------------------------------------------------- |
 | [fileSourceExampleWithDefault.ts](./src/fileSourceExampleWithDefault.ts)     |  Demonstrates importing configuration settings from a file source with default file content profile  |
 | [fileSourceExampleWithKVSet.ts](./src/fileSourceExampleWithKVSet.ts)         |  Demonstrates importing configuration settings from a file source with KVSet file content profile    |
+| [fileSourceExampleWithFFSet.ts](./src/fileSourceExampleWithFFSet.ts)         |  Demonstrates importing enhanced feature flags from a file source with FFSet file content profile     |
 
 ## Prerequisites
 
