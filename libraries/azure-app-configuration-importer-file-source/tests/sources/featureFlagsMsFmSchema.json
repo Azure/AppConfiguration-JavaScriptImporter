@@ -1,0 +1,11 @@
+{
+  "feature_management": {
+    "feature_flags": [
+      {
+        "id": "Checkout",
+        "enabled": true,
+        "conditions": { "client_filters": [] }
+      }
+    ]
+  }
+}

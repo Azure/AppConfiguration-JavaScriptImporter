@@ -9,15 +9,21 @@ import {
 } from "@azure/app-configuration";
 import { SourceOptions } from "../../options";
 import { ConfigurationSettingsConverter } from "./configurationSettingsConverter";
-import { AjvValidationError, ArgumentError } from "../../errors";
+import { ArgumentError } from "../../errors";
 import { ClientFilter } from "../../models";
 import * as flat from "flat";
-import { ConfigurationFormat } from "../../enums";
 import { isJsonContentType, serializeFeatureFlagValue } from "../utils";
-import { MsFeatureFlagValue, RequirementType } from "../../featureFlag";
+import { MsFeatureFlagValue } from "../../featureFlag";
 import { Constants } from "../constants";
-import { MsFeatureFlagValueSchema } from "../../MsFeatureFlagSchema";
-import Ajv, { ErrorObject } from "ajv";
+import {
+  detectFeatureManagement,
+  getDotnetSchemaFeatureFlags,
+  getMsFmSchemaFeatureFlags,
+  isValidFeatureName,
+  lowerCaseKeys,
+  validateMsFmFeatureFlagSchema,
+  validateRequirementType
+} from "./featureManagementParser";
 
 /**
  * Format Parser for common key-value configuration.
@@ -40,62 +46,15 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
     >();
 
     let featureFlagsConfigSettings = new Array<SetConfigurationSettingParam<string>>();
-    let foundMsFmSchema = false;
-    let foundDotnetFmSchema = false;
-    let dotnetFmSchemaKeyWord = "";
 
-    const featureFlagsDict: any = {};
+    const { featureFlagsDict, dotnetFmSchemaKeyWord, foundMsFmSchema, foundFeatureManagement } =
+      detectFeatureManagement(config, options);
 
-    if (options.format == ConfigurationFormat.Properties && !options.skipFeatureFlags) {
-      this.checkFeatureManagementExist(config);
-    }
-
-    for (let i = 0; i < Constants.FeatureManagementKeyWords.length - 1; i++) {
-      if (Constants.FeatureManagementKeyWords[i] in config) {
-        if (foundDotnetFmSchema) {
-          throw new ArgumentError(
-            `Unable to proceed because data contains multiple sections corresponding to Feature Management. with the key, ${Constants.FeatureManagementKeyWords[i]}`
-          );
-        }
-        
-        foundDotnetFmSchema = true;
-        dotnetFmSchemaKeyWord = Constants.FeatureManagementKeyWords[i];
-
-        const dotnetFmSchemaKey = dotnetFmSchemaKeyWord as keyof object;
-        featureFlagsDict[dotnetFmSchemaKey] = config[dotnetFmSchemaKey];
-        delete config[dotnetFmSchemaKey];
-      }
-    }
-
-    const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
-    if (msFeatureManagementKeyWord in config) {
-      if (foundDotnetFmSchema &&
-        Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)) {
-        throw new ArgumentError(
-          `Unable to proceed because data contains an already defined dotnet schema section with the key, ${dotnetFmSchemaKeyWord}.`
-        );
-      }
-
-      if (Object.keys(config[msFeatureManagementKeyWord as keyof object]).includes(Constants.FeatureFlagsKeyWord)) {
-        foundMsFmSchema = true;
-      }
-
-      if (Object.keys(config[msFeatureManagementKeyWord as keyof object]).some(key => key !== Constants.FeatureFlagsKeyWord)){
-        foundDotnetFmSchema = true;
-        dotnetFmSchemaKeyWord = msFeatureManagementKeyWord;
-      }
-
-      const featureManagementKey = msFeatureManagementKeyWord as keyof object;
-      featureFlagsDict[featureManagementKey] = config[featureManagementKey];
-      delete config[featureManagementKey];
-    }
-
-    if ((foundDotnetFmSchema || foundMsFmSchema) && !options.skipFeatureFlags) {
-      const featureFlagConverter = new FeatureFlagConfigurationSettingsConverter(
+    if (foundFeatureManagement && !options.skipFeatureFlags) {
+      featureFlagsConfigSettings = new FeatureFlagConfigurationSettingsConverter(
         dotnetFmSchemaKeyWord,
         foundMsFmSchema
-      );
-      featureFlagsConfigSettings = featureFlagConverter.Convert(featureFlagsDict, options);
+      ).Convert(featureFlagsDict, options);
     }
 
     const flattenedConfigurationSettings: object = flat.flatten(config, {
@@ -107,15 +66,6 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
     configurationSettings = configurationSettings.concat(featureFlagsConfigSettings);
 
     return configurationSettings;
-  }
-
-  private checkFeatureManagementExist(configurations: object): void {
-    const keys: string[] = Object.keys(configurations);
-    for (const featureFlagKeyWord of Constants.FeatureManagementKeyWords) {
-      if (keys.find(key => key.startsWith(featureFlagKeyWord))) {
-        throw new ArgumentError("Importing feature flag in Properties format is not supported. Anything in the Properties format being imported will be treated as key value.");
-      }
-    }
   }
 
   private toConfigurationSettings(
@@ -166,15 +116,13 @@ export class DefaultConfigurationSettingsConverter implements ConfigurationSetti
  *
  * @internal
  * */
-class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettingsConverter {
+export class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettingsConverter {
   dotnetFmSchemaKeyWord: string;
   foundMsFeatureManagement: boolean;
-  ajv: Ajv;
 
   constructor(dotnetFmSchemaKeyWord: string, foundMsFeatureManagement: boolean) {
     this.dotnetFmSchemaKeyWord = dotnetFmSchemaKeyWord;
     this.foundMsFeatureManagement = foundMsFeatureManagement;
-    this.ajv = new Ajv();
 
     if (!this.dotnetFmSchemaKeyWord && !this.foundMsFeatureManagement) {
       throw new ArgumentError("No feature management was found");
@@ -189,15 +137,37 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     options: SourceOptions
   ): SetConfigurationSettingParam<string>[] {
     const settings = new Array<SetConfigurationSettingParam<string>>();
+    const featureFlags = this.ToFeatureFlagValues(config);
+
+    const prefix: string = options.prefix ?? "";
+    for (const featureFlag of featureFlags) {
+      const setting: SetConfigurationSettingParam<string> = {
+        key: featureFlagPrefix + prefix + featureFlag.id,
+        label: options.label,
+        value: serializeFeatureFlagValue(featureFlag),
+        contentType: featureFlagContentType,
+        tags: options.tags
+      };
+
+      settings.push(setting);
+    }
+
+    return settings;
+  }
+
+  /**
+   * Parse the feature management sections into feature flag values.
+   * */
+  ToFeatureFlagValues(config: object): MsFeatureFlagValue[] {
     const featureFlags = new Array<MsFeatureFlagValue>();
 
     if (this.dotnetFmSchemaKeyWord) {
-      const dotnetSchemaFeatureFlags = this.getDotnetFmSchemaFeatureFlags(config);
+      const dotnetSchemaFeatureFlags = getDotnetSchemaFeatureFlags(config, this.dotnetFmSchemaKeyWord);
 
       const featureManagementIndex: number = Constants.FeatureManagementKeyWords.indexOf(this.dotnetFmSchemaKeyWord);
 
       for (const featureFlag in dotnetSchemaFeatureFlags) {
-        if (!this.validateFeatureName(featureFlag)) {
+        if (!isValidFeatureName(featureFlag)) {
           throw new ArgumentError(
             `Feature flag ${featureFlag} contains invalid character,'%' and ':' are not allowed in feature name. Please provide valid feature name.`
           );
@@ -215,7 +185,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     }
 
     if (this.foundMsFeatureManagement) {
-      const msFmSectionFeatureFlags = this.getMsFmSchemaFeatureFlags(config);
+      const msFmSectionFeatureFlags = getMsFmSchemaFeatureFlags(config);
 
       for (const featureFlag of msFmSectionFeatureFlags) {
         if (!featureFlag.id) {
@@ -224,7 +194,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
           );
         }
 
-        if (!this.validateFeatureName(featureFlag.id)) {
+        if (!isValidFeatureName(featureFlag.id)) {
           throw new ArgumentError(
             `Feature flag id ${featureFlag.id} contains invalid character,'%' and ':' are not allowed.`
           );
@@ -245,30 +215,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       }
     }
 
-    const prefix: string = options.prefix ?? "";
-    for (const featureFlag of featureFlags) {
-      const setting: SetConfigurationSettingParam<string> = {
-        key: featureFlagPrefix + prefix + featureFlag.id,
-        label: options.label,
-        value: serializeFeatureFlagValue(featureFlag),
-        contentType: featureFlagContentType,
-        tags: options.tags
-      };
-
-      settings.push(setting);
-    }
-
-    return settings;
-  }
-
-  private validateFeatureName(featureName: string): boolean {
-    if (featureName) {
-      const valid = /^[^:%]*$/;
-      return valid.test(featureName);
-    }
-    else {
-      return false;
-    }
+    return featureFlags;
   }
 
   private getFeatureFlagValueFromDotnetSchema(
@@ -306,7 +253,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
             const parameters: Partial<ClientFilter> = {};
             //
             // Converting client_filter keys to lower case
-            const lowerCaseFilters = this.getLowerCaseFilters(
+            const lowerCaseFilters = lowerCaseKeys(
               featureFlagValue.conditions.clientFilters[i]
             );
 
@@ -337,9 +284,8 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
       const requirementType = featureData[requirementTypeKeyWord];
 
       if (requirementType) {
-        if (this.validateRequirementType(featureFlagName, requirementType)) {
-          featureFlagValue.conditions.requirementType = requirementType;
-        }
+        validateRequirementType(featureFlagName, requirementType);
+        featureFlagValue.conditions.requirementType = requirementType;
       }
     }
     else if (typeof featureData == "boolean") {
@@ -355,21 +301,7 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
   }
 
   private getFeatureFlagValueFromMsFmSchema(featureFlag: any): MsFeatureFlagValue {
-    const validate = this.ajv.compile<MsFeatureFlagValue>(MsFeatureFlagValueSchema);
-    const featureFlagCopy = JSON.parse(JSON.stringify(featureFlag)); //deep copy
-
-    // normalize client filters
-    if (featureFlagCopy.conditions && featureFlagCopy.conditions.client_filters) {
-      for (let i = 0; i < featureFlagCopy.conditions.client_filters.length; i++) {
-        featureFlagCopy.conditions.client_filters[i] = this.getLowerCaseFilters(featureFlagCopy.conditions.client_filters[i]);
-      }
-    }
-
-    const valid = validate(featureFlagCopy);
-    if (!valid) {
-      const validationError = new AjvValidationError(validate.errors as ErrorObject[]);
-      throw new ArgumentError(`Feature flag '${featureFlag.id}' is not in the correct format. ${validationError.getFriendlyMessage()}`);
-    }
+    validateMsFmFeatureFlagSchema(featureFlag);
 
     const parsedFeatureFlag: MsFeatureFlagValue = {
       ...featureFlag,
@@ -389,57 +321,4 @@ class FeatureFlagConfigurationSettingsConverter implements ConfigurationSettings
     return parsedFeatureFlag;
   }
 
-  private getLowerCaseFilters(clientFilter: ClientFilter): { [key: string]: any } {
-    const keys: Array<string> = Object.keys(clientFilter);
-    const lowerCaseFilters: { [key: string]: any } = {};
-
-    for (let i = 0; i < keys.length; i++) {
-      lowerCaseFilters[keys[i].toLowerCase()] = clientFilter[keys[i] as keyof object];
-    }
-
-    return lowerCaseFilters;
-  }
-
-  private validateRequirementType(requirement_type: any, featureFlagName: string) {
-    if(!Object.values(RequirementType).includes(requirement_type)){
-      throw new ArgumentError(
-        `This feature flag '${featureFlagName}' must have any/all requirement type.`
-      );
-    }
-
-    return true;
-  }
-
-  private getMsFmSchemaFeatureFlags(config: object): Array<{ [key: string]: any }>{
-    const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
-    const featureManagementKey =  msFeatureManagementKeyWord as keyof object;
-    const featureManagementSection = config[featureManagementKey];
-
-    if (typeof featureManagementSection !== "object") {
-      throw new ArgumentError(`The ${msFeatureManagementKeyWord} section must be an object.`);
-    }
-
-    if (!Array.isArray(featureManagementSection[Constants.FeatureFlagsKeyWord])) {
-      throw new ArgumentError(`The ${Constants.FeatureFlagsKeyWord} key within ${msFeatureManagementKeyWord} must be an array.`);
-    }
-
-    return featureManagementSection[Constants.FeatureFlagsKeyWord];
-  }
-
-  private getDotnetFmSchemaFeatureFlags(config: object): { [key: string]: any } {
-    const msFeatureManagementKeyWord = Constants.FeatureManagementKeyWords[3];
-    const featureManagementSection: object = config[this.dotnetFmSchemaKeyWord as keyof object];
-
-    if (typeof featureManagementSection !== "object") {
-      throw new ArgumentError(`The ${this.dotnetFmSchemaKeyWord} section must be an object.`);
-    }
-
-    if (this.dotnetFmSchemaKeyWord === msFeatureManagementKeyWord) { //dotnet schema might be nested within msFmSchema
-      const { feature_flags, ...dotnetSchemaFeatureFlags } = featureManagementSection as { [key: string]: any };
-      return dotnetSchemaFeatureFlags;
-    }
-    else {
-      return featureManagementSection;
-    }
-  }
 }

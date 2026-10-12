@@ -10,7 +10,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { ConfigurationFormat } from "../src/enums";
 import { ArgumentError } from "../src/errors";
-import { StringConfigurationSettingsSource } from "../src/settingsImport/stringConfigurationSettingsSource";
+import { StringConfigurationSettingsSource } from "../src/settingsImport/configurationSettings/stringConfigurationSettingsSource";
 import { StringSourceOptions } from "../src/options";
 import { assertThrowAsync } from "./utlis";
 import { MsFeatureFlagValue } from "../src/featureFlag";
@@ -47,6 +47,21 @@ describe("Parse FeatureFlag Json format file", () => {
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
 
     assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
+  });
+
+  it("Rejects an enhanced feature flag schema in the App Configuration importer", async () => {
+    const options: StringSourceOptions = {
+      data: JSON.stringify({
+        feature_management: {
+          feature_flags: [{ name: "Checkout", enabled: true, conditions: { filters: [] } }]
+        }
+      }),
+      format: ConfigurationFormat.Json,
+      skipFeatureFlags: false
+    };
+    const stringConfigurationSource = new StringConfigurationSettingsSource(options);
+
+    await assertThrowAsync(() => stringConfigurationSource.GetConfigurationSettings(), ArgumentError);
   });
 
   it("Parse key value config and feature managment config correctly, skip feature flag keep default", async () => {

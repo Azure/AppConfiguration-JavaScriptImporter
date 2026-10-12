@@ -1,0 +1,15 @@
+{
+  "profile": "appconfig/ffset",
+  "items": [
+    {
+      "name": "Checkout",
+      "label": "Production",
+      "enabled": true,
+      "conditions": { "filters": [] }
+    },
+    {
+      "name": "DarkMode",
+      "enabled": false
+    }
+  ]
+}

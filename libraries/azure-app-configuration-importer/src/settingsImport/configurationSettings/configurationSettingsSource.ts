@@ -7,7 +7,7 @@ import {
   SecretReferenceValue,
   SetConfigurationSettingParam
 } from "@azure/app-configuration";
-import { ConfigurationSettingChange, ConfigurationSettingsFields } from "../models";
+import { ConfigurationSettingChange, ConfigurationSettingsFields } from "../../models";
 
 /**
  * Interface of all ConfigurationSettingsSource
