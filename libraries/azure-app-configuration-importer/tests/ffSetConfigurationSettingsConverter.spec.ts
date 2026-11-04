@@ -36,13 +36,93 @@ describe("Parse ffset format", () => {
       ]
     });
 
-    assert.equal(featureFlags.length, 2);
-    assert.deepEqual(featureFlags[0], { name: "Minimal", enabled: false });
-    assert.equal(featureFlags[1].name, "Checkout");
-    assert.equal(featureFlags[1].conditions?.filters?.[0].name, "Microsoft.TimeWindow");
-    assert.equal(featureFlags[1].variants?.[0].value, "blue");
-    assert.equal(featureFlags[1].allocation?.percentile?.[0].to, 50);
-    assert.deepEqual(featureFlags[1].tags, { owner: "commerce" });
+    assert.deepEqual(featureFlags, [
+      { name: "Minimal", enabled: false },
+      {
+        name: "Checkout",
+        label: "Production",
+        enabled: true,
+        description: "Enables the new checkout flow",
+        conditions: {
+          requirementType: "All",
+          filters: [{ name: "Microsoft.TimeWindow", parameters: { Start: "2026-08-24" } }]
+        },
+        variants: [{ name: "Blue", value: "blue", statusOverride: "Enabled" }],
+        allocation: {
+          defaultWhenEnabled: "Blue",
+          defaultWhenDisabled: "Control",
+          percentile: [{ variant: "Blue", from: 0, to: 50 }],
+          user: [{ variant: "Blue", users: ["alice"] }],
+          group: [{ variant: "Blue", groups: ["commerce"] }],
+          seed: "checkout"
+        },
+        telemetry: { enabled: true, metadata: { owner: "commerce" } },
+        tags: { owner: "commerce" }
+      }
+    ]);
+  });
+
+  it("preserves missing and empty conditions and filter parameters", () => {
+    const featureFlags = converter.Convert({
+      items: [
+        { name: "MissingConditions", enabled: false },
+        { name: "EmptyConditions", enabled: true, conditions: {} },
+        { name: "EmptyFilters", enabled: true, conditions: { filters: [] } },
+        {
+          name: "OptionalParameters",
+          enabled: true,
+          conditions: {
+            filters: [
+              { name: "WithoutParameters" },
+              { name: "EmptyParameters", parameters: {} }
+            ]
+          }
+        }
+      ]
+    });
+
+    assert.deepEqual(featureFlags, [
+      { name: "MissingConditions", enabled: false },
+      { name: "EmptyConditions", enabled: true, conditions: {} },
+      { name: "EmptyFilters", enabled: true, conditions: { filters: [] } },
+      {
+        name: "OptionalParameters",
+        enabled: true,
+        conditions: {
+          filters: [
+            { name: "WithoutParameters" },
+            { name: "EmptyParameters", parameters: {} }
+          ]
+        }
+      }
+    ]);
+  });
+
+  it("preserves encoded, numeric-looking, boolean-looking and empty parameter strings", () => {
+    const featureFlags = converter.Convert({
+      items: [{
+        name: "StringParameters",
+        enabled: true,
+        conditions: {
+          filters: [{
+            name: "Custom",
+            parameters: {
+              Audience: "{\"Users\":[\"alice\"],\"DefaultRolloutPercentage\":40}",
+              Value: "25",
+              Boolean: "true",
+              Empty: ""
+            }
+          }]
+        }
+      }]
+    });
+
+    assert.deepEqual(featureFlags[0].conditions?.filters?.[0].parameters, {
+      Audience: "{\"Users\":[\"alice\"],\"DefaultRolloutPercentage\":40}",
+      Value: "25",
+      Boolean: "true",
+      Empty: ""
+    });
   });
 
   it("parses an empty items collection", () => {

@@ -33,12 +33,45 @@ type SampleFlag = {
   telemetry?: FeatureFlagParam["telemetry"];
 };
 
+function createFfSetDocument(samples: SampleFlag[]): object {
+  return {
+    profile: "appconfig/ffset",
+    items: samples.map(sample => ({
+      name: sample.id,
+      enabled: sample.enabled ?? false,
+      description: sample.description,
+      conditions: sample.conditions && {
+        requirement_type: sample.conditions.requirement_type,
+        filters: sample.conditions.client_filters?.map(filter => ({
+          name: filter.name,
+          parameters: filter.parameters === undefined ? undefined : Object.fromEntries(
+            Object.entries(filter.parameters).map(([name, value]) => [
+              name, typeof value === "string" ? value : JSON.stringify(value)
+            ])
+          )
+        }))
+      },
+      variants: sample.variants?.map(variant => ({
+        name: variant.name,
+        value: variant.configuration_value,
+        status_override: variant.status_override
+      })),
+      allocation: sample.allocation,
+      telemetry: sample.telemetry
+    }))
+  };
+}
+
 function assertConvertedFlag(actual: FeatureFlagParam, sample: SampleFlag): void {
   assert.equal(actual.name, sample.id);
   assert.strictEqual(actual.enabled, sample.enabled ?? false);
   assert.equal(actual.description, sample.description);
   assert.equal(actual.conditions?.requirementType, sample.conditions?.requirement_type);
   assert.deepEqual(actual.telemetry, sample.telemetry);
+  assert.strictEqual(actual.conditions !== undefined, sample.conditions !== undefined);
+  assert.strictEqual(actual.conditions?.filters !== undefined, sample.conditions?.client_filters !== undefined);
+  assert.strictEqual(actual.variants !== undefined, sample.variants !== undefined);
+  assert.strictEqual(actual.allocation !== undefined, sample.allocation !== undefined);
 
   const filters = actual.conditions?.filters ?? [];
   const sampleFilters = sample.conditions?.client_filters ?? [];
@@ -91,6 +124,42 @@ describe("Feature Management sample imports", () => {
       const validData = rejectedIds.length > 0
         ? JSON.stringify({ feature_management: { feature_flags: validFlags } })
         : data;
+
+      describe("FFSet", () => {
+        it("imports projected definitions without losing their configuration", async () => {
+          const source = new StringFeatureFlagSource({
+            data: JSON.stringify(createFfSetDocument(validFlags)),
+            format: ConfigurationFormat.Json
+          });
+
+          const flags = await source.GetFeatureFlags();
+
+          assert.lengthOf(flags, validFlags.length);
+          flags.forEach((flag, index) => assertConvertedFlag(flag, validFlags[index]));
+        });
+
+        if (rejectedIds.length > 0) {
+          it("rejects a projected document containing an intentionally invalid flag", async () => {
+            const source = new StringFeatureFlagSource({
+              data: JSON.stringify(createFfSetDocument(sampleFlags)),
+              format: ConfigurationFormat.Json
+            });
+            await assertThrowAsync(() => source.GetFeatureFlags(), ArgumentError);
+          });
+
+          for (const id of rejectedIds) {
+            it(`rejects the projected ${id} flag`, async () => {
+              const flag = sampleFlags.find(flag => flag.id === id);
+              assert.exists(flag);
+              const source = new StringFeatureFlagSource({
+                data: JSON.stringify(createFfSetDocument(sampleFlags.filter(flag => flag.id === id))),
+                format: ConfigurationFormat.Json
+              });
+              await assertThrowAsync(() => source.GetFeatureFlags(), ArgumentError);
+            });
+          }
+        }
+      });
 
       for (const format of [ConfigurationFormat.Json, ConfigurationFormat.Yaml]) {
         describe(ConfigurationFormat[format], () => {

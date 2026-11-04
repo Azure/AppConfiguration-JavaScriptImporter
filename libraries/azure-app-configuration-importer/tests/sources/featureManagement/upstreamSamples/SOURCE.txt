@@ -8,6 +8,10 @@ These are locally maintained import fixtures until sample sharing is restored.
 Tests read them offline; no upstream checkout or test-package dependency is needed.
 Equivalent YAML documents are generated in memory from these JSON fixtures.
 Both formats exercise both import paths; YAML results must match JSON results.
+JSON FFSet documents are also projected in test code from these samples, with
+filter parameters encoded as strings and optional enabled values defaulted to
+false. FFSet results are checked against the original sample configuration,
+independently of the production Default-profile converter. FFSet is JSON-only.
 The evaluation inputs and expected results in upstream *.tests.json are not
 included, since they are not feature-flag import documents.
 
