@@ -2,10 +2,26 @@
 // Licensed under the MIT license.
 
 import { assert } from "chai";
-import { ConfigurationFormat } from "../src/enums";
+import * as jsyaml from "js-yaml";
+import { ConfigurationFormat, ConfigurationProfile } from "../src/enums";
+import { ArgumentError } from "../src/errors";
 import { StringFeatureFlagSource } from "../src/settingsImport/featureFlag/stringFeatureFlagSource";
+import { assertThrowAsync } from "./utlis";
 
 describe("String feature flag source test", () => {
+  for (const profile of [undefined, ConfigurationProfile.FfSet]) {
+    it(`rejects YAML with ${profile === undefined ? "detected" : "explicit"} FFSet profile`, async () => {
+      await assertThrowAsync(() => new StringFeatureFlagSource({
+        data: jsyaml.dump({
+          profile: "appconfig/ffset",
+          items: [{ name: "Checkout", enabled: true }]
+        }),
+        format: ConfigurationFormat.Yaml,
+        profile
+      }).GetFeatureFlags(), ArgumentError);
+    });
+  }
+
   it("Gets enhanced feature flags from an ffset document", async () => {
     const source = new StringFeatureFlagSource({
       data: JSON.stringify({

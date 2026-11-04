@@ -315,7 +315,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Parse feature flag yaml file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlags.yaml")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/featureFlags.yaml")).toString(),
       format: ConfigurationFormat.Yaml
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -347,7 +347,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Parse new ms fm schema json file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsMsFmSchema.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/featureFlagsMsFmSchema.json")).toString(),
       format: ConfigurationFormat.Json
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -389,7 +389,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Parse new ms fm schema yaml file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureFlagsMsFmSchema.yaml")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/featureFlagsMsFmSchema.yaml")).toString(),
       format: ConfigurationFormat.Yaml
     };
     const stringConfigurationSource = new StringConfigurationSettingsSource(options);
@@ -475,7 +475,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Respect both feature management schemas, dotnet schema within feature_management in the same file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaUnderscoreCase.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/respectBothFmSchemaUnderscoreCase.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
@@ -506,7 +506,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Respect both feature management schemas, FeatureManagement + feature_management in the same file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaPascalCase.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/respectBothFmSchemaPascalCase.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
@@ -546,7 +546,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Respect both feature management schemas, feature-management + feature_management in the same file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaHyphenCase.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/respectBothFmSchemaHyphenCase.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
@@ -574,7 +574,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Respect both feature management schemas, featureManagement + feature_management  in the same file", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/respectBothFmSchemaCamelCase.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/respectBothFmSchemaCamelCase.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };
@@ -617,7 +617,7 @@ describe("Parse FeatureFlag Json format file", () => {
 
   it("Duplicate Feature Flags test, the later feature flag should win", async () => {
     const options: StringSourceOptions = {
-      data: fs.readFileSync(path.join("__dirname", "../tests/sources/duplicateFeatureFlagsInBothSchemas.json")).toString(),
+      data: fs.readFileSync(path.join("__dirname", "../tests/sources/featureManagement/schemas/duplicateFeatureFlagsInBothSchemas.json")).toString(),
       format: ConfigurationFormat.Json,
       skipFeatureFlags: false
     };

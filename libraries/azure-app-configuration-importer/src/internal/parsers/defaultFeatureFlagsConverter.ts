@@ -8,6 +8,7 @@ import {
   FeatureFlagVariantDefinition
 } from "@azure/app-configuration";
 import { ArgumentError } from "../../errors";
+import { ClientFilter } from "../../models";
 import { SourceOptions } from "../../options";
 import { Constants } from "../constants";
 import {
@@ -32,7 +33,7 @@ import { FeatureFlagParamConverter } from "./featureFlagParamConverter";
 export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
   public Convert(config: object, options: SourceOptions): FeatureFlagParam[] {
     const { featureFlagsDict, dotnetFmSchemaKeyWord, foundMsFmSchema, foundFeatureManagement } =
-      detectFeatureManagement(config, options);
+      detectFeatureManagement({ ...config }, options);
 
     if (!foundFeatureManagement) {
       return [];
@@ -94,7 +95,8 @@ export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
     if (rawFeatureFlag.conditions) {
       const conditions: FeatureFlagConditions = {};
       if (rawFeatureFlag.conditions.client_filters !== undefined) {
-        conditions.filters = rawFeatureFlag.conditions.client_filters;
+        conditions.filters = rawFeatureFlag.conditions.client_filters?.map((filter: ClientFilter) =>
+          this.readFilter(lowerCaseKeys(filter) as ClientFilter));
       }
       if (rawFeatureFlag.conditions.requirement_type !== undefined) {
         conditions.requirementType = rawFeatureFlag.conditions.requirement_type;
@@ -115,6 +117,17 @@ export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
     }
 
     return featureFlag;
+  }
+
+  private readFilter(filter: ClientFilter): NonNullable<FeatureFlagConditions["filters"]>[number] {
+    const result: NonNullable<FeatureFlagConditions["filters"]>[number] = { name: filter.name };
+    if (filter.parameters != null) {
+      result.parameters = Object.fromEntries(Object.entries(filter.parameters).map(([name, value]) => [
+        name,
+        typeof value === "string" ? value : JSON.stringify(value)
+      ]));
+    }
+    return result;
   }
 
   private readVariant(variant: Record<string, any>): FeatureFlagVariantDefinition {
@@ -209,11 +222,7 @@ export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
           alwaysOn = true;
           break;
         }
-        const parsedFilter: NonNullable<FeatureFlagConditions["filters"]>[number] = { name: filterName };
-        if (lowerCaseFilter["parameters"]) {
-          parsedFilter.parameters = lowerCaseFilter["parameters"];
-        }
-        parsedFilters.push(parsedFilter);
+        parsedFilters.push(this.readFilter({ name: filterName, parameters: lowerCaseFilter["parameters"] }));
       }
 
       if (!alwaysOn) {

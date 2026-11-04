@@ -1,0 +1,26 @@
+These eight *.sample.json files are unchanged copies from:
+https://github.com/microsoft/FeatureManagement/tree/a4d01aa30a891670252fffd06eb17bdb1059e4a3/Samples
+
+Upstream commit: a4d01aa30a891670252fffd06eb17bdb1059e4a3
+Upstream MIT license: LICENSE in this directory.
+
+These are locally maintained import fixtures until sample sharing is restored.
+Tests read them offline; no upstream checkout or test-package dependency is needed.
+Equivalent YAML documents are generated in memory from these JSON fixtures.
+Both formats exercise both import paths; YAML results must match JSON results.
+JSON FFSet documents are also projected in test code from these samples, with
+filter parameters encoded as strings and optional enabled values defaulted to
+false. FFSet results are checked against the original sample configuration,
+independently of the production Default-profile converter. FFSet is JSON-only.
+The evaluation inputs and expected results in upstream *.tests.json are not
+included, since they are not feature-flag import documents.
+
+NoFilters.sample.json deliberately includes InvalidEnabled with enabled="invalid".
+Tests assert that the original document and that individual flag are rejected
+on both classic key-value and enhanced import paths, and separately import its
+remaining valid flags without modifying the fixture.
+
+The tests exercise both classic key-value and enhanced source conversion, not
+feature evaluation or live REST acceptance. Classic parameters retain their
+original JSON types; enhanced parameters are strings. Filter dates and rollout
+outcomes are not evaluated.
