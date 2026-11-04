@@ -95,7 +95,8 @@ export class DefaultFeatureFlagsConverter implements FeatureFlagParamConverter {
     if (rawFeatureFlag.conditions) {
       const conditions: FeatureFlagConditions = {};
       if (rawFeatureFlag.conditions.client_filters !== undefined) {
-        conditions.filters = rawFeatureFlag.conditions.client_filters?.map((filter: ClientFilter) => this.readFilter(filter));
+        conditions.filters = rawFeatureFlag.conditions.client_filters?.map((filter: ClientFilter) =>
+          this.readFilter(lowerCaseKeys(filter) as ClientFilter));
       }
       if (rawFeatureFlag.conditions.requirement_type !== undefined) {
         conditions.requirementType = rawFeatureFlag.conditions.requirement_type;
