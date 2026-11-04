@@ -51,7 +51,7 @@ describe("Readable stream configuration settings source tests", () => {
   });
 
   it("Successfully get configuration settings from readable stream source, yaml file", async () => {
-    const filePath = path.join("__dirname", "../tests/sources/featureFlags.yaml");
+    const filePath = path.join("__dirname", "../tests/sources/featureManagement/schemas/featureFlags.yaml");
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream<Uint8Array>({
       start(controller) {

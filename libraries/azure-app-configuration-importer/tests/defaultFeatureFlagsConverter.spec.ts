@@ -5,9 +5,10 @@ import { assert } from "chai";
 import { ArgumentError } from "../src/errors";
 import { ConfigurationFormat } from "../src/enums";
 import { SourceOptions } from "../src/options";
+import { ClientFilter } from "../src/models";
 import { DefaultFeatureFlagsConverter } from "../src/internal/parsers/defaultFeatureFlagsConverter";
 
-describe("DefaultFeatureFlagsConverter MS FM feature flags", () => {
+describe("DefaultFeatureFlagsConverter feature flags", () => {
   const converter = new DefaultFeatureFlagsConverter();
 
   function convert(featureFlags: Array<Record<string, unknown>>, options?: Partial<SourceOptions>) {
@@ -20,6 +21,115 @@ describe("DefaultFeatureFlagsConverter MS FM feature flags", () => {
   it("converts a minimal MS FM feature flag", () => {
     assert.deepEqual(convert([{ id: "Checkout", enabled: true }]), [{ name: "Checkout", enabled: true }]);
   });
+
+  const filterSchemas = [
+    {
+      name: "Microsoft feature_management",
+      createConfig: (filters: ClientFilter[]) => ({
+        feature_management: {
+          feature_flags: [{
+            id: "ImportTest",
+            enabled: false,
+            conditions: { requirement_type: "Any", client_filters: filters }
+          }]
+        }
+      })
+    },
+    {
+      name: ".NET FeatureManagement",
+      createConfig: (filters: ClientFilter[]) => ({
+        FeatureManagement: {
+          ImportTest: {
+            RequirementType: "Any",
+            EnabledFor: filters.map(filter => ({
+              Name: filter.name,
+              ...(filter.parameters !== undefined ? { Parameters: filter.parameters } : {})
+            }))
+          }
+        }
+      })
+    }
+  ];
+
+  for (const schema of filterSchemas) {
+    describe(`DefaultFeatureFlagsConverter ${schema.name} enhanced filter parameters`, () => {
+      const converter = new DefaultFeatureFlagsConverter();
+      const options = { format: ConfigurationFormat.Json };
+
+      it("JSON-encodes nested targeting and numeric percentage parameters without mutating the input", () => {
+        const filters = [
+          {
+            name: "Microsoft.Targeting",
+            parameters: { Audience: { Users: ["userA"], Groups: [], DefaultRolloutPercentage: 40 } }
+          },
+          { name: "Microsoft.Percentage", parameters: { Value: 25 } }
+        ];
+        const config = schema.createConfig(filters);
+        const originalConfig = JSON.parse(JSON.stringify(config));
+
+        const result = converter.Convert(config, options);
+
+        assert.deepEqual(result[0].conditions, {
+          requirementType: "Any",
+          filters: [
+            {
+              name: "Microsoft.Targeting",
+              parameters: { Audience: "{\"Users\":[\"userA\"],\"Groups\":[],\"DefaultRolloutPercentage\":40}" }
+            },
+            { name: "Microsoft.Percentage", parameters: { Value: "25" } }
+          ]
+        });
+        assert.deepEqual(config, originalConfig);
+        assert.notStrictEqual<unknown>(result[0].conditions?.filters?.[0], filters[0]);
+        assert.notStrictEqual<unknown>(result[0].conditions?.filters?.[0].parameters, filters[0].parameters);
+      });
+
+      it("preserves strings and JSON-encodes other supported parameter values", () => {
+        const result = converter.Convert(schema.createConfig([{
+          name: "Custom",
+          parameters: {
+            Text: "unchanged",
+            JsonText: "{\"Value\":25}",
+            EmptyText: "",
+            Enabled: true,
+            Disabled: false,
+            Zero: 0,
+            Fraction: 0.25,
+            Null: null,
+            Array: ["userA", 25, false, null, { nested: true }],
+            EmptyObject: {},
+            EmptyArray: []
+          }
+        }]), options);
+
+        assert.deepEqual(result[0].conditions?.filters?.[0].parameters, {
+          Text: "unchanged",
+          JsonText: "{\"Value\":25}",
+          EmptyText: "",
+          Enabled: "true",
+          Disabled: "false",
+          Zero: "0",
+          Fraction: "0.25",
+          Null: "null",
+          Array: "[\"userA\",25,false,null,{\"nested\":true}]",
+          EmptyObject: "{}",
+          EmptyArray: "[]"
+        });
+      });
+
+      it("supports filters with missing or empty parameters", () => {
+        const result = converter.Convert(schema.createConfig([
+          { name: "WithoutParameters" },
+          { name: "EmptyParameters", parameters: {} }
+        ]), options);
+
+        assert.deepEqual(result[0].conditions?.filters, [
+          { name: "WithoutParameters" },
+          { name: "EmptyParameters", parameters: {} }
+        ]);
+      });
+    });
+  }
 
   it("transforms the snake_case fields of a full MS FM feature flag into FeatureFlagParam", () => {
     const msFm = {
