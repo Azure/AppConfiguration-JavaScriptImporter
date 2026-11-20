@@ -3,6 +3,8 @@
 
 import { assert, expect } from "chai";
 import { FeatureFlag, FeatureFlagClient } from "@azure/app-configuration";
+import { readFileSync } from "fs";
+import { join } from "path";
 import * as sinon from "sinon";
 import { ChangeType, ConfigurationFormat, ImportMode } from "../src/enums";
 import { ArgumentError, OperationTimeoutError } from "../src/errors";
@@ -30,6 +32,46 @@ describe("FeatureFlagImporter", () => {
     assert.equal(client.addFeatureFlag.callCount, 0);
     assert.equal(client.setFeatureFlag.callCount, 2);
     assert.deepEqual(progress, { successCount: 2, importCount: 2 });
+  });
+
+  it("imports nullable FFSet fields without writing nulls or dropping non-null siblings", async () => {
+    const client = createClient();
+    const importer = new FeatureFlagImporter(client.client);
+    const source = new StringFeatureFlagSource({
+      data: readFileSync(join(__dirname, "sources", "ffsetWithNullFields.json"), "utf8"),
+      format: ConfigurationFormat.Json
+    });
+
+    await importer.Import(source, { timeout: 3 });
+
+    const writtenFlags = client.setFeatureFlag.getCalls().map(call => call.args[0]);
+    assert.sameDeepMembers(writtenFlags, [
+      { name: "Checkout", enabled: false },
+      {
+        name: "CheckoutExperiment",
+        enabled: true,
+        conditions: {
+          filters: [
+            { name: "Custom" },
+            { name: "Microsoft.Percentage", parameters: { Value: "25" } }
+          ]
+        },
+        variants: [
+          { name: "Control" },
+          { name: "Treatment", value: "new", contentType: "text/plain", statusOverride: "Enabled" }
+        ],
+        allocation: {},
+        telemetry: { enabled: false, metadata: { owner: "checkout" } }
+      },
+      {
+        name: "SearchExperiment",
+        enabled: false,
+        conditions: {},
+        variants: [{ name: "Control", value: "classic" }],
+        telemetry: { enabled: false },
+        allocation: { seed: "", user: [], percentile: [{ variant: "Control", from: 0, to: 100 }] }
+      }
+    ]);
   });
 
   it("fails import when the server returns an error", async () => {

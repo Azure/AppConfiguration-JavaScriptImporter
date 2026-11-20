@@ -51,31 +51,32 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
     if (typeof item.name !== "string" || item.name.length === 0) {
       throw new ArgumentError(`Feature flag at index ${index} must contain a non-empty string 'name'.`);
     }
-    if (typeof item.enabled !== "boolean") {
+    const enabled = item.enabled ?? false;
+    if (typeof enabled !== "boolean") {
       throw new ArgumentError(`Feature flag '${item.name}' must contain a boolean 'enabled'.`);
     }
 
-    const featureFlag: FeatureFlagParam = { name: item.name, enabled: item.enabled };
+    const featureFlag: FeatureFlagParam = { name: item.name, enabled };
 
-    if (item.description !== undefined) {
+    if (item.description != null) {
       featureFlag.description = this.readString(item.name, "description", item.description);
     }
-    if (item.label !== undefined) {
+    if (item.label != null) {
       featureFlag.label = this.readString(item.name, "label", item.label);
     }
-    if (item.conditions !== undefined) {
+    if (item.conditions != null) {
       featureFlag.conditions = this.readConditions(item.name, item.conditions);
     }
-    if (item.variants !== undefined) {
+    if (item.variants != null) {
       featureFlag.variants = this.readVariants(item.name, item.variants);
     }
-    if (item.allocation !== undefined) {
+    if (item.allocation != null) {
       featureFlag.allocation = this.readAllocation(item.name, item.allocation);
     }
-    if (item.telemetry !== undefined) {
+    if (item.telemetry != null) {
       featureFlag.telemetry = this.readTelemetry(item.name, item.telemetry);
     }
-    if (item.tags !== undefined) {
+    if (item.tags != null) {
       featureFlag.tags = this.readStringMap(item.name, "tags", item.tags);
     }
 
@@ -90,7 +91,7 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
     if (conditions.requirement_type !== undefined) {
       result.requirementType = this.readString(name, "requirement_type", conditions.requirement_type);
     }
-    if (conditions.filters !== undefined) {
+    if (conditions.filters != null) {
       if (!Array.isArray(conditions.filters)) {
         throw new ArgumentError(`Feature flag '${name}' has invalid 'filters'.`);
       }
@@ -98,7 +99,7 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
         if (!this.isObject(filter) || typeof filter.name !== "string") {
           throw new ArgumentError(`Feature flag '${name}' has an invalid filter.`);
         }
-        return filter.parameters !== undefined
+        return filter.parameters != null
           ? { name: filter.name, parameters: this.readStringMap(name, "parameters", filter.parameters) }
           : { name: filter.name };
       });
@@ -115,10 +116,10 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
         throw new ArgumentError(`Feature flag '${name}' has an invalid variant.`);
       }
       const result: FeatureFlagVariantDefinition = { name: variant.name };
-      if (variant.value !== undefined) {
+      if (variant.value != null) {
         result.value = this.readString(name, "value", variant.value);
       }
-      if (variant.content_type !== undefined) {
+      if (variant.content_type != null) {
         result.contentType = this.readString(name, "content_type", variant.content_type);
       }
       if (variant.status_override !== undefined) {
@@ -133,33 +134,33 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
       throw new ArgumentError(`Feature flag '${name}' has invalid 'allocation'.`);
     }
     const result: FeatureFlagAllocation = {};
-    if (allocation.seed !== undefined) {
+    if (allocation.seed != null) {
       result.seed = this.readString(name, "seed", allocation.seed);
     }
-    if (allocation.default_when_enabled !== undefined) {
+    if (allocation.default_when_enabled != null) {
       result.defaultWhenEnabled = this.readString(name, "default_when_enabled", allocation.default_when_enabled);
     }
-    if (allocation.default_when_disabled !== undefined) {
+    if (allocation.default_when_disabled != null) {
       result.defaultWhenDisabled = this.readString(name, "default_when_disabled", allocation.default_when_disabled);
     }
-    if (allocation.percentile !== undefined) {
+    if (allocation.percentile != null) {
       result.percentile = this.readAllocationList(name, allocation.percentile, ["variant", "from", "to"], ["from", "to"]) as NonNullable<FeatureFlagAllocation["percentile"]>;
     }
-    if (allocation.user !== undefined) {
+    if (allocation.user != null) {
       result.user = this.readAllocationList(name, allocation.user, ["variant", "users"]) as NonNullable<FeatureFlagAllocation["user"]>;
     }
-    if (allocation.group !== undefined) {
+    if (allocation.group != null) {
       result.group = this.readAllocationList(name, allocation.group, ["variant", "groups"]) as NonNullable<FeatureFlagAllocation["group"]>;
     }
     return result;
   }
 
   private readTelemetry(name: string, telemetry: unknown): NonNullable<FeatureFlagParam["telemetry"]> {
-    if (!this.isObject(telemetry) || typeof telemetry.enabled !== "boolean") {
+    if (!this.isObject(telemetry) || (telemetry.enabled != null && typeof telemetry.enabled !== "boolean")) {
       throw new ArgumentError(`Feature flag '${name}' has invalid 'telemetry'.`);
     }
-    const result: NonNullable<FeatureFlagParam["telemetry"]> = { enabled: telemetry.enabled };
-    if (telemetry.metadata !== undefined) {
+    const result: NonNullable<FeatureFlagParam["telemetry"]> = { enabled: telemetry.enabled ?? false };
+    if (telemetry.metadata != null) {
       result.metadata = this.readStringMap(name, "metadata", telemetry.metadata);
     }
     return result;
@@ -191,11 +192,14 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
     return value;
   }
 
-  private readStringMap(name: string, field: string, value: unknown): { [propertyName: string]: string } {
-    if (!this.isObject(value) || Object.values(value).some(entry => typeof entry !== "string")) {
-      throw new ArgumentError(`Feature flag '${name}' has invalid '${field}'.`);
+  private readStringMap(name: string, field: "tags" | "parameters" | "metadata", value: unknown): Record<string, string> {
+    if (this.isObject(value)) {
+      const entries = Object.entries(value).filter(([, entry]) => field === "tags" || entry !== null);
+      if (entries.every((pair): pair is [string, string] => typeof pair[1] === "string")) {
+        return Object.fromEntries(entries);
+      }
     }
-    return value as { [propertyName: string]: string };
+    throw new ArgumentError(`Feature flag '${name}' has invalid '${field}'.`);
   }
 
   private isObject(value: unknown): value is Record<string, unknown> {

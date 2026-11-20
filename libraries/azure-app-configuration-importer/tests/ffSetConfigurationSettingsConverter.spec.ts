@@ -2,6 +2,8 @@
 // Licensed under the MIT license.
 
 import { assert } from "chai";
+import Ajv from "ajv";
+import { MsFeatureFlagValueSchema } from "../src/MsFeatureFlagSchema";
 import { ArgumentError } from "../src/errors";
 import { FfSetConfigurationSettingsConverter } from "../src/internal/parsers/ffSetConfigurationSettingsConverter";
 
@@ -96,6 +98,39 @@ describe("Parse ffset format", () => {
         }
       }
     ]);
+  });
+
+  it("matches the local MS feature flag schema's null acceptance for corresponding fields", () => {
+    const validate = new Ajv().compile(MsFeatureFlagValueSchema);
+    const filter = { name: "Custom", parameters: { Value: null } };
+    const cases: [Record<string, unknown>, Record<string, unknown>?][] = [
+      [{ enabled: null }],
+      [{ telemetry: { enabled: null, metadata: { owner: null } } }],
+      [{ conditions: { client_filters: [filter] } }, { conditions: { filters: [filter] } }],
+      [{ variants: [{ name: "Blue", configuration_value: null }] }, { variants: [{ name: "Blue", value: null }] }],
+      [{ conditions: { requirement_type: null } }],
+      [{ variants: [{ name: "Blue", status_override: null }] }],
+      [{ allocation: { user: [{ variant: "Blue", users: null }] } }]
+    ];
+    for (const [msFields, ffSetFields = msFields] of cases) {
+      const convert = () => converter.Convert({ items: [{ name: "Checkout", enabled: true, ...ffSetFields }] });
+      if (validate({ id: "Checkout", enabled: true, ...msFields })) {
+        assert.doesNotThrow(convert);
+      }
+      else {
+        assert.throws(convert, ArgumentError, undefined, JSON.stringify(ffSetFields));
+      }
+    }
+  });
+
+  it("rejects null tag values and required names", () => {
+    for (const fields of [
+      { tags: { owner: null } },
+      { name: null },
+      { variants: [{ name: null }] }
+    ]) {
+      assert.throws(() => converter.Convert({ items: [{ name: "Checkout", enabled: true, ...fields }] }), ArgumentError);
+    }
   });
 
   it("preserves encoded, numeric-looking, boolean-looking and empty parameter strings", () => {
