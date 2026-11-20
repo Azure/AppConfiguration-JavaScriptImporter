@@ -42,9 +42,9 @@ export type KvSetConfigurationItem = {
  */
 export type FfSetItem = {
   name: string;
-  label?: string;
+  label?: string | null;
   enabled: boolean;
-  description?: string;
+  description?: string | null;
   conditions?: {
     requirement_type?: string;
     filters?: Array<{ name: string; parameters?: Record<string, string> }>;
@@ -58,7 +58,7 @@ export type FfSetItem = {
     default_when_enabled?: string;
     default_when_disabled?: string;
   };
-  telemetry?: { enabled: boolean; metadata?: { [propertyName: string]: string } };
+  telemetry?: { enabled: boolean; metadata?: { [propertyName: string]: string } } | null;
   tags?: { [propertyName: string]: string };
 }
 

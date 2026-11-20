@@ -1,0 +1,12 @@
+{
+  "profile": "appconfig/ffset",
+  "items": [
+    {
+      "name": "Checkout",
+      "enabled": true,
+      "description": null,
+      "label": null,
+      "telemetry": null
+    }
+  ]
+}

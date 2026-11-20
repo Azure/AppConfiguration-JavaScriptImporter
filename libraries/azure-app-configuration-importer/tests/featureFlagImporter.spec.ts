@@ -3,6 +3,8 @@
 
 import { assert, expect } from "chai";
 import { FeatureFlag, FeatureFlagClient } from "@azure/app-configuration";
+import { readFileSync } from "fs";
+import { join } from "path";
 import * as sinon from "sinon";
 import { ChangeType, ConfigurationFormat, ImportMode } from "../src/enums";
 import { ArgumentError, OperationTimeoutError } from "../src/errors";
@@ -30,6 +32,20 @@ describe("FeatureFlagImporter", () => {
     assert.equal(client.addFeatureFlag.callCount, 0);
     assert.equal(client.setFeatureFlag.callCount, 2);
     assert.deepEqual(progress, { successCount: 2, importCount: 2 });
+  });
+
+  it("imports an FFSet file with null description, label, and telemetry as omitted fields", async () => {
+    const client = createClient();
+    const importer = new FeatureFlagImporter(client.client);
+    const source = new StringFeatureFlagSource({
+      data: readFileSync(join(__dirname, "sources", "ffsetWithNullFields.json"), "utf8"),
+      format: ConfigurationFormat.Json
+    });
+
+    await importer.Import(source, { timeout: 3 });
+
+    assert.equal(client.setFeatureFlag.callCount, 1);
+    assert.deepEqual(client.setFeatureFlag.firstCall.args[0], { name: "Checkout", enabled: true });
   });
 
   it("fails import when the server returns an error", async () => {

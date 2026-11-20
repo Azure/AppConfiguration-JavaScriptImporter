@@ -57,10 +57,10 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
 
     const featureFlag: FeatureFlagParam = { name: item.name, enabled: item.enabled };
 
-    if (item.description !== undefined) {
+    if (item.description != null) {
       featureFlag.description = this.readString(item.name, "description", item.description);
     }
-    if (item.label !== undefined) {
+    if (item.label != null) {
       featureFlag.label = this.readString(item.name, "label", item.label);
     }
     if (item.conditions !== undefined) {
@@ -72,7 +72,7 @@ export class FfSetConfigurationSettingsConverter implements FeatureFlagParamConv
     if (item.allocation !== undefined) {
       featureFlag.allocation = this.readAllocation(item.name, item.allocation);
     }
-    if (item.telemetry !== undefined) {
+    if (item.telemetry != null) {
       featureFlag.telemetry = this.readTelemetry(item.name, item.telemetry);
     }
     if (item.tags !== undefined) {
