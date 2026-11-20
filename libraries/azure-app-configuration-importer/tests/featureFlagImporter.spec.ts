@@ -34,7 +34,7 @@ describe("FeatureFlagImporter", () => {
     assert.deepEqual(progress, { successCount: 2, importCount: 2 });
   });
 
-  it("imports an FFSet file with null description, label, and telemetry as omitted fields", async () => {
+  it("imports nullable FFSet fields without writing nulls or dropping non-null siblings", async () => {
     const client = createClient();
     const importer = new FeatureFlagImporter(client.client);
     const source = new StringFeatureFlagSource({
@@ -44,8 +44,34 @@ describe("FeatureFlagImporter", () => {
 
     await importer.Import(source, { timeout: 3 });
 
-    assert.equal(client.setFeatureFlag.callCount, 1);
-    assert.deepEqual(client.setFeatureFlag.firstCall.args[0], { name: "Checkout", enabled: true });
+    const writtenFlags = client.setFeatureFlag.getCalls().map(call => call.args[0]);
+    assert.sameDeepMembers(writtenFlags, [
+      { name: "Checkout", enabled: false },
+      {
+        name: "CheckoutExperiment",
+        enabled: true,
+        conditions: {
+          filters: [
+            { name: "Custom" },
+            { name: "Microsoft.Percentage", parameters: { Value: "25" } }
+          ]
+        },
+        variants: [
+          { name: "Control" },
+          { name: "Treatment", value: "new", contentType: "text/plain", statusOverride: "Enabled" }
+        ],
+        allocation: {},
+        telemetry: { enabled: false, metadata: { owner: "checkout" } }
+      },
+      {
+        name: "SearchExperiment",
+        enabled: false,
+        conditions: {},
+        variants: [{ name: "Control", value: "classic" }],
+        telemetry: { enabled: false },
+        allocation: { seed: "", user: [], percentile: [{ variant: "Control", from: 0, to: 100 }] }
+      }
+    ]);
   });
 
   it("fails import when the server returns an error", async () => {

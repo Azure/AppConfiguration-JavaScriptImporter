@@ -43,23 +43,23 @@ export type KvSetConfigurationItem = {
 export type FfSetItem = {
   name: string;
   label?: string | null;
-  enabled: boolean;
+  enabled?: boolean | null;
   description?: string | null;
   conditions?: {
     requirement_type?: string;
-    filters?: Array<{ name: string; parameters?: Record<string, string> }>;
-  };
-  variants?: Array<{ name: string; value?: string; content_type?: string; status_override?: string }>;
+    filters?: Array<{ name: string; parameters?: Record<string, string | null> | null }> | null;
+  } | null;
+  variants?: Array<{ name: string; value?: string | null; content_type?: string | null; status_override?: string }> | null;
   allocation?: {
-    user?: Array<{ variant: string; users: string[] }>;
-    group?: Array<{ variant: string; groups: string[] }>;
-    percentile?: Array<{ variant: string; from: number; to: number }>;
-    seed?: string;
-    default_when_enabled?: string;
-    default_when_disabled?: string;
-  };
-  telemetry?: { enabled: boolean; metadata?: { [propertyName: string]: string } } | null;
-  tags?: { [propertyName: string]: string };
+    user?: Array<{ variant: string; users: string[] }> | null;
+    group?: Array<{ variant: string; groups: string[] }> | null;
+    percentile?: Array<{ variant: string; from: number; to: number }> | null;
+    seed?: string | null;
+    default_when_enabled?: string | null;
+    default_when_disabled?: string | null;
+  } | null;
+  telemetry?: { enabled?: boolean | null; metadata?: Record<string, string | null> | null } | null;
+  tags?: Record<string, string> | null;
 }
 
 export interface ImportProgress {

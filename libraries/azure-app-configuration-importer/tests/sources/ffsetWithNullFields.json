@@ -3,10 +3,49 @@
   "items": [
     {
       "name": "Checkout",
-      "enabled": true,
+      "enabled": null,
       "description": null,
       "label": null,
-      "telemetry": null
+      "conditions": null,
+      "variants": null,
+      "allocation": null,
+      "telemetry": null,
+      "tags": null
+    },
+    {
+      "name": "CheckoutExperiment",
+      "enabled": true,
+      "conditions": {
+        "filters": [
+          { "name": "Custom", "parameters": null },
+          { "name": "Microsoft.Percentage", "parameters": { "Value": "25", "Unused": null } }
+        ]
+      },
+      "variants": [
+        { "name": "Control", "value": null, "content_type": null },
+        { "name": "Treatment", "value": "new", "content_type": "text/plain", "status_override": "Enabled" }
+      ],
+      "allocation": {
+        "seed": null,
+        "default_when_enabled": null,
+        "default_when_disabled": null,
+        "user": null,
+        "group": null,
+        "percentile": null
+      },
+      "telemetry": { "enabled": null, "metadata": { "owner": "checkout", "unused": null } }
+    },
+    {
+      "name": "SearchExperiment",
+      "conditions": { "filters": null },
+      "variants": [{ "name": "Control", "value": "classic" }],
+      "telemetry": { "metadata": null },
+      "allocation": {
+        "seed": "",
+        "user": [],
+        "group": null,
+        "percentile": [{ "variant": "Control", "from": 0, "to": 100 }]
+      }
     }
   ]
 }
